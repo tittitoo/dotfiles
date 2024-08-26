@@ -1,0 +1,19 @@
+# themes from https://github.com/alacritty/alacritty-theme
+
+import = ["~/.config/alacritty/themes/gruvbox_dark.toml"]
+# import = ["~/.config/alacritty/themes/gruvbox_light.toml"]
+# import = ["~/.config/alacritty/themes/github_dark.toml"]
+# import = ["~/.config/alacritty/themes/github_light.toml"]
+
+[font]
+size = 18
+
+[font.normal]
+family = "UbuntuMono Nerd Font"
+
+[window]
+decorations = "none"
+
+[window.padding]
+x = 7
+y = 0
