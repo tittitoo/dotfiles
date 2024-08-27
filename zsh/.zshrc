@@ -67,6 +67,8 @@ if [[ "$OSTYPE" == darwin* ]]; then
   fpath+=("$(brew --prefix)/share/zsh/site-functions")
 else
   fpath+=($HOME/.zsh/pure)
+  # Required by brew to set environment path on linux. 
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 autoload -U promptinit; promptinit
