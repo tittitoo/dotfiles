@@ -95,9 +95,15 @@ alias la='ls -lathr'
 
 alias sb='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second_brain'
 
+# LaunchBar Snippets folder
+alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
+
 # fzf aliases
 # use fp to do a fzf search and preview the files
 alias fp="fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'"
+
+# Source .zshrc
+alias sz='source ~/.zshrc'
 
 # search for a file with fzf and open it in vim
 alias vf='v "$(fp)"'
