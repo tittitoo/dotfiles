@@ -35,6 +35,9 @@ setopt null_glob
 # [setopt extended_glob](https://tinyurl.com/2463wdmk)
 setopt extended_glob
 
+# Below is based on brew doctor
+export PATH="/usr/local/sbin:$PATH"
+
 path=(
   $path   # keep existing PATH entries
   $SCRIPTS # own scripts file above
