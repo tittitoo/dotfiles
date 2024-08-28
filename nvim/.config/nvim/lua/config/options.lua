@@ -2,9 +2,9 @@
 -- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 -- Add any additional options here
 
-local opt = vim.opt
+-- local opt = vim.opt
 
 -- wrap / break
 
-opt.textwidth = 80
-opt.linebreak = true
+-- opt.textwidth = 80
+-- opt.linebreak = true
