@@ -38,6 +38,9 @@ setopt extended_glob
 # Below is based on brew doctor
 export PATH="/usr/local/sbin:$PATH"
 
+# Homebrew Setting
+export HOMEBREW_NO_ENV_HINTS=TRUE
+
 path=(
   $path   # keep existing PATH entries
   $SCRIPTS # own scripts file above
@@ -145,3 +148,5 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# zoxide configuration at the end of the file
+eval "$(zoxide init zsh)"
