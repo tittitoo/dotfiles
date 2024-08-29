@@ -7,7 +7,7 @@ LC_CTYPE=en_US.UTF-8
 LC_ALL=en_US.UTF-8
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Environment Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set to superior editing mode, i.e. vim
-set -o vi 
+set -o vi
 
 export VISUAL=nvim
 export EDITOR=nvim
@@ -98,8 +98,8 @@ alias dot='cd $GHREPOS/dotfiles'
 
 # ls
 
-alias ls='ls --color=auto'
-alias la='ls -lathr'
+alias ls=lsd
+alias la='lsd -la'
 
 # cd
 
