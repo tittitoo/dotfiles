@@ -40,7 +40,7 @@ export HOMEBREW_NO_ENV_HINTS=TRUE
 
 # Only run these on Debian, Ubuntu and Fedora
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  export PATH="~/.local/bin:$PATH"
+  export PATH="$HOME/.local/bin:$PATH"
 fi
 
 path=(
