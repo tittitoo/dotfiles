@@ -42,7 +42,7 @@ export PATH="/usr/local/sbin:$PATH"
 export HOMEBREW_NO_ENV_HINTS=TRUE
 
 # Only run these on Debian, Ubuntu and Fedora
-if [[ $(grep -E "^(ID|NAME)=" /etc/os-release | grep -Eq "debian|ubuntu|fedora")$? == 0 ]]; then
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   export PATH="~/.local/bin:$PATH"
 fi
 
