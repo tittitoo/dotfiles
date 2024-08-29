@@ -1,5 +1,5 @@
 # .zshrc config file
-
+# 
 # https://stackoverflow.com/questions/2499794/how-to-fix-a-locale-setting-warning-from-perlOO
 # Setting for the new UTF-8 terminal support
 export LANG="en_US.UTF-8"
