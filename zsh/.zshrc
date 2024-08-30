@@ -102,11 +102,13 @@ alias ls=lsd
 alias la='lsd -la'
 
 # cd
-
 alias sb='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second_brain'
 
 # LaunchBar Snippets folder
 alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
+
+# Minimalist Repo
+alias mini='cd ~/Repos/github.com/tittitoo/minimalist'
 
 # fzf aliases
 # use fp to do a fzf search and preview the files
