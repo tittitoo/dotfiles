@@ -10,7 +10,7 @@ LC_ALL=en_US.UTF-8
 set -o vi 
 export VISUAL=nvim
 export EDITOR=nvim
-export TERM="tmux-256color"#
+export TERM="tmux-256color" #
 # Directories
 # 
 export REPOS="$HOME/Repos"
@@ -151,3 +151,4 @@ unset __conda_setup
 # 
 # zoxide configuration at the end of the file
 eval "$(zoxide init zsh)"
+# 
