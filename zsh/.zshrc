@@ -10,7 +10,7 @@ LC_ALL=en_US.UTF-8
 set -o vi 
 export VISUAL=nvim
 export EDITOR=nvim
-export TERM="tmux-256color"
+export TERM="tmux-256color"#
 # Directories
 # 
 export REPOS="$HOME/Repos"
@@ -25,10 +25,10 @@ export SCRIPTS="$HOME/.config/scripts"  # Configured this way so that scripts fo
 # [Bash to Zsh: File Globbing and ‘no matches found’ Errors : Bart Busschots](https://tinyurl.com/2ahdqngr)
 # If wild card is not found in bash it produces warning and execute. zsh throws error and stop.
 # below option mimic bash behaviour
-setopt null_glob
+setopt null_glob #
 # 
 # [setopt extended_glob](https://tinyurl.com/2463wdmk)
-setopt extended_glob
+setopt extended_glob #
 # 
 # Below is based on brew doctor
 export PATH="/usr/local/sbin:$PATH"
