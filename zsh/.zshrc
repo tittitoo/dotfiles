@@ -151,4 +151,3 @@ unset __conda_setup
 # 
 # zoxide configuration at the end of the file
 eval "$(zoxide init zsh)"
-# 
