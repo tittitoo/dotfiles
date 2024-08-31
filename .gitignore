@@ -2,3 +2,4 @@
 *.bak
 *.log
 .netrwhist
+nvim/.config/nvim/lazy-lock.json
