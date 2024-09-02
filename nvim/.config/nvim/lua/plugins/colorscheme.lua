@@ -3,7 +3,8 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "retrobox",
+      -- colorscheme = "retrobox",
+      colorscheme = "zellner",
     },
   },
 }
