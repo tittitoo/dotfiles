@@ -92,6 +92,7 @@ alias t='tmux'
 # Repos
 
 alias dot='cd $GHREPOS/dotfiles'
+alias zet='cd $GHREPOS/zet'
 
 # ls
 
