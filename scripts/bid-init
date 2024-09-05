@@ -1,0 +1,6 @@
+#!/bin/zsh
+
+# Initialize project for bidding
+
+echo "Testing if it works"
+
