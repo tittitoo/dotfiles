@@ -41,16 +41,16 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   export PATH="$HOME/.local/bin:$PATH"
 fi
 
-path=(
-  $path   # keep existing PATH entries
-  $SCRIPTS # own scripts file above
-  )
+path=( $path )   # keep existing PATH entries
 
 # Remove duplicate entries and non-existent Directories
 typeset -U path
 path=($^path(N-/))
 
 export PATH
+
+# This path is not picked up if put earlier in the file. Need to see why.
+export PATH="$HOME/.config/scripts:$PATH"
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ History ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
