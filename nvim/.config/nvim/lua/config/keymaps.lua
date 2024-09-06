@@ -3,4 +3,4 @@
 -- Add any additional keymaps here
 
 -- Preview in Marked 2 App.
-vim.keymap.set("n", "<leader>m", '<cmd>r!open -a "Marked 2.app" "%:p"<cr>', { desc = "Open in Marked2 app" })
+vim.keymap.set("n", "<leader>m", '<cmd>r!open -a "Marked 2.app" "%"<cr>', { desc = "Open in Marked2 app" })
