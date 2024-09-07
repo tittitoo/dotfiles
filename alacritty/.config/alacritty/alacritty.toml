@@ -1,22 +1,28 @@
 # themes from https://github.com/alacritty/alacritty-theme
 
-import = ["~/.config/alacritty/themes/gruvbox_dark.toml"]
-# import = ["~/.config/alacritty/themes/gruvbox_light.toml"]  
-# import = ["~/.config/alacritty/themes/github_light.toml"]    
-# import = ["~/.config/alacritty/themes/github_dark.toml"]    
-# import = ["~/.config/alacritty/themes/pencil_light.toml"]
-# import = ["~/.config/alacritty/themes/papercolor_light.toml"]
-
+import = [
+  # uncomment the flavour you want below:
+  "~/.config/alacritty/themes/catppuccin-latte.toml",
+  # "~/.config/alacritty/themes/catppuccin-frappe.toml"
+  # "~/.config/alacritty/themes/catppuccin-macchiato.toml"
+  # "~/.config/alacritty/themes/catppuccin-mocha.toml"
+  # "~/.config/alacritty/themes/gruvbox_dark.toml"
+  # "~/.config/alacritty/themes/gruvbox_light.toml"
+  # "~/.config/alacritty/themes/github_light.toml"
+  # "~/.config/alacritty/themes/github_dark.toml"
+  # "~/.config/alacritty/themes/pencil_light.toml"
+  # "~/.config/alacritty/themes/papercolor_light.toml"
+]
 
 [font]
-size = 18 
+size = 16
 
 [font.normal]
-family = "UbuntuMono Nerd Font"
+family = "VictorMono Nerd Font Mono"
 
 [window]
 decorations = "none"
 
 [window.padding]
 x = 7
-y = 0 
+y = 0
