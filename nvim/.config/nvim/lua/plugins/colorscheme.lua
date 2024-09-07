@@ -6,8 +6,8 @@ return {
     opts = {
       -- colorscheme = "retrobox",
       -- colorscheme = "zellner",
-      colorscheme = "catppuccin-latte",
-      -- colorscheme = "catppuccin-mocha",
+      -- colorscheme = "catppuccin-latte",
+      colorscheme = "catppuccin-mocha",
       -- colorscheme = "catppuccin-macchiato",
       -- colorscheme = "catppuccin-frappe",
     },
