@@ -101,7 +101,7 @@ alias ls=lsd
 alias la='lsd -la'
 
 # cd
-alias sb='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second_brain'
+alias sb='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-brain'
 alias d='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/drafts'
 alias dw='cd ~/Downloads'
 
