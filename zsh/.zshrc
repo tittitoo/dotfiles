@@ -93,18 +93,17 @@ alias e='exit'
 alias t='tmux'
 
 # Repos
-
 alias dot='cd $GHREPOS/dotfiles'
 alias zet='cd $GHREPOS/zet'
 
 # ls
-
 alias ls=lsd
 alias la='lsd -la'
 
 # cd
 alias sb='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second_brain'
-alias d='cd ~/Downloads'
+alias d='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/drafts'
+alias dw='cd ~/Downloads'
 
 # LaunchBar Snippets folder
 alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
