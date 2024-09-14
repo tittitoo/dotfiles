@@ -4,3 +4,6 @@
 
 -- Preview in Marked 2 App.
 vim.keymap.set("n", "<leader>m", '<cmd>r!open -a "Marked 2.app" "%"<cr>', { desc = "Open in Marked2 app" })
+
+-- Undotree
+vim.keymap.set("n", "<leader>uu", require("undotree").toggle, { noremap = true, silent = true, desc = "Undotree" })
