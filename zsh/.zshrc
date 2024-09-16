@@ -37,7 +37,7 @@ export PATH="/usr/local/sbin:$PATH"
 export HOMEBREW_NO_ENV_HINTS=TRUE
 
 # Ruby setting based on Homebrew input
-export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
 
 # Only run these on Debian, Ubuntu and Fedora
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
