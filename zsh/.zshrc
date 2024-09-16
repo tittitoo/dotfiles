@@ -37,7 +37,10 @@ export PATH="/usr/local/sbin:$PATH"
 export HOMEBREW_NO_ENV_HINTS=TRUE
 
 # Ruby setting based on Homebrew input
-export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
+# export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
+
+# To manage ruby environment, goes with rbenv instead as follows.
+eval "$(rbenv init - zsh)"
 
 # Only run these on Debian, Ubuntu and Fedora
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
