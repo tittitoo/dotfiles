@@ -53,17 +53,17 @@ vim.api.nvim_create_autocmd("FocusLost", {
   command = "silent! wa",
 })
 
--- Define a function to save the file
-local function auto_save()
-  if vim.bo.filetype == "markdown" then
-    vim.cmd("silent! wa")
-  end
-end
-
--- Set up an autocmd to trigger the function after typing has stopped
-vim.api.nvim_create_augroup("AutoSaveGroup", { clear = true })
-vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
-  group = "AutoSaveGroup",
-  pattern = "*",
-  callback = auto_save,
-})
+-- -- Define a function to save the file
+-- local function auto_save()
+--   if vim.bo.filetype == "markdown" then
+--     vim.cmd("silent! wa")
+--   end
+-- end
+--
+-- -- Set up an autocmd to trigger the function after typing has stopped
+-- vim.api.nvim_create_augroup("AutoSaveGroup", { clear = true })
+-- vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+--   group = "AutoSaveGroup",
+--   pattern = "*",
+--   callback = auto_save,
+-- })
