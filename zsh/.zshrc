@@ -117,9 +117,9 @@ alias mini='cd ~/Repos/github.com/tittitoo/minimalist'
 
 # fzf aliases
 # Setting fd as the default source for fzf
-export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
+# export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
 # Use the following if we want to follow symbolic links and also including hidden files.
-# export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
 
 # use fp to do a fzf search and preview the files
 alias fp="fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'"
