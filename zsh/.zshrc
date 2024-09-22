@@ -99,6 +99,9 @@ alias t='tmux'
 alias dot='cd $GHREPOS/dotfiles'
 alias zet='cd $GHREPOS/zet'
 
+# Lazydocker
+alias lzd='lazydocker'
+
 # ls
 alias ls=lsd
 alias la='lsd -la'
