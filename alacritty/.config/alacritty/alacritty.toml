@@ -2,10 +2,10 @@
 
 import = [
   # uncomment the flavour you want below:
-  "~/.config/alacritty/themes/catppuccin-latte.toml",
+  # "~/.config/alacritty/themes/catppuccin-latte.toml",
   # "~/.config/alacritty/themes/catppuccin-frappe.toml"
   # "~/.config/alacritty/themes/catppuccin-macchiato.toml"
-  # "~/.config/alacritty/themes/catppuccin-mocha.toml"
+  "~/.config/alacritty/themes/catppuccin-mocha.toml",
   # "~/.config/alacritty/themes/gruvbox_dark.toml"
   # "~/.config/alacritty/themes/gruvbox_light.toml"
   # "~/.config/alacritty/themes/github_light.toml"
@@ -15,10 +15,8 @@ import = [
 ]
 
 [font]
+normal = { family = "VictorMono Nerd Font Mono", style = "Light" }
 size = 16
-
-[font.normal]
-family = "VictorMono Nerd Font Mono"
 
 [window]
 decorations = "none"
