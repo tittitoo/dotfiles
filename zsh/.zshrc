@@ -40,8 +40,9 @@ export HOMEBREW_NO_ENV_HINTS=TRUE
 # export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
 
 # Only run these on Debian, Ubuntu and Fedora
+# If there's brew, add linuxbrew path
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  export PATH="$HOME/.local/bin:$PATH"
+  export PATH="$HOME/.local/bin:/home/linuxbrew/.linuxbrew/bin:$PATH"
 fi
 
 # To manage ruby environment, goes with rbenv instead as follows.
