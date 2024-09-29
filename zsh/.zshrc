@@ -108,9 +108,13 @@ alias la='lsd -la'
 
 # cd
 alias sb='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-brain'
+alias zet='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-brain/zet'
 alias d='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/drafts'
 alias dw='cd ~/Downloads'
-alias 24='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2024'
+alias rfqs='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs'
+# alias 24='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2024'
+# alias 23='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2023'
+# alias 22='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2022'
 
 # LaunchBar Snippets folder
 alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
@@ -125,16 +129,22 @@ alias mini='cd ~/Repos/github.com/tittitoo/minimalist'
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
 
 # use fp to do a fzf search and preview the files
-alias fp="fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'"
+alias fp='fzf --preview "bat --style=numbers --color=always --line-range :500 {}" --layout=reverse --height=40%'
 
 # Source .zshrc
 alias sz='source ~/.zshrc'
 
 # search for a file with fzf and open it in vim
-alias vf='v "$(fp)"'
+alias vf='fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=40% --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
 
 # search for a file with fzf and open it in default system application
-alias of='open "$(fp)"'
+alias of='fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=40% | xargs -0 -I {} open "{}"'
+alias ofd='fd -t d | fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=40% | xargs -0 -I {} open "{}"'
+
+# search hook bookmarks and open them in system application
+# need hookmark to be installed and hoop app
+# limit the path so it shows head and tail, otherwise, some paths are too long
+alias h='hook list | fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=40% | xargs -0 -I {} open "{}"'
 
 # finds all files recursively and sorts by last modification, ignore hidden files
 alias lastmod='find . -type f -not -path "*/\.*" -exec ls -lrt {} +'
@@ -143,6 +153,7 @@ alias lastmod='find . -type f -not -path "*/\.*" -exec ls -lrt {} +'
 
 alias gp='git pull'
 alias gs='git status'
+alias gf='git fetch'
 alias lg='lazygit'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Sourcing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
