@@ -39,13 +39,16 @@ export HOMEBREW_NO_ENV_HINTS=TRUE
 # Ruby setting based on Homebrew input
 # export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
 
-# To manage ruby environment, goes with rbenv instead as follows.
-eval "$(rbenv init - zsh)"
-
 # Only run these on Debian, Ubuntu and Fedora
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   export PATH="$HOME/.local/bin:$PATH"
 fi
+
+# To manage ruby environment, goes with rbenv instead as follows.
+eval "$(rbenv init - zsh)"
+
+# Put scripts in path
+export PATH="$SCRIPTS:$PATH"
 
 path=( $path )   # keep existing PATH entries
 
@@ -54,9 +57,6 @@ typeset -U path
 path=($^path(N-/))
 
 export PATH
-
-# This path is not picked up if put earlier in the file. Need to see why.
-export PATH="$HOME/.config/scripts:$PATH"
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ History ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
