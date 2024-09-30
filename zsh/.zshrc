@@ -113,6 +113,9 @@ alias zet='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-br
 alias d='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/drafts'
 alias dw='cd ~/Downloads'
 alias rfqs='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs'
+alias docs='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@docs'
+alias ho='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@handover'
+alias ct='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@costing'
 # alias 24='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2024'
 # alias 23='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2023'
 # alias 22='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2022'
@@ -120,8 +123,9 @@ alias rfqs='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsP
 # LaunchBar Snippets folder
 alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
 
-# Minimalist Repo
+# Repos
 alias mini='cd ~/Repos/github.com/tittitoo/minimalist'
+alias bid='cd ~/Repos/github.com/tittitoo/bid'
 
 # fzf aliases
 # Setting fd as the default source for fzf
@@ -136,11 +140,11 @@ alias fp='fzf --preview "bat --style=numbers --color=always --line-range :500 {}
 alias sz='source ~/.zshrc'
 
 # search for a file with fzf and open it in vim
-alias vf='fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=40% --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
+alias vf='fzf --delimiter="/" --with-nth=1,-3.. --print0 --layout=reverse --height=50% --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
 
 # search for a file with fzf and open it in default system application
-alias of='fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=40% | xargs -0 -I {} open "{}"'
-alias ofd='fd -t d | fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=40% | xargs -0 -I {} open "{}"'
+alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 --layout=reverse --height=50% | xargs -0 -I {} open "{}"'
+alias od='fd -t d | fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=50% | xargs -0 -I {} open "{}"'
 
 # search hook bookmarks and open them in system application
 # need hookmark to be installed and hoop app
