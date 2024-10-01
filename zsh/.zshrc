@@ -116,9 +116,6 @@ alias rfqs='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsP
 alias docs='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@docs'
 alias ho='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@handover'
 alias ct='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@costing'
-# alias 24='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2024'
-# alias 23='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2023'
-# alias 22='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs/2022'
 
 # LaunchBar Snippets folder
 alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
