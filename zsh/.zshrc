@@ -127,29 +127,43 @@ alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
 alias mini='cd ~/Repos/github.com/tittitoo/minimalist'
 alias bid='cd ~/Repos/github.com/tittitoo/bid'
 
-# fzf aliases
-# Setting fd as the default source for fzf
-# export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
+# fzf options
 # Use the following if we want to follow symbolic links and also including hidden files.
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
+export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border'
+# Preview file content using bat (https://github.com/sharkdp/bat)
+export FZF_CTRL_T_OPTS="
+  --walker-skip .git,node_modules,target,.obsidian
+  --preview 'bat -n --color=always {}'
+  --bind 'ctrl-/:change-preview-window(down|hidden|)'"
+# CTRL-Y to copy the command into clipboard using pbcopy
+export FZF_CTRL_R_OPTS="
+  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
+  --color header:italic
+  --header 'Press CTRL-Y to copy command into clipboard'"
+# Print tree structure in the preview window
+export FZF_ALT_C_OPTS="
+  --walker-skip .git,node_modules,target
+  --preview 'tree -C {}'"
 
 # use fp to do a fzf search and preview the files
-alias fp='fzf --preview "bat --style=numbers --color=always --line-range :500 {}" --layout=reverse --height=40%'
+alias fp='fzf --preview "bat --style=numbers --color=always --line-range :500 {}"'
 
 # Source .zshrc
 alias sz='source ~/.zshrc'
 
 # search for a file with fzf and open it in vim
-alias vf='fzf --delimiter="/" --with-nth=1,-3.. --print0 --layout=reverse --height=50% --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
+alias vf='fzf --delimiter="/" --with-nth=1,-3.. --print0 --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
 
 # search for a file with fzf and open it in default system application
-alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 --layout=reverse --height=50% | xargs -0 -I {} open "{}"'
-alias od='fd -t d | fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=50% | xargs -0 -I {} open "{}"'
+alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 | xargs -0 -I {} open "{}"'
+alias od='fd -t d --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0  | xargs -0 -I {} open "{}"'
+alias o='fd --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0 | xargs -0 -I {} open "{}"'
 
 # search hook bookmarks and open them in system application
 # need hookmark to be installed and hoop app
 # limit the path so it shows head and tail, otherwise, some paths are too long
-alias h='hook list | fzf --delimiter="/" --with-nth=1,-2.. --print0 --layout=reverse --height=40% | xargs -0 -I {} open "{}"'
+alias h='hook list | fzf --delimiter="/" --with-nth=1,-2.. --print0 | xargs -0 -I {} open "{}"'
 
 # finds all files recursively and sorts by last modification, ignore hidden files
 alias lastmod='find . -type f -not -path "*/\.*" -exec ls -lrt {} +'
