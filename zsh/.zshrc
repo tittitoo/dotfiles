@@ -127,24 +127,24 @@ alias bid='cd ~/Repos/github.com/tittitoo/bid'
 # fzf options
 # Use the following if we want to follow symbolic links and also including hidden files.
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
-export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border'
+export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"'
 # Preview file content using bat (https://github.com/sharkdp/bat)
+# CRTL-T looks for files and upon enter, output the file path into console
 export FZF_CTRL_T_OPTS="
   --walker-skip .git,node_modules,target,.obsidian
   --preview 'bat -n --color=always {}'
   --bind 'ctrl-/:change-preview-window(down|hidden|)'"
 # CTRL-Y to copy the command into clipboard using pbcopy
+# CTRL-R looks for command history and upon enter, output the file path into console
 export FZF_CTRL_R_OPTS="
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
   --color header:italic
   --header 'Press CTRL-Y to copy command into clipboard'"
 # Print tree structure in the preview window
+# ALT-C looks for directories and upon enter cd into the selected directory.
 export FZF_ALT_C_OPTS="
   --walker-skip .git,node_modules,target
   --preview 'tree -C {}'"
-
-# use fp to do a fzf search and preview the files
-alias fp='fzf --preview "bat --style=numbers --color=always --line-range :500 {}"'
 
 # Source .zshrc
 alias sz='source ~/.zshrc'
@@ -153,9 +153,9 @@ alias sz='source ~/.zshrc'
 alias vf='fzf --delimiter="/" --with-nth=1,-3.. --print0 --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
 
 # search for a file with fzf and open it in default system application
-alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 | xargs -0 -I {} open "{}"'
-alias od='fd -t d --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0  | xargs -0 -I {} open "{}"'
-alias o='fd --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0 | xargs -0 -I {} open "{}"'
+alias o='fd --follow --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0 --bind "ctrl-o:execute(open {})" | xargs -0 -I {} open "{}"'
+alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
+alias od='fd -t d --follow --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0  --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 
 # search hook bookmarks and open them in system application
 # need hookmark to be installed and hoop app
