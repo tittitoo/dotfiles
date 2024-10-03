@@ -126,8 +126,21 @@ alias bid='cd ~/Repos/github.com/tittitoo/bid'
 
 # fzf options
 # Use the following if we want to follow symbolic links and also including hidden files.
-export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
-export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"'
+export FZF_DEFAULT_COMMAND='fd
+# --strip-cwd-prefix
+--follow
+--exclude .git'
+export FZF_DEFAULT_OPTS='
+  --height=60%
+  --layout=reverse
+  --info=inline
+  --preview="echo {}"
+  --preview-window=down:3:wrap
+  --border
+  --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
+  --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download"
+  --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
+  --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"'
 # Preview file content using bat (https://github.com/sharkdp/bat)
 # CRTL-T looks for files and upon enter, output the file path into console
 export FZF_CTRL_T_OPTS="
@@ -153,7 +166,7 @@ alias sz='source ~/.zshrc'
 alias vf='fzf --delimiter="/" --with-nth=1,-3.. --print0 --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
 
 # search for a file with fzf and open it in default system application
-alias o='fd --follow --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0 --bind "ctrl-o:execute(open {})" | xargs -0 -I {} open "{}"'
+alias o='fzf --tmux=60% --delimiter="/" --with-nth=-2.. --print0 --bind "ctrl-o:execute(open {})" --bind "ctrl-y:execute(cp {} ~/Downloads/)" | xargs -0 -I {} open "{}"'
 alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 alias od='fd -t d --follow --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0  --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 
