@@ -129,6 +129,7 @@ alias bid='cd ~/Repos/github.com/tittitoo/bid'
 export FZF_DEFAULT_COMMAND='fd --follow --exclude .git'
 export FZF_DEFAULT_OPTS='
   --height=60%
+  --tmux=70%
   --layout=reverse
   --info=inline
   --preview="echo {}"
@@ -138,13 +139,14 @@ export FZF_DEFAULT_OPTS='
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
   --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download"
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
-  --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"'
+  --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
+  --bind "ctrl-o:execute(open {})" 
+  --bind "ctrl-y:execute(cp {} ~/Downloads/)"
+  --bind "ctrl-/:change-preview-window(down|hidden|)"'
 # Preview file content using bat (https://github.com/sharkdp/bat)
 # CRTL-T looks for files and upon enter, output the file path into console
-export FZF_CTRL_T_OPTS="
-  --walker-skip .git,node_modules,target,.obsidian
-  --preview 'bat -n --color=always {}'
-  --bind 'ctrl-/:change-preview-window(down|hidden|)'"
+export FZF_CTRL_T_OPTS='
+  --walker-skip .git,node_modules,target,.obsidian'
 # CTRL-Y to copy the command into clipboard using pbcopy
 # CTRL-R looks for command history and upon enter, output the file path into console
 export FZF_CTRL_R_OPTS="
@@ -153,9 +155,12 @@ export FZF_CTRL_R_OPTS="
   --header 'Press CTRL-Y to copy command into clipboard'"
 # Print tree structure in the preview window
 # ALT-C looks for directories and upon enter cd into the selected directory.
-export FZF_ALT_C_OPTS="
+export FZF_ALT_C_OPTS='
   --walker-skip .git,node_modules,target
-  --preview 'tree -C {}'"
+  --preview "tree -C {}"
+  --preview-window=right:70%:wrap
+  --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
+  --bind "ctrl-o:execute(open {})"'
 
 # Source .zshrc
 alias sz='source ~/.zshrc'
@@ -164,7 +169,7 @@ alias sz='source ~/.zshrc'
 alias vf='fzf --delimiter="/" --with-nth=1,-3.. --print0 --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
 
 # search for a file with fzf and open it in default system application
-alias o='fzf --tmux=70% --delimiter="/" --with-nth=-4.. --print0 --bind "ctrl-o:execute(open {})" --bind "ctrl-y:execute(cp {} ~/Downloads/)" | xargs -0 -I {} open "{}"'
+alias o='fzf --delimiter="/" --with-nth=-4.. --print0 --bind "ctrl-o:execute(open {})" --bind "ctrl-y:execute(cp {} ~/Downloads/)" | xargs -0 -I {} open "{}"'
 alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 alias od='fd -t d --follow --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0  --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 
@@ -206,3 +211,5 @@ unset __conda_setup
 # zoxide configuration at the end of the file
 eval "$(zoxide init zsh)"
 
+
+eval $(thefuck --alias)
