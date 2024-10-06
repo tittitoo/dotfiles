@@ -134,7 +134,11 @@ export FZF_DEFAULT_OPTS='
   --info=inline
   --preview="echo {}"
   --preview-window=down:3:wrap
-  --border
+  --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
+  --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
+  --color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
+  --color=selected-bg:#45475a
+  --border 
   --multi
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
   --header "CTRL-T: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download"
