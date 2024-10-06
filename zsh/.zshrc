@@ -162,7 +162,7 @@ export FZF_CTRL_R_OPTS="
 export FZF_ALT_C_OPTS='
   --walker-skip .git,node_modules,target
   --preview "tree -C {}"
-  --preview-window=right:70%:wrap
+  --preview-window=right:50%:wrap
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
   --bind "ctrl-o:execute(open {})"'
 
