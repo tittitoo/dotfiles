@@ -137,8 +137,8 @@ export FZF_DEFAULT_OPTS='
   --border
   --multi
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
-  --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download"
-  --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
+  --header "CTRL-T: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download"
+  --bind "ctrl-t:change-prompt(Directories> )+reload(fd -t d)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
   --bind "ctrl-o:execute(open {})" 
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
@@ -166,10 +166,10 @@ export FZF_ALT_C_OPTS='
 alias sz='source ~/.zshrc'
 
 # search for a file with fzf and open it in vim
-alias vf='fzf --delimiter="/" --with-nth=1,-3.. --print0 --preview "bat --style=numbers --color=always --line-range :40 {}" | xargs -0 -I {} nvim "{}"'
+alias vf='fzf --delimiter="/" --with-nth=-2.. --print0 --preview "bat --style=numbers --color=always --line-range :40 {}" --preview-window=right:70%:wrap | xargs -0 -I {} nvim "{}"'
 
 # search for a file with fzf and open it in default system application
-alias o='fzf --delimiter="/" --with-nth=-4.. --print0 --bind "ctrl-o:execute(open {})" --bind "ctrl-y:execute(cp {} ~/Downloads/)" | xargs -0 -I {} open "{}"'
+alias o='fzf --delimiter="/" --with-nth=-4.. --print0 | xargs -0 -I {} open "{}"'
 alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 alias od='fd -t d --follow --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0  --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 
