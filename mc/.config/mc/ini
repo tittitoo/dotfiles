@@ -89,10 +89,10 @@ filepos_max_saved_entries=1024
 [Layout]
 output_lines=0
 left_panel_size=91
-top_panel_size=0
+top_panel_size=29
 message_visible=false
 keybar_visible=true
-xterm_title=true
+xterm_title=false
 command_prompt=false
 menubar_visible=true
 free_space=true
@@ -139,7 +139,7 @@ select_flags=6
 simple_swap=false
 
 [FindFile]
-file_case_sens=true
+file_case_sens=false
 file_shell_pattern=true
 file_find_recurs=true
 follow_symlinks=false
