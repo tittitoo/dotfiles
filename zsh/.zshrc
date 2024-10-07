@@ -104,8 +104,8 @@ alias zet='cd $GHREPOS/zet'
 alias lzd='lazydocker'
 
 # ls
-alias ls=lsd
-alias la='lsd -la'
+alias ls=eza
+alias la='eza -la'
 
 # cd
 alias sb='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-brain'
