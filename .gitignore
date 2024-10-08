@@ -4,3 +4,5 @@
 .netrwhist
 nvim/.config/nvim/lazy-lock.json
 __pycache__
+catppuccin-mc/.local/share/mc
+mc/.config/mc/panels.ini
