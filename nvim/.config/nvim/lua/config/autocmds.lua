@@ -28,20 +28,20 @@ vim.api.nvim_create_autocmd("filetype", {
   command = "set nospell",
 })
 
--- Automatically save file when switching buffers or losing focus
--- Meant for Marked2 preview
-vim.api.nvim_create_augroup("auto_save", { clear = true })
-vim.api.nvim_create_autocmd("BufLeave", {
-  group = "auto_save",
-  pattern = "*",
-  command = "silent! wa",
-})
-vim.api.nvim_create_autocmd("FocusLost", {
-  group = "auto_save",
-  pattern = "*",
-  command = "silent! wa",
-})
-
+-- -- Automatically save file when switching buffers or losing focus
+-- -- Meant for Marked2 preview
+-- vim.api.nvim_create_augroup("auto_save", { clear = true })
+-- vim.api.nvim_create_autocmd("BufLeave", {
+--   group = "auto_save",
+--   pattern = "*",
+--   command = "silent! wa",
+-- })
+-- vim.api.nvim_create_autocmd("FocusLost", {
+--   group = "auto_save",
+--   pattern = "*",
+--   command = "silent! wa",
+-- })
+--
 -- -- Define a function to save the file
 -- local function auto_save()
 --   if vim.bo.filetype == "markdown" then
