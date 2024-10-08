@@ -14,11 +14,14 @@ require("cmp").setup({
 -- added to disable spelling
 vim.api.nvim_create_autocmd("FileType", {
   -- group = augroup("wrap_spell"),
-  pattern = { "gitcommit", "markdown", "pandoc" },
+  pattern = { "gitcommit", "markdown", "pandoc", "*.md" },
   callback = function()
     vim.opt_local.wrap = true
     vim.opt_local.spell = false
     vim.opt_local.textwidth = 80
+    vim.opt_local.tabstop = 4 -- Number of spaces a <Tab> counts for
+    vim.opt_local.shiftwidth = 4 -- Number of spaces used for each step of (auto)indent
+    vim.opt_local.expandtab = true -- Use spaces instead of tabs
   end,
 })
 
