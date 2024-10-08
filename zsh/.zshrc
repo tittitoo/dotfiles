@@ -19,6 +19,10 @@ export GHREPOS="$REPOS/github.com/$GITUSER"
 export DOTFILES="$GHREPOS/dotfiles"
 export SCRIPTS="$HOME/.config/scripts"  # Configured this way so that scripts folder is also symlinked to dotfiles/scripts
 
+# Set XDG
+# Set this variable so that config files are grouped together in this path
+export XDG_CONFIG_HOME="$HOME/.config"
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Path configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # File globbing
