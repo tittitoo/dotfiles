@@ -1,6 +1,6 @@
 [Midnight-Commander]
 verbose=true
-shell_patterns=true
+shell_patterns=false
 auto_save_setup=true
 preallocate_space=false
 auto_menu=false
@@ -84,17 +84,18 @@ editor_filesize_threshold=64M
 editor_stop_format_chars=-+*\\,.;:&>
 mcview_eof=
 skin=catppuccin
+filepos_max_saved_entries=1024
 
 [Layout]
 output_lines=0
-left_panel_size=85
-top_panel_size=19
+left_panel_size=142
+top_panel_size=29
 message_visible=false
 keybar_visible=false
-xterm_title=false
+xterm_title=true
 command_prompt=false
 menubar_visible=false
-free_space=false
+free_space=true
 horizontal_split=false
 vertical_equal=true
 horizontal_equal=true
@@ -126,7 +127,7 @@ fast_reload_msg_shown=false
 mark_moves_down=true
 reverse_files_only=true
 auto_save_setup_panels=false
-navigate_with_arrows=true
+navigate_with_arrows=false
 panel_scroll_pages=true
 panel_scroll_center=false
 mouse_move_pages=true
@@ -134,11 +135,11 @@ filetype_mode=true
 permission_mode=false
 torben_fj_mode=false
 quick_search_mode=0
-select_flags=7
+select_flags=6
 simple_swap=false
 
 [FindFile]
-file_case_sens=true
+file_case_sens=false
 file_shell_pattern=true
 file_find_recurs=true
 follow_symlinks=false
@@ -153,7 +154,7 @@ ignore_dirs_enable=true
 ignore_dirs=
 
 [Panelize]
-Find *.orig after patching=find . -name \\*.orig -print
 Find SUID and SGID programs=find . \\( \\( -perm -04000 -a -perm /011 \\) -o \\( -perm -02000 -a -perm /01 \\) \\) -print
 Find rejects after patching=find . -name \\*.rej -print
 Modified git files=git ls-files --modified
+Find *.orig after patching=find . -name \\*.orig -print
