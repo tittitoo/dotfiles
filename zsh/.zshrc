@@ -20,7 +20,6 @@ export DOTFILES="$GHREPOS/dotfiles"
 export SCRIPTS="$HOME/.config/scripts"  # Configured this way so that scripts folder is also symlinked to dotfiles/scripts
 
 # Set XDG
-# Set this variable so that config files are grouped together in this path
 export XDG_CONFIG_HOME="$HOME/.config"
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Path configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,6 +121,7 @@ alias rfq='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPt
 alias doc='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@docs'
 alias ho='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@handover'
 alias ct='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@costing'
+alias ..='cd ..'
 
 # LaunchBar Snippets folder
 alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
