@@ -98,6 +98,7 @@ alias scripts='cd $SCRIPTS'
 alias c='clear'
 alias e='exit'
 alias t='tmux'
+alias rr='ranger'
 
 # Repos
 alias dot='cd $GHREPOS/dotfiles'
