@@ -199,6 +199,18 @@ alias gs='git status'
 alias gf='git fetch'
 alias lg='lazygit'
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ yazi ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# [Quick Start | Yazi](https://yazi-rs.github.io/docs/quick-start)
+
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Sourcing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 source "$HOME/.privaterc" # coming soon
