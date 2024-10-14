@@ -118,6 +118,7 @@ alias zet='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-br
 alias d='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/drafts'
 alias da='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/drafts/Archive/Attachments'
 alias dw='cd ~/Downloads'
+alias scans='cd ~/Library/Mobile\ Documents/iCloud~com~readdle~Scanner~PDF/Documents'
 alias rfq='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs'
 alias doc='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@docs'
 alias ho='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@handover'
