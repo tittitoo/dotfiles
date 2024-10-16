@@ -131,7 +131,6 @@ alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
 
 # Repos
 alias mini='cd ~/Repos/github.com/tittitoo/minimalist'
-alias bid='cd ~/Repos/github.com/tittitoo/bid'
 
 # fzf options
 # Use the following if we want to follow symbolic links and also including hidden files.
