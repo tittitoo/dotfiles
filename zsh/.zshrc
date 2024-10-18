@@ -161,6 +161,7 @@ export FZF_CTRL_T_OPTS='
   --walker-skip .git,node_modules,target,.obsidian'
 # CTRL-Y to copy the command into clipboard using pbcopy
 # CTRL-R looks for command history and upon enter, output the file path into console
+# CTRL-R will be overriden by atuin as atuin runs last.
 export FZF_CTRL_R_OPTS="
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
   --color header:italic
@@ -237,3 +238,4 @@ eval "$(zoxide init zsh)"
 
 
 eval $(thefuck --alias)
+eval "$(atuin init zsh)"
