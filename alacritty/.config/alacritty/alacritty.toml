@@ -1,21 +1,21 @@
 # themes from https://github.com/alacritty/alacritty-theme
 
 import = [
-  # uncomment the flavour you want below:
-  # "~/.config/alacritty/themes/catppuccin-latte.toml",
-  # "~/.config/alacritty/themes/catppuccin-frappe.toml"
-  # "~/.config/alacritty/themes/catppuccin-macchiato.toml"
-  "~/.config/alacritty/themes/catppuccin-mocha.toml",
-  # "~/.config/alacritty/themes/gruvbox_dark.toml"
-  # "~/.config/alacritty/themes/gruvbox_light.toml"
-  # "~/.config/alacritty/themes/github_light.toml"
-  # "~/.config/alacritty/themes/github_dark.toml"
-  # "~/.config/alacritty/themes/pencil_light.toml"
-  # "~/.config/alacritty/themes/papercolor_light.toml"
+    # uncomment the flavour you want below:
+    # "~/.config/alacritty/themes/catppuccin-latte.toml",
+    # "~/.config/alacritty/themes/catppuccin-frappe.toml"
+    # "~/.config/alacritty/themes/catppuccin-macchiato.toml"
+    "~/.config/alacritty/themes/catppuccin-mocha.toml",
+    # "~/.config/alacritty/themes/gruvbox_dark.toml"
+    # "~/.config/alacritty/themes/gruvbox_light.toml"
+    # "~/.config/alacritty/themes/github_light.toml"
+    # "~/.config/alacritty/themes/github_dark.toml"
+    # "~/.config/alacritty/themes/pencil_light.toml"
+    # "~/.config/alacritty/themes/papercolor_light.toml"
 ]
 
 [font]
-normal = { family = "VictorMono Nerd Font Mono", style = "Light" }
+normal = { family = "VictorMono Nerd Font Mono", style = "Regular" }
 size = 16
 
 [window]
