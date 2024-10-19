@@ -63,19 +63,19 @@ setopt SHARE_HISTORY  # Share history between sessions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Prompt ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # [Pure Prompt](https://github.com/sindresorhus/pure)
 
-PURE_GIT_PULL=0 # Prevent pure from checking whether git remote is updated
-
-
-if [[ "$OSTYPE" == darwin* ]]; then
-  fpath+=("$(brew --prefix)/share/zsh/site-functions")
-else
-  fpath+=($HOME/.zsh/pure)
-  # Required by brew to set environment path on linux. 
-  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
-
-autoload -U promptinit; promptinit
-prompt pure
+# PURE_GIT_PULL=0 # Prevent pure from checking whether git remote is updated
+#
+#
+# if [[ "$OSTYPE" == darwin* ]]; then
+#   fpath+=("$(brew --prefix)/share/zsh/site-functions")
+# else
+#   fpath+=($HOME/.zsh/pure)
+#   # Required by brew to set environment path on linux. 
+#   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# fi
+#
+# autoload -U promptinit; promptinit
+# prompt pure
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ fzf ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # fzf options
@@ -165,8 +165,10 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# Install tools
+eval "$(thefuck --alias)"
+eval "$(atuin init zsh)"
+eval "$(starship init zsh)"
+
 # zoxide configuration at the end of the file
 eval "$(zoxide init zsh)"
-
-eval $(thefuck --alias)
-eval "$(atuin init zsh)"
