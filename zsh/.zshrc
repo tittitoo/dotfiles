@@ -5,6 +5,7 @@
 export LANG="en_US.UTF-8"
 LC_CTYPE=en_US.UTF-8
 LC_ALL=en_US.UTF-8
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Environment Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set to superior editing mode, i.e. vim
 set -o vi 
@@ -117,12 +118,12 @@ function y() {
 	fi
 	rm -f -- "$tmp"
 }
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Sourcing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 source "$HOME/.privaterc" # coming soon
 source <(fzf --zsh)
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Conda ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/Users/infowizard/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
@@ -138,6 +139,7 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Tools ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Install tools
 eval "$(thefuck --alias)"
 eval "$(atuin init zsh)"
