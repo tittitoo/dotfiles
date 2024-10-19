@@ -8,21 +8,8 @@ LC_ALL=en_US.UTF-8
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Environment Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set to superior editing mode, i.e. vim
 set -o vi 
-export VISUAL=nvim
-export EDITOR=nvim
 export TERM="tmux-256color" #
 # Directories
-
-export REPOS="$HOME/Repos"
-export GITUSER="tittitoo"
-export GHREPOS="$REPOS/github.com/$GITUSER"
-export DOTFILES="$GHREPOS/dotfiles"
-export SCRIPTS="$HOME/.config/scripts"  # Configured this way so that scripts folder is also symlinked to dotfiles/scripts
-
-# Set XDG
-export XDG_CONFIG_HOME="$HOME/.config"
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Path configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # File globbing
 # [Bash to Zsh: File Globbing and ‘no matches found’ Errors : Bart Busschots](https://tinyurl.com/2ahdqngr)
@@ -90,48 +77,7 @@ fi
 autoload -U promptinit; promptinit
 prompt pure
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Aliases/Shortcuts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-alias v=nvim
-
-alias scripts='cd $SCRIPTS'
-alias c='clear'
-alias e='exit'
-alias t='tmux'
-alias rr='ranger'
-
-# Repos
-alias dot='cd $GHREPOS/dotfiles'
-alias zet='cd $GHREPOS/zet'
-
-# Lazydocker
-alias lzd='lazydocker'
-
-# ls
-alias ls=eza
-alias la='eza -la'
-
-# cd
-alias sb='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-brain'
-alias sba='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-brain/Archive/Attachments'
-alias zet='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/second-brain/zet'
-alias d='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/drafts'
-alias da='cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/drafts/Archive/Attachments'
-alias dw='cd ~/Downloads'
-alias scans='cd ~/Library/Mobile\ Documents/iCloud~com~readdle~Scanner~PDF/Documents'
-alias arc='cd ~/Documents/Archive'
-alias rfq='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@rfqs'
-alias doc='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@docs'
-alias ho='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@handover'
-alias ct='cd ~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid\ Proposal\ -\ Documents/@costing'
-alias ..='cd ..'
-
-# LaunchBar Snippets folder
-alias sp='cd ~/Library/Application\ Support/LaunchBar/Snippets'
-
-# Repos
-alias mini='cd ~/Repos/github.com/tittitoo/minimalist'
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ fzf ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # fzf options
 # Use the following if we want to follow symbolic links and also including hidden files.
 export FZF_DEFAULT_COMMAND='fd --follow --exclude .git'
@@ -175,31 +121,17 @@ export FZF_ALT_C_OPTS='
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
   --bind "ctrl-o:execute(open {})"'
 
-# Source .zshrc
-alias sz='source ~/.zshrc'
-
-# search for a file with fzf and open it in vim
-alias vf='fzf --delimiter="/" --with-nth=-2.. --print0 --preview "bat --style=numbers --color=always --line-range :40 {}" --preview-window=right:70%:wrap | xargs -0 -I {} nvim "{}"'
-
 # search for a file with fzf and open it in default system application
 alias o='fzf --delimiter="/" --with-nth=-4.. --print0 | xargs -0 -I {} open "{}"'
-alias of='fzf --delimiter="/" --with-nth=1,-3.. --print0 --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 alias od='fd -t d --follow --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0  --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
 
 # search hook bookmarks and open them in system application
 # need hookmark to be installed and hoop app
 # limit the path so it shows head and tail, otherwise, some paths are too long
-alias h='hook list | fzf --delimiter="/" --with-nth=1,-2.. --print0 | xargs -0 -I {} open "{}"'
+# alias h='hook list | fzf --delimiter="/" --with-nth=1,-2.. --print0 | xargs -0 -I {} open "{}"'
 
 # finds all files recursively and sorts by last modification, ignore hidden files
 alias lastmod='find . -type f -not -path "*/\.*" -exec ls -lrt {} +'
-
-# Git
-
-alias gp='git pull'
-alias gs='git status'
-alias gf='git fetch'
-alias lg='lazygit'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ yazi ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # [Quick Start | Yazi](https://yazi-rs.github.io/docs/quick-start)
@@ -235,7 +167,6 @@ unset __conda_setup
 
 # zoxide configuration at the end of the file
 eval "$(zoxide init zsh)"
-
 
 eval $(thefuck --alias)
 eval "$(atuin init zsh)"
