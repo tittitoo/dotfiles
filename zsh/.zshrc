@@ -23,9 +23,6 @@ setopt extended_glob #
 # Below is based on brew doctor
 export PATH="/usr/local/sbin:$PATH"
 
-# Homebrew Setting
-export HOMEBREW_NO_ENV_HINTS=TRUE
-
 # Ruby setting based on Homebrew input
 # export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
 
@@ -59,23 +56,6 @@ setopt HIST_IGNORE_SPACE  # Don't save when prefixed with space
 setopt HIST_IGNORE_DUPS # Don't save duplicate lines
 setopt HIST_IGNORE_ALL_DUPS # Don't save all duplicate lines regardless of event
 setopt SHARE_HISTORY  # Share history between sessions
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Prompt ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# [Pure Prompt](https://github.com/sindresorhus/pure)
-
-# PURE_GIT_PULL=0 # Prevent pure from checking whether git remote is updated
-#
-#
-# if [[ "$OSTYPE" == darwin* ]]; then
-#   fpath+=("$(brew --prefix)/share/zsh/site-functions")
-# else
-#   fpath+=($HOME/.zsh/pure)
-#   # Required by brew to set environment path on linux. 
-#   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-# fi
-#
-# autoload -U promptinit; promptinit
-# prompt pure
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ fzf ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # fzf options
@@ -121,17 +101,10 @@ export FZF_ALT_C_OPTS='
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
   --bind "ctrl-o:execute(open {})"'
 
-# search for a file with fzf and open it in default system application
-alias o='fzf --delimiter="/" --with-nth=-4.. --print0 | xargs -0 -I {} open "{}"'
-alias od='fd -t d --follow --exclude .git | fzf --delimiter="/" --with-nth=1,-2.. --print0  --bind "ctrl-o:execute(open {})"| xargs -0 -I {} open "{}"'
-
 # search hook bookmarks and open them in system application
 # need hookmark to be installed and hoop app
 # limit the path so it shows head and tail, otherwise, some paths are too long
 # alias h='hook list | fzf --delimiter="/" --with-nth=1,-2.. --print0 | xargs -0 -I {} open "{}"'
-
-# finds all files recursively and sorts by last modification, ignore hidden files
-alias lastmod='find . -type f -not -path "*/\.*" -exec ls -lrt {} +'
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ yazi ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # [Quick Start | Yazi](https://yazi-rs.github.io/docs/quick-start)
