@@ -5,7 +5,6 @@
 export LANG="en_US.UTF-8"
 LC_CTYPE=en_US.UTF-8
 LC_ALL=en_US.UTF-8
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Environment Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set to superior editing mode, i.e. vim
 set -o vi 
@@ -35,9 +34,6 @@ fi
 
 # To manage ruby environment, goes with rbenv instead as follows.
 eval "$(rbenv init - zsh)"
-
-# Put scripts in path
-export PATH="$SCRIPTS:$PATH"
 
 path=( $path )   # keep existing PATH entries
 
@@ -122,7 +118,8 @@ function y() {
 
 source "$HOME/.privaterc" # coming soon
 source <(fzf --zsh)
-
+# zsh-autosuggestions
+source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Conda ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
