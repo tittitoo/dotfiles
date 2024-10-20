@@ -24,7 +24,7 @@ setopt extended_glob #
 export PATH="/usr/local/sbin:$PATH"
 
 # Ruby setting based on Homebrew input
-# export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
+export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
 
 # Only run these on Debian, Ubuntu and Fedora
 # If there's brew, add linuxbrew path
