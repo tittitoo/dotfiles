@@ -6,7 +6,7 @@ if test -f /Users/infowizard/anaconda3/bin/conda
 end
 # <<< conda initialize <<<
 
-export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/env"
+export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
 
 # Supress greeting message
 set fish_greeting
