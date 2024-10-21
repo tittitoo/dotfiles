@@ -20,6 +20,7 @@ size = 16
 
 [window]
 decorations = "none"
+option_as_alt = "Both"
 
 [window.padding]
 x = 7
