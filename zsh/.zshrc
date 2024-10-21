@@ -8,7 +8,8 @@ LC_ALL=en_US.UTF-8
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Environment Variables ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Set to superior editing mode, i.e. vim
 set -o vi 
-export TERM="tmux-256color" #
+
+# export TERM="tmux-256color" #
 # Directories
 
 # File globbing
@@ -21,7 +22,7 @@ setopt null_glob #
 setopt extended_glob #
 
 # Below is based on brew doctor
-export PATH="/usr/local/sbin:$PATH"
+# export PATH="/usr/local/sbin:$PATH"
 
 # Ruby setting based on Homebrew input
 export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
