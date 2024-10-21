@@ -48,9 +48,22 @@ set -x FZF_ALT_C_OPTS '
 # set fzf_preview_dir_cmd eza --all --color=always
 
 # Homebrew setting
-# eval "$(/opt/homebrew/bin/brew shellenv)"
-eval "$(/usr/local/bin/brew shellenv)"
-# eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+if test (uname -s) = Darwin
+    if test (uname -m) = arm64
+        # eval "$(/opt/homebrew/bin/brew shellenv)"
+        set -gx HOMEBREW_PREFIX /opt/homebrew
+    else
+        test (uname -m) = x86_64
+        # eval "$(/usr/local/bin/brew shellenv)"
+        set -gx HOMEBREW_PREFIX /usr/local
+    end
+else
+    test (uname -s) = Linux
+    set -gx HOMEBREW_PREFIX /home/linuxbrew/.linuxbrew
+    # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+end
+
+set -gx PATH $HOMEBREW_PREFIX/bin $PATH
 
 # Yazi
 function y
