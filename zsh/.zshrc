@@ -24,14 +24,14 @@ setopt extended_glob #
 # Below is based on brew doctor
 # export PATH="/usr/local/sbin:$PATH"
 
-# Ruby setting based on Homebrew input
-export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
-
 # Only run these on Debian, Ubuntu and Fedora
 # If there's brew, add linuxbrew path
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   export PATH="$HOME/.local/bin:/home/linuxbrew/.linuxbrew/bin:$PATH"
 fi
+
+# Ruby setting based on Homebrew input
+export PATH="$(brew --prefix)/opt/ruby/bin:$PATH"
 
 # To manage ruby environment, goes with rbenv instead as follows.
 eval "$(rbenv init - zsh)"
