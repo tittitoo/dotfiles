@@ -9,7 +9,7 @@ set -gx PATH $HOME/.config/scripts $PATH
 # Homebrew PATH setting
 
 if test (uname -s) = Darwin
-    if test (uname -m) = arc64
+    if test (uname -m) = arm64
         set -gx HOMEBREW_PREFIX /opt/homebrew
     else
         set -gx HOMEBREW_PREFIX /usr/local
