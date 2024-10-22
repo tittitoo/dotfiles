@@ -1,12 +1,27 @@
+# fish config
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-if test -f /Users/infowizard/anaconda3/bin/conda
-    eval /Users/infowizard/anaconda3/bin/conda "shell.fish" hook $argv | source
+# PATH
+set -gx PATH /usr/local/opt/coreutils/libexec/gnubin $PATH
+set -gx PATH $HOME/.local/bin $PATH
+set -gx PATH $HOME/.cargo/bin $PATH
+set -gx PATH $HOME/.config/scripts $PATH
+
+# Homebrew PATH setting
+
+if test (uname -s) = Darwin
+    if test (uname -m) = arc64
+        set -gx HOMEBREW_PREFIX /opt/homebrew
+    else
+        set -gx HOMEBREW_PREFIX /usr/local
+    end
+else
+    set -gx HOMEBREW_PREFIX /home/linuxbrew/.linuxbrew
 end
-# <<< conda initialize <<<
 
-export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
+set -gx PATH $HOMEBREW_PREFIX/bin $PATH
+
+# remove duplicate path entries
+set -g PATH (echo $PATH | tr ' ' '\n' | sort -u | sed 's/:$//')
 
 # Supress greeting message
 set fish_greeting
@@ -47,11 +62,6 @@ set -x FZF_ALT_C_OPTS '
 # fiz.fish
 # set fzf_preview_dir_cmd eza --all --color=always
 
-# Homebrew setting
-# eval "$(/opt/homebrew/bin/brew shellenv)"
-eval "$(/usr/local/bin/brew shellenv)"
-# eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
 # Yazi
 function y
     set tmp (mktemp -t "yazi-cwd.XXXXXX")
@@ -61,6 +71,13 @@ function y
     end
     rm -f -- "$tmp"
 end
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+if test -f /Users/infowizard/anaconda3/bin/conda
+    eval /Users/infowizard/anaconda3/bin/conda "shell.fish" hook $argv | source
+end
+# <<< conda initialize <<<
 
 # Atuin
 atuin init fish | source
