@@ -20,8 +20,11 @@ end
 
 set -gx PATH $HOMEBREW_PREFIX/bin $PATH
 
+# ruby PATH
+set -gx PATH $HOMEBREW_PREFIX/opt/ruby/bin $PATH
+
 # remove duplicate path entries
-set -g PATH (echo $PATH | tr ' ' '\n' | sort -u | sed 's/:$//')
+set -gx PATH (echo $PATH | tr ' ' '\n' | sort -u | sed 's/:$//')
 
 # Supress greeting message
 set fish_greeting
@@ -87,3 +90,6 @@ starship init fish | source
 
 # zoxide
 zoxide init fish | source
+
+# Added by `rbenv init` on Tue Oct 22 13:11:31 +08 2024
+status --is-interactive; and rbenv init - --no-rehash fish | source
