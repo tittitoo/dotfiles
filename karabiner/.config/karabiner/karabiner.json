@@ -4,7 +4,7 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "(Vim 1/11) caps_lock -> on, caps_lock, esc, control+[ or any pointing_button -> off",
+                        "description": "(Vim 1/11) right_command -> on, right_command, esc, control+[ or any pointing_button -> off",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -25,7 +25,7 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": { "key_code": "caps_lock" },
+                                "from": { "key_code": "right_command" },
                                 "parameters": {
                                     "basic.to_if_alone_threshold_milliseconds": 0,
                                     "basic.to_if_held_down_threshold_milliseconds": 100
@@ -86,7 +86,7 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": { "key_code": "caps_lock" },
+                                "from": { "key_code": "right_command" },
                                 "to": [
                                     {
                                         "set_variable": {
@@ -3984,18 +3984,28 @@
                             "to": [{ "key_code": "tab" }]
                         },
                         {
-                            "from": { "key_code": "tab" },
-                            "to": [{ "key_code": "escape" }]
-                        },
-                        {
                             "from": { "key_code": "right_command" },
                             "to": [{ "key_code": "caps_lock" }]
+                        },
+                        {
+                            "from": { "key_code": "tab" },
+                            "to": [{ "key_code": "escape" }]
                         }
                     ]
                 }
             ],
             "name": "Default profile",
             "selected": true,
+            "simple_modifications": [
+                {
+                    "from": { "key_code": "escape" },
+                    "to": [{ "key_code": "tab" }]
+                },
+                {
+                    "from": { "key_code": "tab" },
+                    "to": [{ "key_code": "escape" }]
+                }
+            ],
             "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
         }
     ]
