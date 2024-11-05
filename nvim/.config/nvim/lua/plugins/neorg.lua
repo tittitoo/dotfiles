@@ -23,13 +23,13 @@ return {
         ["core.summary"] = {},
         ["core.tangle"] = { config = { report_on_empty = false } },
         ["core.dirman"] = { -- Manages Neorg workspaces
-          -- config = {
-          --   workspaces = {
-          --     notes = "~/notes/notes",
-          --     work = "~/notes/work",
-          --   },
-          --   default_workspace = "work",
-          -- },
+          config = {
+            workspaces = {
+              notes = "~/documents/Notes",
+              -- work = "~/notes/work",
+            },
+            default_workspace = "notes",
+          },
         },
       },
     })
