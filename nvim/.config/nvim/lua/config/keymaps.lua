@@ -10,3 +10,9 @@ vim.keymap.set("n", "<leader>uu", require("undotree").toggle, { noremap = true, 
 
 -- Toggle nvim-cmp
 vim.keymap.set("n", "<leader>uj", "<cmd>lua vim.g.cmptoggle = not vim.g.cmptoggle<CR>", { desc = "Toggle nvim-cmp" })
+
+-- oil.nvim
+vim.keymap.set("n", "-", "<cmd>Oil<CR>", { desc = "Open parent directory" })
+
+-- Split Window Below
+vim.keymap.set("n", '<leader>"', "<cmd>split<CR>", { noremap = false, silent = true, desc = "Split Window Below" })
