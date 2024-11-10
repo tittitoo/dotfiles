@@ -16,3 +16,6 @@ vim.keymap.set("n", "-", "<cmd>Oil<CR>", { desc = "Open parent directory" })
 
 -- Split Window Below
 vim.keymap.set("n", '<leader>"', "<cmd>split<CR>", { noremap = false, silent = true, desc = "Split Window Below" })
+
+-- Zen Mode
+vim.keymap.set("n", "<leader>z", "<cmd>ZenMode<CR>", { desc = "ZenMode" })
