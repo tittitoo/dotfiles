@@ -5,7 +5,7 @@ return {
     "folke/zen-mode.nvim",
     opts = {
       window = {
-        width = 100,
+        width = 110,
       },
       plugins = {
         twilight = { enabled = false },
