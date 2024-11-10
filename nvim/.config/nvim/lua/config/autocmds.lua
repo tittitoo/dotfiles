@@ -25,11 +25,22 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
-vim.api.nvim_create_autocmd("filetype", {
+vim.api.nvim_create_autocmd("FileType", {
   -- group = augroup("wrap_spell"),
   pattern = { "gitcommit", "markdown", "pandoc" },
   command = "set nospell",
 })
+
+-- Auto enable wrap
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "gitcommit", "markdown", "pandoc", "norg" },
+  command = "set wrap",
+})
+-- Try softwrapping for norg files
+-- vim.api.nvim_create_autocmd("FileType", {
+--   pattern = { "norg" },
+--   command = "setlocal wrap colorcolumn=100 linebreak",
+-- })
 
 -- -- Automatically save file when switching buffers or losing focus
 -- -- Meant for Marked2 preview
