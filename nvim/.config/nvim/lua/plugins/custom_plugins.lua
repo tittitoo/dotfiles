@@ -1,7 +1,17 @@
 -- Custom plugins
 
 return {
-  { "folke/zen-mode.nvim", opts = {} },
+  {
+    "folke/zen-mode.nvim",
+    opts = {
+      window = {
+        width = 100,
+      },
+      plugins = {
+        twilight = { enabled = false },
+      },
+    },
+  },
   { "folke/twilight.nvim", opts = {} },
   {
     "jiaoshijie/undotree",
