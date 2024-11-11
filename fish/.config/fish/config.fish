@@ -33,6 +33,7 @@ set fish_greeting
 set fish_vi_key_bindings
 
 # fzf
+
 set -x FZF_DEFAULT_COMMAND 'fd --follow --exclude .git'
 set -x FZF_DEFAULT_OPTS '
   --height=60%
@@ -61,6 +62,9 @@ set -x FZF_ALT_C_OPTS '
   --preview-window=bottom:50%:wrap
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
   --bind "ctrl-o:execute(open {})"'
+
+# fzf source
+fzf --fish | source
 
 # fiz.fish
 # set fzf_preview_dir_cmd eza --all --color=always
