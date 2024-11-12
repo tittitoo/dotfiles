@@ -13,7 +13,14 @@ return {
         ["core.completion"] = { config = { engine = "nvim-cmp", name = "[Norg]" } },
         ["core.integrations.nvim-cmp"] = {},
         -- ["core.concealer"] = { config = { icon_preset = "diamond" } },
-        ["core.esupports.metagen"] = { config = { type = "auto", update_date = true } },
+        ["core.esupports.metagen"] = {
+          config = {
+            author = "Thiha Aung",
+            -- timezone = "implicit-local",
+            type = "auto",
+            update_date = true,
+          },
+        },
         ["core.qol.toc"] = {},
         ["core.qol.todo_items"] = {},
         ["core.looking-glass"] = {},
