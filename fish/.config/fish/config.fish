@@ -48,13 +48,13 @@ set -x FZF_DEFAULT_OPTS '
   --color=selected-bg:#45475a
   --border 
   --multi
-  --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
-  --header "CTRL-T: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download"
-  --bind "ctrl-t:change-prompt(Directories> )+reload(fd -t d)"
+  --bind "ctrl-n:preview-page-up,ctrl-p:preview-page-down"
+  --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download / CTRL-/: Change Preview"
+  --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
   --bind "ctrl-o:execute(open {})" 
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
-  --bind "ctrl-/:change-preview-window(down|hidden|)"'
+  --bind "ctrl-/:change-preview-window(down|hidden)"'
 set -x FZF_CTRL_T_OPTS '--walker-skip .git,node_modules,target,.obsidian'
 set -x FZF_ALT_C_OPTS '
   --walker-skip .git,node_modules,target
@@ -65,6 +65,10 @@ set -x FZF_ALT_C_OPTS '
 
 # fzf source
 fzf --fish | source
+
+# Configure keybidings for fzf
+# \e means ALT, \c means CTRL
+fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ch --git_status=\cg --git_log=\cl --processes=\cp
 
 # fiz.fish
 # set fzf_preview_dir_cmd eza --all --color=always
