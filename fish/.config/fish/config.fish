@@ -33,6 +33,8 @@ set fish_greeting
 set fish_vi_key_bindings
 
 # fzf
+# fzf source
+fzf --fish | source
 
 set -x FZF_DEFAULT_COMMAND 'fd --follow --exclude .git'
 set -x FZF_DEFAULT_OPTS '
@@ -42,9 +44,9 @@ set -x FZF_DEFAULT_OPTS '
   --info=inline
   --preview="echo {}"
   --preview-window=down:3:wrap
-  --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
-  --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
-  --color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
+  --color=bg+:#313244,bg:#1F1F28,spinner:#f5e0dc,hl:#F38BA8
+  --color=fg:#DCD7BA,header:#6A9589,info:#cba6f7,pointer:#f5e0dc
+  --color=marker:#b4befe,fg+:#FFA066,prompt:#cba6f7,hl+:#FF5D62
   --color=selected-bg:#45475a
   --border 
   --multi
@@ -63,12 +65,10 @@ set -x FZF_ALT_C_OPTS '
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
   --bind "ctrl-o:execute(open {})"'
 
-# fzf source
-fzf --fish | source
-
 # Configure keybidings for fzf
 # \e means ALT, \c means CTRL
 fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ch --git_status=\cg --git_log=\cl --processes=\cp
+
 
 # fiz.fish
 # set fzf_preview_dir_cmd eza --all --color=always
