@@ -60,25 +60,28 @@ setopt SHARE_HISTORY  # Share history between sessions
 # Use the following if we want to follow symbolic links and also including hidden files.
 export FZF_DEFAULT_COMMAND='fd --follow --exclude .git'
 export FZF_DEFAULT_OPTS='
-  --height=60%
-  --tmux=70%
+   --height=60%
+  # --tmux=left,70%
   --layout=reverse
   --info=inline
   --preview="echo {}"
   --preview-window=down:3:wrap
-  --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
-  --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
-  --color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
+  # --color=bg+:#313244,bg:#1F1F28,spinner:#f5e0dc,hl:#F38BA8
+  # --color=fg:#DCD7BA,header:#6A9589,info:#cba6f7,pointer:#f5e0dc
+  # --color=marker:#b4befe,fg+:#FFA066,prompt:#cba6f7,hl+:#FF5D62
+  --color=fg:#dcd7ba,bg:#1f1f28,hl:#7e9cd8 
+  --color=fg+:#c8c093,bg+:#2d4f67,hl+:#957fb8 
+  --color=info:#a3d4d5,prompt:#dca561,pointer:#e46876,marker:#98bb6c,spinner:#7fb4ca
   --color=selected-bg:#45475a
   --border 
   --multi
-  --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
-  --header "CTRL-T: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download"
-  --bind "ctrl-t:change-prompt(Directories> )+reload(fd -t d)"
+  --bind "ctrl-n:preview-page-up,ctrl-p:preview-page-down"
+  --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download / CTRL-/: Change Preview"
+  --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
   --bind "ctrl-o:execute(open {})" 
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
-  --bind "ctrl-/:change-preview-window(down|hidden|)"'
+  --bind "ctrl-/:change-preview-window(down|hidden)"'
 # Preview file content using bat (https://github.com/sharkdp/bat)
 # CRTL-T looks for files and upon enter, output the file path into console
 export FZF_CTRL_T_OPTS='
