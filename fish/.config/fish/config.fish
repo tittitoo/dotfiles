@@ -44,9 +44,12 @@ set -x FZF_DEFAULT_OPTS '
   --info=inline
   --preview="echo {}"
   --preview-window=down:3:wrap
-  --color=bg+:#313244,bg:#1F1F28,spinner:#f5e0dc,hl:#F38BA8
-  --color=fg:#DCD7BA,header:#6A9589,info:#cba6f7,pointer:#f5e0dc
-  --color=marker:#b4befe,fg+:#FFA066,prompt:#cba6f7,hl+:#FF5D62
+  # --color=bg+:#313244,bg:#1F1F28,spinner:#f5e0dc,hl:#F38BA8
+  # --color=fg:#DCD7BA,header:#6A9589,info:#cba6f7,pointer:#f5e0dc
+  # --color=marker:#b4befe,fg+:#FFA066,prompt:#cba6f7,hl+:#FF5D62
+  --color=fg:#dcd7ba,bg:#1f1f28,hl:#7e9cd8 
+  --color=fg+:#c8c093,bg+:#2d4f67,hl+:#957fb8 
+  --color=info:#a3d4d5,prompt:#dca561,pointer:#e46876,marker:#98bb6c,spinner:#7fb4ca
   --color=selected-bg:#45475a
   --border 
   --multi
