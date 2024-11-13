@@ -1,0 +1,12 @@
+[theme]
+name = "kanagawa"
+
+[colors]
+AlertInfo = "#7e9cd8"
+AlertWarn = "#dca561"
+AlertError = "#e46876"
+Annotation = "#6a9589"
+Base = "#dcd7ba"
+Guidance = "#98bb6c"
+Important = "#957fb8"
+Title = "#c8c093"

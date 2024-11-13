@@ -234,3 +234,7 @@ records = true
 # Test out dot files
 [dotfiles]
 enabled = true
+
+# Add theme
+[theme]
+name = "kanagawa"
