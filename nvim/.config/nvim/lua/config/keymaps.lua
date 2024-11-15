@@ -19,3 +19,9 @@ vim.keymap.set("n", '<leader>"', "<cmd>split<CR>", { noremap = false, silent = t
 
 -- Zen Mode
 vim.keymap.set("n", "<leader>z", "<cmd>ZenMode<CR>", { desc = "ZenMode" })
+
+-- Neorg core.text-objects keymap
+vim.keymap.set("n", "<up>", "<Plug>(neorg.text-objects.item-up)", {})
+vim.keymap.set("n", "<down>", "<Plug>(neorg.text-objects.item-down)", {})
+vim.keymap.set({ "o", "x" }, "iH", "<Plug>(neorg.text-objects.textobject.heading.inner)", {})
+vim.keymap.set({ "o", "x" }, "aH", "<Plug>(neorg.text-objects.textobject.heading.outer)", {})
