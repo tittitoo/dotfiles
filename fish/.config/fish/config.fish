@@ -66,7 +66,7 @@ set -x FZF_ALT_C_OPTS '
 
 # Configure keybidings for fzf
 # \e means ALT, \c means CTRL
-fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ch --git_status=\cg --git_log=\cl --processes=\cp
+fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ch --git_status=\cg --git_log=\ck --processes=\cp
 
 
 # fiz.fish
