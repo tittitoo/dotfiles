@@ -33,10 +33,10 @@ return {
         ["core.dirman"] = { -- Manages Neorg workspaces
           config = {
             workspaces = {
+              dragon = "~/Repos/github.com/tittitoo/dragon",
               notes = "~/Documents/Notes",
-              work = "~/Documents/Work",
             },
-            default_workspace = "notes",
+            default_workspace = "dragon",
           },
         },
         ["core.dirman.utils"] = {},
