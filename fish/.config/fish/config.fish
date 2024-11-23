@@ -101,3 +101,6 @@ zoxide init fish | source
 
 # Added by `rbenv init` on Tue Oct 22 13:11:31 +08 2024
 status --is-interactive; and rbenv init - --no-rehash fish | source
+
+# Added by Windsurf
+fish_add_path /Users/infowizard/.codeium/windsurf/bin
