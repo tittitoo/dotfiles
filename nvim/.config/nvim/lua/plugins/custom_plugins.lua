@@ -5,7 +5,7 @@ return {
     "folke/zen-mode.nvim",
     opts = {
       window = {
-        width = 95,
+        width = 110,
       },
       plugins = {
         twilight = { enabled = false },
@@ -20,6 +20,11 @@ return {
     keys = { -- load the plugin only when using it's keybinding:
       { "<leader>u", "<cmd>lua require('undotree').toggle()<cr>" },
     },
+  },
+  -- Codeium plugin
+  {
+    "Exafunction/codeium.vim",
+    event = "BufEnter",
   },
   -- oil-nvim
   {
