@@ -27,7 +27,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 vim.api.nvim_create_autocmd("FileType", {
   -- group = augroup("wrap_spell"),
-  pattern = { "gitcommit", "markdown", "pandoc" },
+  pattern = { "gitcommit", "markdown", "pandoc", "norg" },
   command = "set nospell",
 })
 
@@ -36,6 +36,13 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = { "gitcommit", "markdown", "pandoc", "norg" },
   command = "set wrap",
 })
+
+-- Disable comment from being copied
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "gitcommit", "markdown", "pandoc", "norg" },
+  command = "set formatoptions-=cro", -- Disable auto-comment
+})
+
 -- Try softwrapping for norg files
 -- vim.api.nvim_create_autocmd("FileType", {
 --   pattern = { "norg" },
