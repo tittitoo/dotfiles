@@ -1,9 +1,30 @@
 -- Custom plugins
 
 return {
+  -- {
+  --   "joshuadanpeterson/typewriter",
+  --   dependencies = {
+  --     "nvim-treesitter/nvim-treesitter",
+  --   },
+  --   config = function()
+  --     require("typewriter").setup({
+  --       enable_with_zen_mode = true,
+  --       keep_cursor_position = true,
+  --       enable_notifications = false,
+  --       enable_horizontal_scroll = false,
+  --     })
+  --   end,
+  --   opts = {},
+  -- },
   {
     "folke/zen-mode.nvim",
     opts = {
+      -- on_open = function()
+      --   vim.cmd("TWEnable")
+      -- end,
+      -- on_close = function()
+      --   vim.cmd("TWDisable")
+      -- end,
       window = {
         width = 110,
       },
@@ -21,11 +42,7 @@ return {
       { "<leader>u", "<cmd>lua require('undotree').toggle()<cr>" },
     },
   },
-  -- Codeium plugin
-  {
-    "Exafunction/codeium.vim",
-    event = "BufEnter",
-  },
+
   -- oil-nvim
   {
     "stevearc/oil.nvim",
