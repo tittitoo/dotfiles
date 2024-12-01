@@ -43,10 +43,9 @@ set -x FZF_DEFAULT_OPTS '
   --info=inline
   --preview="echo {}"
   --preview-window=down:3:wrap
-  --color=fg:#dcd7ba,bg:#1f1f28,hl:#7e9cd8 
+  --color=fg:#dcd7ba,hl:#7e9cd8 
   --color=fg+:#c8c093,bg+:#2d4f67,hl+:#957fb8 
   --color=info:#a3d4d5,prompt:#dca561,pointer:#e46876,marker:#98bb6c,spinner:#7fb4ca
-  --color=selected-bg:#45475a
   --border 
   --multi
   --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download / CTRL-/: Change Preview"
