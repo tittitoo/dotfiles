@@ -18,7 +18,7 @@ vim.api.nvim_create_autocmd("FileType", {
   callback = function()
     vim.opt_local.wrap = true
     vim.opt_local.spell = false
-    vim.opt_local.textwidth = 60
+    vim.opt_local.textwidth = 95
     vim.opt_local.tabstop = 4 -- Number of spaces a <Tab> counts for
     vim.opt_local.shiftwidth = 4 -- Number of spaces used for each step of (auto)indent
     vim.opt_local.expandtab = true -- Use spaces instead of tabs
