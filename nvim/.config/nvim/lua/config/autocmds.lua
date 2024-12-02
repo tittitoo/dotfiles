@@ -10,6 +10,7 @@ require("cmp").setup({
     return vim.g.cmptoggle
   end,
 })
+
 -- wrap and check for spell in text filetypes
 -- added to disable spelling
 vim.api.nvim_create_autocmd("FileType", {
