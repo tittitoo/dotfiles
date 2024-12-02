@@ -3,13 +3,13 @@
 -- Add any additional autocmds here
 
 -- initialize global var to false -> nvim-cmp turned off by default
-vim.g.cmptoggle = true
-
-require("cmp").setup({
-  enabled = function()
-    return vim.g.cmptoggle
-  end,
-})
+-- vim.g.cmptoggle = true
+--
+-- require("cmp").setup({
+--   enabled = function()
+--     return vim.g.cmptoggle
+--   end,
+-- })
 
 -- wrap and check for spell in text filetypes
 -- added to disable spelling

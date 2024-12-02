@@ -68,4 +68,7 @@ return {
       -- vim.keymap.set("n", "<C-Space>", nvim_tmux_nav.NvimTmuxNavigateNext)
     end,
   },
+  -- blink.compact. This is for compatibility with blink and codeium
+  -- Othereise it will output "attempt to index field 'lsp' (a nil value)" error
+  { "saghen/blink.compat", opts = { enable_events = true, impersonate_nvim_cmp = true } },
 }

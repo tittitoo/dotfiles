@@ -13,3 +13,7 @@ vim.opt.expandtab = true -- Use spaces instead of tabs
 
 -- Enable Codeium status
 vim.g.codeium_enabled = true
+
+-- Turn off ai completions. It will be shown as ghost text.
+-- Otherwise, it will show all the options to choose from which could be noisy.
+vim.g.ai_cmp = false
