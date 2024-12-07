@@ -23,6 +23,9 @@ set -gx PATH $HOMEBREW_PREFIX/bin $PATH
 # ruby PATH
 set -gx PATH $HOMEBREW_PREFIX/opt/ruby/bin $PATH
 
+# image.nvim
+set -gx DYLD_FALLBACK_LIBRARY_PATH $HOMEBREW_PREFIX/lib
+
 # remove duplicate path entries
 set -gx PATH (echo $PATH | tr ' ' '\n' | sort -u | sed 's/:$//')
 
