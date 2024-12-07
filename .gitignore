@@ -7,3 +7,5 @@ __pycache__
 mc/.config/mc/panels.ini
 catppuccin-mc/.local/share/mc/history
 fish/.config/fish/fish_variables
+fabric/.config/fabric/.env
+fabric/.config/fabric/unique_patterns.txt
