@@ -17,7 +17,7 @@ return {
           config = {
             author = "Thiha Aung",
             -- timezone = "implicit-local",
-            type = "auto",
+            type = "none",
             update_date = true,
           },
         },
