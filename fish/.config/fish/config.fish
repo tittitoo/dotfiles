@@ -41,7 +41,11 @@ set fish_vi_key_bindings
 # fzf
 # fzf source
 fzf --fish | source
-
+# set awk_cmd '{gsub(/^[0-9]*\/|\//, ""); print}'
+set awk_cmd 'gsub(/^[0-9]*\/|\//, ""); print'
+# --bind "ctrl-n:execute(echo {} | awk '{gsub(/^[0-9]*\/|\//, \"\"); print}' | pbcopy)"
+# --bind "ctrl-n:execute(echo {} | awk \'{gsub(\/^[0-9]+\/, \"\"); print}\' | pbcopy)"
+# --bind "ctrl-u:execute(echo {} | pbcopy)"
 set -x FZF_DEFAULT_COMMAND 'fd --follow --exclude .git'
 set -x FZF_DEFAULT_OPTS '
   --height=60%
@@ -54,12 +58,14 @@ set -x FZF_DEFAULT_OPTS '
   --color=info:#a3d4d5,prompt:#dca561,pointer:#e46876,marker:#98bb6c,spinner:#7fb4ca
   --border 
   --multi
-  --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download / CTRL-/: Change Preview"
+  --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download / CTRL-U: Copy Name / CTRL-/: Change Preview"
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
   --bind "ctrl-o:execute(open {})" 
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
+  --bind "ctrl-u:execute(echo {} | pbcopy)"
   --bind "ctrl-/:change-preview-window(down|hidden)"'
+
 set -x FZF_CTRL_T_OPTS '--walker-skip .git,node_modules,target,.obsidian'
 set -x FZF_ALT_C_OPTS '
   --walker-skip .git,node_modules,target
