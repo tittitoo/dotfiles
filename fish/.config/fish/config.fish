@@ -58,12 +58,13 @@ set -x FZF_DEFAULT_OPTS '
   --color=info:#a3d4d5,prompt:#dca561,pointer:#e46876,marker:#98bb6c,spinner:#7fb4ca
   --border 
   --multi
-  --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download / CTRL-U: Copy Name / CTRL-/: Change Preview"
+  --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / CTRL-U / CTRL-R / CTRL-/"
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
   --bind "ctrl-o:execute(open {})" 
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
   --bind "ctrl-u:execute(echo {} | clean-text | pbcopy)"
+  --bind "ctrl-r:execute(echo {} | clean-text-outlook | pbcopy)"
   --bind "ctrl-/:change-preview-window(down|hidden)"'
 
 set -x FZF_CTRL_T_OPTS '--walker-skip .git,node_modules,target,.obsidian'
