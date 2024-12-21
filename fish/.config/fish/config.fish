@@ -16,9 +16,6 @@ if test (uname -s) = Darwin
     end
 else
     set -gx HOMEBREW_PREFIX /home/linuxbrew/.linuxbrew
-    # Set alias for pbcopy and pbpaste. xclip is required.
-    alias pbcopy 'xclip -selection clipboard'
-    alias pbpaste 'xclip -selection clipboard -o'
 end
 
 set -gx PATH $HOMEBREW_PREFIX/bin $PATH
