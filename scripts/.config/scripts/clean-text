@@ -16,7 +16,11 @@ def extract_filename(text):
 
 
 def main():
-    input_string = sys.stdin.read().strip()
+    if len(sys.argv) > 1:
+        # Input from command line
+        input_string = " ".join(sys.argv[1:])
+    else:
+        input_string = sys.stdin.read().strip()
     filename = extract_filename(input_string)
     print(filename)
 

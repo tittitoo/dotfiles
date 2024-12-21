@@ -11,7 +11,7 @@ import re
 
 
 def extract_filename(text):
-    "Extract folder name from a path"
+    "Extract folder/filename name from a path"
     text = text.strip()
     if text.endswith("/"):
         text = text[:-1]
@@ -20,16 +20,22 @@ def extract_filename(text):
     text = re.split(pattern, text)
     text = [word for word in text if word is not None]
     text = [word for word in text if word.strip() != "-"]
-    # return text
+    text = [word.strip() for word in text]
     if len(text) < 2:
         return text
     last_word = text.pop()
-    text = " ".join([text[0][:6], last_word, text[0][6:]] + text[1:])
+    first_phrase = text[0].split()
+    text = " ".join([first_phrase[0], last_word] + first_phrase[1:] + text[1:])
     return text
 
 
 def main():
-    input_string = sys.stdin.read().strip()
+    if len(sys.argv) > 1:
+        # Input from the command line
+        input_string = " ".join(sys.argv[1:])
+    else:
+        input_string = sys.stdin.read().strip()
+
     filename = extract_filename(input_string)
     print(filename)
 
