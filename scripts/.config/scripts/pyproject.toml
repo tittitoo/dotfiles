@@ -1,0 +1,10 @@
+[project]
+name = "dotfiles"
+version = "0.1.0"
+description = "My dotfiles"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.1.7",
+    "shpyx>=0.0.32",
+]

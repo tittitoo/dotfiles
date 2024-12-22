@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 
 # Helper scripts to clean text
 # Meant to be passed from echo command

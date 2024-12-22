@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 
 # Helper scripts to clean text for outlook folder
 # Meant to be passed from echo command
@@ -22,7 +22,7 @@ def extract_filename(text):
     text = [word for word in text if word.strip() != "-"]
     text = [word.strip() for word in text]
     if len(text) < 2:
-        return text
+        return " ".join(text[:])
     last_word = text.pop()
     first_phrase = text[0].split()
     text = " ".join([first_phrase[0], last_word] + first_phrase[1:] + text[1:])
