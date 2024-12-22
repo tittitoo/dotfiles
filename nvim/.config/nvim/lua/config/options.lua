@@ -16,3 +16,6 @@ vim.g.codeium_enabled = true
 
 -- Disable AI completion
 -- vim.g.ai_cmp = false
+
+-- Disable swap file. Take the risk
+vim.opt.swapfile = false
