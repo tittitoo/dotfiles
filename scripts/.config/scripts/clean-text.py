@@ -22,7 +22,7 @@ def main():
     else:
         input_string = sys.stdin.read().strip()
     filename = extract_filename(input_string)
-    print(filename)
+    print(filename, end="")
 
 
 if __name__ == "__main__":
