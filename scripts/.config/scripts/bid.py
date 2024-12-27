@@ -12,6 +12,7 @@ import logging
 import os
 import shutil
 import shpyx
+import platform
 from datetime import datetime
 from pathlib import Path
 
@@ -19,6 +20,16 @@ RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+def open_with_default_app(file_path):
+    "Open file_path with default application"
+    if platform.system() == "Windows":
+        shpyx.run(f"explorer.exe '{file_path}'")
+    elif platform.system() == "Darwin":
+        shpyx.run(f"open '{file_path}'")
+    else:
+        click.echo("Not implemented for this platform")
 
 
 def remove_folder(folder_path):
@@ -74,6 +85,8 @@ def init(folder_name: str) -> None:
     new_path = new_path / folder_name
     if new_path.exists():
         click.echo("The folder already exists.")
+        if click.confirm("Do you want to open the folder?", abort=True):
+            open_with_default_app(new_path)
     else:
         if click.confirm(f"'{new_path}' will be created. Continue?", abort=True):
             new_path.mkdir()
@@ -99,6 +112,11 @@ def init(folder_name: str) -> None:
             toolkit = new_path / "08-Toolkit/00-Arc"
             toolkit.mkdir(parents=True, exist_ok=True)
             click.echo(f"Created fodler {new_path}")
+            if click.confirm(
+                "Do you want to open the folder?",
+                abort=True,
+            ):
+                open_with_default_app(new_path)
         else:
             click.echo("Folder creation aborted.")
 
