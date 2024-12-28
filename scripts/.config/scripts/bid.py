@@ -71,20 +71,37 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     new_file_name = re.sub(r" _(\w+)", r" \1", new_file_name)
     # new_file_name = re.sub(r"(\w+)_ ", r"\1 ", new_file_name)
     new_file_name = re.sub(r"(#+|_+\s{1,})", r" ", new_file_name)
-    new_file_name = re.sub(r"^(RE\s{1,})\b", "", new_file_name, flags=re.IGNORECASE)
-    new_file_name = re.sub(r"^(FW\s{1,})\b", "", new_file_name, flags=re.IGNORECASE)
-    new_file_name = re.sub(r"^(SV\s{1,})\b", "", new_file_name, flags=re.IGNORECASE)
-    new_file_name = re.sub(
-        r"^(EXTERNAL(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
-    )
     new_file_name = re.sub(r"^(RE(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(SV(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(FW(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"^(FWD(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(
+        r"^(EXTERNAL(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
+    )
+    new_file_name = re.sub(r"^(FWD(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"^(FW(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"^(SV(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"^(RE(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"\s{2,}", " ", new_file_name)
     if new_file_name != file_name:
         flag = True
         return (new_file_name, flag)
     return (file_name, flag)
+
+
+def rename_file(old_file_name: Path, new_file_name: Path):
+    "Rename old_file_name to new_file_name"
+    try:
+        if os.path.exists(new_file_name):
+            click.echo(
+                f"File with the same name as '{new_file_name}' already exists. Skipping..."
+            )
+            return False
+        os.rename(old_file_name, new_file_name)
+        return True
+    except OSError as e:
+        click.echo(f"Error renaming file: '{old_file_name}' caused by {e}")
+        return False
 
 
 # Create project folder structure
@@ -182,13 +199,38 @@ def clean(folder_name: str, dry_run: bool, start_path=RFQ) -> None:
                             check = require_rename((file))
                             if check[1]:
                                 rename_list.append((root, file, check[0]))
-                    if dry_run:
-                        # click.echo(f"{rename_list}")
+                    if not dry_run:
+                        if not rename_list:
+                            click.echo(
+                                "No file required to be renamed. Folder clean 😎."
+                            )
+                            return
+                        click.echo("Here is the list of files to rename.")
                         for item in rename_list:
-                            click.echo(f"Rename: {item[1]} -> {item[2]}")
+                            click.echo(f"{item[1]} -> {item[2]}")
                         click.echo(f"{len(rename_list)} files to rename")
+                        if click.confirm(
+                            "Do you want to rename the files?", abort=True
+                        ):
+                            click.echo("Renaming files")
+                            for item in rename_list:
+                                check = rename_file(
+                                    Path(item[0]).joinpath(item[1]),
+                                    Path(item[0]).joinpath(item[2]),
+                                )
+                                if check:
+                                    click.echo(f"Renamed: '{item[1]}' -> '{item[2]}'")
+                                else:
+                                    click.echo(f"Failed to rename '{item[1]}'")
                         return
                     else:
+                        if not rename_list:
+                            click.echo(
+                                "No file required to be renamed. Folder clean 😎."
+                            )
+                            return
+                        for item in rename_list:
+                            click.echo(f"'{item[1]}' -> '{item[2]}'")
                         click.echo(f"{len(rename_list)} files to rename")
                         return
             dirs.clear()  # To stop at top level folder
