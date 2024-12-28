@@ -7,14 +7,16 @@
 # ]
 # ///
 
-import click
 import logging
 import os
-import shutil
-import shpyx
 import platform
+import re
+import shutil
 from datetime import datetime
 from pathlib import Path
+
+import click
+import shpyx
 
 RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
 
@@ -45,18 +47,44 @@ def remove_folder(folder_path):
         click.echo(f"Folder {folder_path} does not exist.")
 
 
-def require_rename(file: str):
+def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     "Check if file meets requried name specs"
     "If not, suggest renaming and the name"
     "Specs:"
     "No double 'space' or more"
     "No double '.' or more"
     "File extension must be lower case"
-    "Remove RE, SV, FW at the start of email messages"
+    "Remove RE, SV, FW, EXTERNAL at the start of email messages"
     "Remove orphan '_'"
     "Remove 'space' before file extension"
     "Remove detached '-' like ' -1' or ' -T'"
-    pass
+    "One or more '-' to single '-'"
+    "One or more orphan '.' to ' '"
+    "Be careful that new_file_name needs to be passed after the first one"
+    file, extension = os.path.splitext(file_name)
+    new_file_name = file.strip() + extension.lower()
+
+    new_file_name = re.sub(r"(\b\w+\b)-\s", r"\1 - ", new_file_name)
+    new_file_name = re.sub(r"-{2,}", "-", new_file_name)
+    new_file_name = re.sub(r"_{2,}", "_", new_file_name)
+    new_file_name = re.sub(r" \.+ ", " ", new_file_name)
+    new_file_name = re.sub(r" _(\w+)", r" \1", new_file_name)
+    # new_file_name = re.sub(r"(\w+)_ ", r"\1 ", new_file_name)
+    new_file_name = re.sub(r"(#+|_+\s{1,})", r" ", new_file_name)
+    new_file_name = re.sub(r"^(RE\s{1,})\b", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"^(FW\s{1,})\b", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"^(SV\s{1,})\b", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(
+        r"^(EXTERNAL(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
+    )
+    new_file_name = re.sub(r"^(RE(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"^(SV(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"^(FW(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(r"\s{2,}", " ", new_file_name)
+    if new_file_name != file_name:
+        flag = True
+        return (new_file_name, flag)
+    return (file_name, flag)
 
 
 # Create project folder structure
@@ -140,6 +168,7 @@ def clean(folder_name: str, dry_run: bool, start_path=RFQ) -> None:
         folders = sorted(folders, key=lambda x: int(x), reverse=True)
 
     # Walk files in the second level
+    rename_list = []
     for level in folders:
         for _, dirs, _ in os.walk(rfqs / level):
             for dir in dirs:
@@ -149,11 +178,19 @@ def clean(folder_name: str, dry_run: bool, start_path=RFQ) -> None:
                         if ".git" in dirs:
                             git_path = Path(rfqs / level / dir / ".git")
                             remove_folder(git_path)
-                        # click.echo(f"{root}, {files}")
-                        if dry_run:
-                            for file in files:
-                                click.echo(Path(root, file))
-                    return
+                        for file in files:
+                            check = require_rename((file))
+                            if check[1]:
+                                rename_list.append((root, file, check[0]))
+                    if dry_run:
+                        # click.echo(f"{rename_list}")
+                        for item in rename_list:
+                            click.echo(f"Rename: {item[1]} -> {item[2]}")
+                        click.echo(f"{len(rename_list)} files to rename")
+                        return
+                    else:
+                        click.echo(f"{len(rename_list)} files to rename")
+                        return
             dirs.clear()  # To stop at top level folder
     click.echo(f"{folder_name} cannot be found in {rfqs}")
 
