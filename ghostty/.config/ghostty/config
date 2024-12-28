@@ -4,8 +4,17 @@ font-size = 18
 
 # keymaps
 keybind = global:cmd+`=toggle_quick_terminal
+
+# keymaps for navigation
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:bottom
+keybind = ctrl+k=goto_split:top
+keybind = ctrl+l=goto_split:right
+
+# macos options
 macos-titlebar-style = tabs
 macos-titlebar-proxy-icon = hidden
+macos-option-as-alt = true
 
 # Try for Myanmar Font
 # U+1000-U+109F="Noto Sans Myanmar"
