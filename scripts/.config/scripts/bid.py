@@ -54,7 +54,7 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     "No double 'space' or more"
     "No double '.' or more"
     "File extension must be lower case"
-    "Remove RE, SV, FW, EXTERNAL at the start of email messages"
+    "Remove RE, SV, FW, EXTERNAL, URGENT at the start of email messages"
     "Remove orphan '_'"
     "Remove 'space' before file extension"
     "Remove detached '-' like ' -1' or ' -T'"
@@ -69,12 +69,14 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     new_file_name = re.sub(r"_{2,}", "_", new_file_name)
     new_file_name = re.sub(r" \.+ ", " ", new_file_name)
     new_file_name = re.sub(r" _(\w+)", r" \1", new_file_name)
-    # new_file_name = re.sub(r"(\w+)_ ", r"\1 ", new_file_name)
     new_file_name = re.sub(r"(#+|_+\s{1,})", r" ", new_file_name)
     new_file_name = re.sub(r"^(RE(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(SV(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(FW(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(FWD(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(
+        r"^(URGENT(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
+    )
     new_file_name = re.sub(
         r"^(EXTERNAL(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
     )
