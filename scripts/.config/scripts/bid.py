@@ -240,12 +240,14 @@ def clean(folder_name: str, dry_run: bool, remove_git: bool, start_path=RFQ) -> 
                             "Do you want to rename the files?", abort=True
                         ):
                             click.echo("Renaming files")
+                            count = 0
                             for item in rename_list:
                                 check = rename_file(
                                     Path(item[0]).joinpath(item[1]),
                                     Path(item[0]).joinpath(item[2]),
                                 )
                                 if check:
+                                    count += 1
                                     click.echo(f"Renamed: '{item[1]}' -> '{item[2]}'")
                                 else:
                                     # Handle the case where file with same name exists
@@ -260,6 +262,7 @@ def clean(folder_name: str, dry_run: bool, remove_git: bool, start_path=RFQ) -> 
                                         Path(item[0]).joinpath(new_file_name),
                                     )
                                     if check_again:
+                                        count += 1
                                         click.echo(
                                             (
                                                 f"Since the same file name exists '{item[1]}' "
@@ -268,6 +271,7 @@ def clean(folder_name: str, dry_run: bool, remove_git: bool, start_path=RFQ) -> 
                                         )
                                     else:
                                         click.echo(f"Failed to rename '{item[1]}'")
+                            click.echo(f"Total {count} files renamed.")
                         return
                     else:
                         if not rename_list:
