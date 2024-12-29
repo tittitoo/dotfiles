@@ -89,13 +89,16 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     return (file_name, flag)
 
 
-def rename_file(old_file_name: Path, new_file_name: Path):
+def rename_file(old_file_name: Path, new_file_name: Path) -> bool:
     "Rename old_file_name to new_file_name"
     try:
         if os.path.exists(new_file_name):
-            click.echo(
-                f"File with the same name as '{new_file_name}' already exists. Skipping..."
-            )
+            # Handle case where file with same extension but different case exists
+            if new_file_name.suffix != old_file_name.suffix:
+                os.rename(old_file_name, new_file_name)
+                return True
+            # Othereise skip
+            click.echo(f"File with the same name as '{new_file_name}' already exists.")
             return False
         os.rename(old_file_name, new_file_name)
         return True
@@ -169,7 +172,13 @@ def init(folder_name: str) -> None:
 @click.command()
 @click.argument("folder_name", default="")
 @click.option("-d", "--dry-run", is_flag=True, help="Dry run mode")
-def clean(folder_name: str, dry_run: bool, start_path=RFQ) -> None:
+@click.option(
+    "-r",
+    "--remove-git",
+    is_flag=True,
+    help="Delete .git folder and .gitignore if exists",
+)
+def clean(folder_name: str, dry_run: bool, remove_git: bool, start_path=RFQ) -> None:
     """
     Look for the folder in @rfqs and clean.
     """
@@ -194,7 +203,18 @@ def clean(folder_name: str, dry_run: bool, start_path=RFQ) -> None:
                     for root, dirs, files in os.walk(path):
                         if ".git" in dirs:
                             git_path = Path(rfqs / level / dir / ".git")
-                            remove_folder(git_path)
+                            click.echo(f"Found {git_path}")
+                            if remove_git:
+                                remove_folder(git_path)
+                        if ".gitignore" in files:
+                            gitignore_path = Path(rfqs / level / dir / ".gitignore")
+                            click.echo(f"Found {gitignore_path}")
+                            if remove_git:
+                                try:
+                                    os.remove(gitignore_path)
+                                    click.echo(f"Deleted: {gitignore_path}")
+                                except OSError as e:
+                                    click.echo(f"Error deleting file: {e}")
                         for file in files:
                             check = require_rename((file))
                             if check[1]:
@@ -221,7 +241,23 @@ def clean(folder_name: str, dry_run: bool, start_path=RFQ) -> None:
                                 if check:
                                     click.echo(f"Renamed: '{item[1]}' -> '{item[2]}'")
                                 else:
-                                    click.echo(f"Failed to rename '{item[1]}'")
+                                    # Handle the case where file with same name exists
+                                    # Append -000, try once
+                                    new_file_name = (
+                                        Path(item[2]).stem
+                                        + "-000"
+                                        + Path(item[2]).suffix
+                                    )
+                                    check_again = rename_file(
+                                        Path(item[0]).joinpath(item[1]),
+                                        Path(item[0]).joinpath(new_file_name),
+                                    )
+                                    if check_again:
+                                        click.echo(
+                                            f"Since the same file name exists '{item[1]}' renamed to '{new_file_name}' instead appending '-000' to the end"
+                                        )
+                                    else:
+                                        click.echo(f"Failed to rename '{item[1]}'")
                         return
                     else:
                         if not rename_list:
