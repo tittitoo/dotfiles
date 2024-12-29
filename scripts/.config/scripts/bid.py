@@ -224,7 +224,7 @@ def clean(folder_name: str, dry_run: bool, remove_git: bool, start_path=RFQ) -> 
                     if not dry_run:
                         if not rename_list:
                             click.echo(
-                                "No file required to be renamed. Folder clean 😎."
+                                "No file required to be renamed. Folder clean 😎"
                             )
                             return
                         click.echo("Here is the list of files to rename.")
@@ -256,7 +256,10 @@ def clean(folder_name: str, dry_run: bool, remove_git: bool, start_path=RFQ) -> 
                                     )
                                     if check_again:
                                         click.echo(
-                                            f"Since the same file name exists '{item[1]}' renamed to '{new_file_name}' instead appending '-000' to the end"
+                                            (
+                                                f"Since the same file name exists '{item[1]}' "
+                                                f"renamed to '{new_file_name}' instead appending '-000'"
+                                            )
                                         )
                                     else:
                                         click.echo(f"Failed to rename '{item[1]}'")
@@ -264,7 +267,7 @@ def clean(folder_name: str, dry_run: bool, remove_git: bool, start_path=RFQ) -> 
                     else:
                         if not rename_list:
                             click.echo(
-                                "No file required to be renamed. Folder clean 😎."
+                                "No file required to be renamed. Folder clean 😎"
                             )
                             return
                         for item in rename_list:
