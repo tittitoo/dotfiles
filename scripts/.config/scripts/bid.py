@@ -48,19 +48,24 @@ def remove_folder(folder_path):
 
 
 def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
-    "Check if file meets requried name specs"
-    "If not, suggest renaming and the name"
-    "Specs:"
-    "No double 'space' or more"
-    "No double '.' or more"
-    "File extension must be lower case"
-    "Remove RE, SV, FW, EXTERNAL, URGENT at the start of email messages"
-    "Remove orphan '_'"
-    "Remove 'space' before file extension"
-    "Remove detached '-' like ' -1' or ' -T'"
-    "One or more '-' to single '-'"
-    "One or more orphan '.' to ' '"
-    "Be careful that new_file_name needs to be passed after the first one"
+    """
+    Check if file meets requried name specs
+    If not, suggest renaming and the name
+
+    Specs:
+    Strip file name of white space at the end
+    Put file extension in lowercase
+    `word-` to `word -`
+    One or more '-' to single '-'
+    One or more '_' to single '_'
+    One or more ` . ` to single ` `
+    ` _word` to ` word`
+    One or more `#`, `_` followed by space to single space
+    Remove RE, SV, FW, FWD, EXTERNAL, URGENT at the start of email, case insensitive
+    No double 'space' or more
+
+    """
+
     file, extension = os.path.splitext(file_name)
     new_file_name = file.strip() + extension.lower()
 
