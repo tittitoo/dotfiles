@@ -70,6 +70,7 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     One or more ` . ` to single ` `
     ` _word` to ` word`
     One or more `#`, `_` followed by space to single space
+    Delete `[` or `]`
     Remove RE, SV, FW, FWD, EXTERNAL, URGENT, 回复 at the start of email, case insensitive
     No double 'space' or more
 
@@ -84,6 +85,8 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     new_file_name = re.sub(r" \.+ ", " ", new_file_name)
     new_file_name = re.sub(r" _(\w+)", r" \1", new_file_name)
     new_file_name = re.sub(r"(#+|_+\s{1,})", r" ", new_file_name)
+    new_file_name = re.sub(r"(\[+)", "", new_file_name)
+    new_file_name = re.sub(r"(\]+)", "", new_file_name)
     new_file_name = re.sub(r"^(RE(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(SV(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(FW(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
@@ -296,13 +299,14 @@ def clean_rfqs(folder_name, remove_git=False, dry_run=False):
         folders = sorted(folders, key=lambda x: int(x), reverse=True)
 
     # Walk files in the second level
-    rename_list = []
+    # rename_list = []
     for level in folders:
-        for _, dirs, _ in os.walk(rfqs / level):
+        for _, dirs, files in os.walk(rfqs / level):
             for dir in dirs:
                 if folder_name == dir:
-                    path = Path(rfqs / level / dir)
-                    for root, dirs, files in os.walk(path):
+                    start_path = Path(rfqs / level / dir)
+                    # Check for .git folder and .gitignore
+                    for _, dirs, files in os.walk(start_path):
                         if ".git" in dirs:
                             git_path = Path(rfqs / level / dir / ".git")
                             click.echo(f"Found {git_path}")
@@ -317,68 +321,11 @@ def clean_rfqs(folder_name, remove_git=False, dry_run=False):
                                     click.echo(f"Deleted: {gitignore_path}")
                                 except OSError as e:
                                     click.echo(f"Error deleting file: {e}")
-                        for file in files:
-                            check = require_rename((file))
-                            if check[1]:
-                                rename_list.append((root, file, check[0]))
-                    if not dry_run:
-                        if not rename_list:
-                            click.echo(
-                                "No file required to be renamed. Folder clean 😎"
-                            )
-                            return
-                        click.echo("Here is the list of files to rename.")
-                        for item in rename_list:
-                            click.echo(f"{item[1]} -> {item[2]}")
-                        click.echo(f"{len(rename_list)} files to rename")
-                        if click.confirm(
-                            "Do you want to rename the files?", abort=True
-                        ):
-                            click.echo("Renaming files")
-                            count = 0
-                            for item in rename_list:
-                                check = rename_file(
-                                    Path(item[0]).joinpath(item[1]),
-                                    Path(item[0]).joinpath(item[2]),
-                                )
-                                if check:
-                                    count += 1
-                                    click.echo(f"Renamed: '{item[1]}' -> '{item[2]}'")
-                                else:
-                                    # Handle the case where file with same name exists
-                                    # Append -000, try once
-                                    new_file_name = (
-                                        Path(item[2]).stem
-                                        + "-000"
-                                        + Path(item[2]).suffix
-                                    )
-                                    check_again = rename_file(
-                                        Path(item[0]).joinpath(item[1]),
-                                        Path(item[0]).joinpath(new_file_name),
-                                    )
-                                    if check_again:
-                                        count += 1
-                                        click.echo(
-                                            (
-                                                f"Since the same file name exists '{item[1]}' "
-                                                f"renamed to '{new_file_name}' instead appending '-000'"
-                                            )
-                                        )
-                                    else:
-                                        click.echo(f"Failed to rename '{item[1]}'")
-                            click.echo(f"Total {count} files renamed.")
-                        return
-                    else:
-                        if not rename_list:
-                            click.echo(
-                                "No file required to be renamed. Folder clean 😎"
-                            )
-                            return
-                        for item in rename_list:
-                            click.echo(f"'{item[1]}' -> '{item[2]}'")
-                        click.echo(f"{len(rename_list)} files to rename")
-                        return
-            dirs.clear()  # To stop at top level folder
+                        dirs.clear()  # Stop at top level folder
+                    # Now clean folder
+                    clean_folder(start_path, dry_run=dry_run)
+                    return
+            dirs.clear()  # Stop at top level folder
     click.echo(f"{folder_name} cannot be found in {rfqs}")
 
 
