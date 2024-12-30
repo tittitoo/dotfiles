@@ -19,6 +19,15 @@ import click
 import shpyx
 
 RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
+RESTRICTED_FOLDER = [
+    "@rfqs",
+    "@costing",
+    "@handover",
+    "@tools",
+    "@commercial-review",
+    "@projects",
+    "Documents",
+]
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -61,7 +70,7 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     One or more ` . ` to single ` `
     ` _word` to ` word`
     One or more `#`, `_` followed by space to single space
-    Remove RE, SV, FW, FWD, EXTERNAL, URGENT at the start of email, case insensitive
+    Remove RE, SV, FW, FWD, EXTERNAL, URGENT, 回复 at the start of email, case insensitive
     No double 'space' or more
 
     """
@@ -79,6 +88,9 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     new_file_name = re.sub(r"^(SV(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(FW(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(FWD(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    new_file_name = re.sub(
+        r"^(回复(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
+    )
     new_file_name = re.sub(
         r"^(URGENT(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
     )
@@ -185,13 +197,96 @@ def init(folder_name: str) -> None:
     is_flag=True,
     help="Delete .git folder and .gitignore if exists",
 )
-def clean(folder_name: str, dry_run: bool, remove_git: bool, start_path=RFQ) -> None:
+def clean(folder_name: str, dry_run: bool, remove_git: bool) -> None:
     """
+    Clean files in folder. Default search path is @rfqs.
     Look for the folder in @rfqs and clean.
     """
     if folder_name == "":
-        folder_name = click.prompt("Please enter folder name to clean")
-    rfqs = Path(start_path).expanduser()
+        folder_name = click.prompt(
+            (
+                "Please enter folder name to clean. "
+                "Default search path is in @rfqs. \n"
+                "Press `Enter` to choose current folder:"
+            ),
+            default=Path.cwd().name,
+            type=str,
+        )
+        if (
+            folder_name in RESTRICTED_FOLDER
+            or folder_name.isdigit()  # Main folder in @rfqs
+            or folder_name == Path.home().name
+        ):
+            click.echo(
+                f"You are not allowed to clean '{folder_name}' directly. "
+                "Please choose a subfolder."
+            )
+            return
+        if folder_name == Path.cwd().name:
+            clean_folder(Path.cwd(), dry_run=dry_run)
+        else:
+            clean_rfqs(folder_name, remove_git=remove_git, dry_run=dry_run)
+
+
+def clean_folder(start_path, dry_run=False):
+    "Clean folder"
+    rename_list = []
+    for root, _, files in os.walk(start_path):
+        for file in files:
+            check = require_rename((file))
+            if check[1]:
+                rename_list.append((root, file, check[0]))
+    if not dry_run:
+        if not rename_list:
+            click.echo("No file required to be renamed. Folder clean 😎")
+            return
+        click.echo("Here is the list of files to rename.")
+        for item in rename_list:
+            click.echo(f"{item[1]} -> {item[2]}")
+        click.echo(f"{len(rename_list)} files to rename")
+        if click.confirm("Do you want to rename the files?", abort=True):
+            click.echo("Renaming files")
+            count = 0
+            for item in rename_list:
+                check = rename_file(
+                    Path(item[0]).joinpath(item[1]), Path(item[0]).joinpath(item[2])
+                )
+                if check:
+                    count += 1
+                    click.echo(f"Renamed: '{item[1]}' -> '{item[2]}'")
+                else:
+                    # Handle the case where file with same name exists
+                    # Append -000, try once
+                    new_file_name = Path(item[2]).stem + "-000" + Path(item[2]).suffix
+                    check_again = rename_file(
+                        Path(item[0]).joinpath(item[1]),
+                        Path(item[0]).joinpath(new_file_name),
+                    )
+                    if check_again:
+                        count += 1
+                        click.echo(
+                            (
+                                f"Since the same file name exists '{item[1]}' "
+                                f"renamed to '{new_file_name}' instead appending '-000'"
+                            )
+                        )
+                    else:
+                        click.echo(f"Failed to rename '{item[1]}'")
+            click.echo(f"Total {count} files renamed.")
+        return
+    else:  # if dry_run
+        if not rename_list:
+            click.echo("No file required to be renamed. Folder clean 😎")
+            return
+        click.echo("Here is the list of files to rename.")
+        for item in rename_list:
+            click.echo(f"'{item[1]}' -> '{item[2]}'")
+        click.echo(f"{len(rename_list)} files to rename")
+
+
+def clean_rfqs(folder_name, remove_git=False, dry_run=False):
+    "Search for folder name in @rfqs and clean it"
+    rfqs = Path(RFQ).expanduser()
     folders = []
     for _, dirs, _ in os.walk(rfqs):
         for dir in dirs:
@@ -292,11 +387,20 @@ def setup():
     """
     Setup necessary environment variables and alias
     """
-    if os.name == "nt":
-        click.echo("For Windows")
+    if platform.system() == "Linux":
+        pass
+    elif platform.system() == "Windows":
+        """
+        Add alias for shell `uv run bid.py` -> `bid`
+        Check and confirm the location for `RFQ`
+        Add `@tools` folder to PATH
+        I may consider Git BASH as the default shell
+        """
+        pass
+    elif platform.system() == "Darwin":
+        pass
     else:
         pass
-    pass
 
 
 @click.command()
