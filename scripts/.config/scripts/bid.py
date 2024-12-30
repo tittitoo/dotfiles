@@ -203,7 +203,8 @@ def init(folder_name: str) -> None:
 def clean(folder_name: str, dry_run: bool, remove_git: bool) -> None:
     """
     Clean files in folder. Default search path is @rfqs.
-    Look for the folder in @rfqs and clean.
+    If folder is given, clean the folder.
+    If not, search the folder in @rfqs and clean.
     """
     if folder_name == "":
         folder_name = click.prompt(
@@ -215,20 +216,20 @@ def clean(folder_name: str, dry_run: bool, remove_git: bool) -> None:
             default=Path.cwd().name,
             type=str,
         )
-        if (
-            folder_name in RESTRICTED_FOLDER
-            or folder_name.isdigit()  # Main folder in @rfqs
-            or folder_name == Path.home().name
-        ):
-            click.echo(
-                f"You are not allowed to clean '{folder_name}' directly. "
-                "Please choose a subfolder."
-            )
-            return
-        if folder_name == Path.cwd().name:
-            clean_folder(Path.cwd(), dry_run=dry_run)
-        else:
-            clean_rfqs(folder_name, remove_git=remove_git, dry_run=dry_run)
+    if (
+        folder_name in RESTRICTED_FOLDER
+        or folder_name.isdigit()  # Main folder in @rfqs
+        or folder_name == Path.home().name
+    ):
+        click.echo(
+            f"You are not allowed to clean '{folder_name}' directly. "
+            "Please choose a subfolder."
+        )
+        return
+    if folder_name == Path.cwd().name:
+        clean_folder(Path.cwd(), dry_run=dry_run)
+    else:
+        clean_rfqs(folder_name, remove_git=remove_git, dry_run=dry_run)
 
 
 def clean_folder(start_path, dry_run=False):
@@ -369,7 +370,7 @@ def bid():
 
 bid.add_command(init)
 bid.add_command(setup)
-bid.add_command(test)
+# bid.add_command(test)
 bid.add_command(clean)
 
 if __name__ == "__main__":
