@@ -33,12 +33,17 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def open_with_default_app(file_path):
+def open_with_default_app(file_path: Path):
     "Open file_path with default application"
     if platform.system() == "Windows":
-        shpyx.run(f"explorer.exe '{file_path}'")
+        try:
+            click.launch("file://" + str(file_path.resolve()))
+            # shpyx.run(f'explorer.exe "{file_path}"')
+        except Exception as _:
+            click.echo("Not yet implemented.")
     elif platform.system() == "Darwin":
-        shpyx.run(f"open '{file_path}'")
+        click.launch("file://" + str(file_path.resolve()))
+        # shpyx.run(f"open '{file_path}'")
     else:
         click.echo("Not implemented for this platform")
 
@@ -290,6 +295,10 @@ def clean_folder(start_path, dry_run=False):
 
 def clean_rfqs(folder_name, remove_git=False, dry_run=False):
     "Search for folder name in @rfqs and clean it"
+    # Handle case where @rfqs does not exists
+    if not Path(RFQ).expanduser().exists():
+        click.echo("The folder @rfqs does not exist. Check if you have access.")
+        return
     rfqs = Path(RFQ).expanduser()
     folders = []
     for _, dirs, _ in os.walk(rfqs):
@@ -354,6 +363,12 @@ def setup():
 @click.command()
 def audit():
     "Plan for audit features"
+    pass
+
+
+@click.command()
+def beautify():
+    "Plan for beautify features"
     pass
 
 
