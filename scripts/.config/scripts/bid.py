@@ -12,11 +12,14 @@ import os
 import platform
 import re
 import shutil
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
 import click
-import shpyx
+
+from util import beautify
+
 
 RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
 RESTRICTED_FOLDER = [
@@ -37,13 +40,11 @@ def open_with_default_app(file_path: Path):
     "Open file_path with default application"
     if platform.system() == "Windows":
         try:
-            click.launch("file://" + str(file_path.resolve()))
-            # shpyx.run(f'explorer.exe "{file_path}"')
+            subprocess.run(["explorer", file_path.expanduser().resolve()])
         except Exception as _:
             click.echo("Not yet implemented.")
     elif platform.system() == "Darwin":
         click.launch("file://" + str(file_path.resolve()))
-        # shpyx.run(f"open '{file_path}'")
     else:
         click.echo("Not implemented for this platform")
 
@@ -143,6 +144,11 @@ def init(folder_name: str) -> None:
     Search for the latest year, create one if it does not exists.
     Then create the required folder structure in it.
     """
+    # Handle case where @rfqs does not exists
+    if not Path(RFQ).expanduser().exists():
+        click.echo("The folder @rfqs does not exist. Check if you have access.")
+        return
+
     if folder_name == "":
         folder_name = click.prompt("Please enter folder name to create")
     current_year = datetime.now().year
@@ -366,15 +372,17 @@ def audit():
     pass
 
 
-@click.command()
-def beautify():
-    "Plan for beautify features"
-    pass
+# @click.command()
+# def beautify():
+#     "Plan for beautify features"
+#     pass
+#
 
 
 @click.command()
 def test():
-    shpyx.run("echo hello world | pbcopy")
+    test = Path("~/Downloads")
+    open_with_default_app(test)
 
 
 @click.group()
@@ -385,8 +393,9 @@ def bid():
 
 bid.add_command(init)
 bid.add_command(setup)
-# bid.add_command(test)
 bid.add_command(clean)
+bid.add_command(beautify.beautify)
+# bid.add_command(test)
 
 if __name__ == "__main__":
     bid()
