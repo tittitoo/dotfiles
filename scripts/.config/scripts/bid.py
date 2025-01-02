@@ -13,6 +13,7 @@ import platform
 import re
 import shutil
 import subprocess
+import getpass
 from datetime import datetime
 from pathlib import Path
 
@@ -20,8 +21,17 @@ import click
 
 from util import beautify
 
+# Handle case for different users
+username = getpass.getuser()
+match username:
+    case "oliver":
+        RFQ = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@rfqs/"
+        BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/bid.py').expanduser().resolve()}'\""
 
-RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
+    case _:
+        RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
+        BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/bid.py').expanduser().resolve()}'\""
+
 RESTRICTED_FOLDER = [
     "@rfqs",
     "@costing",
@@ -44,7 +54,7 @@ def open_with_default_app(file_path: Path):
         except Exception as _:
             click.echo("Not yet implemented.")
     elif platform.system() == "Darwin":
-        click.launch("file://" + str(file_path.resolve()))
+        click.launch("file://" + str(file_path.expanduser().resolve()))
     else:
         click.echo("Not implemented for this platform")
 
@@ -213,7 +223,7 @@ def init(folder_name: str) -> None:
 )
 def clean(folder_name: str, dry_run: bool, remove_git: bool) -> None:
     """
-    Clean files in folder. Default search path is @rfqs.
+    Clean file names in folder. Default search path is @rfqs.
     If folder is given, clean the folder.
     If not, search the folder in @rfqs and clean.
     """
@@ -348,7 +358,7 @@ def clean_rfqs(folder_name, remove_git=False, dry_run=False):
 @click.command()
 def setup():
     """
-    Setup necessary environment variables and alias
+    Setup necessary environment variables and alias.
     """
     if platform.system() == "Linux":
         pass
@@ -359,8 +369,21 @@ def setup():
         Add `@tools` folder to PATH
         I may consider Git BASH as the default shell
         """
-        pass
+        # Wirte .bashrc file for git bash
+        with open(Path.home() / ".bashrc", "w") as f:
+            f.write(f"{BID_ALIAS} \n")
+        # click.echo(f"Added {BID_ALIAS} to .bashrc")
+        # Customize minttyrc
+        with open(Path.home() / ".minttyrc", "w") as f:
+            f.write("FontFamily=Victor Mono \n FontSize=18 \n")
+        # click.echo("Added font and font size to .minttyrc")
     elif platform.system() == "Darwin":
+        # click.echo(RFQ)
+        # click.echo(BID_ALIAS)
+        # bid_alias = f"alias bid=\"uv run --quiet {Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/bid.py').expanduser().resolve()}\""
+        # click.echo(bid_alias)
+        # click.echo(Path.home() / ".bash_profile")
+        # click.echo(Path.home() / ".bashrc")
         pass
     else:
         pass
