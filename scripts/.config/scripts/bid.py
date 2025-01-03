@@ -21,6 +21,11 @@ import click
 
 from util import beautify
 
+# Version
+# Recommended is to define in __init__.py but I am doing it here.
+__version__ = "0.1.0"
+
+
 # Handle case for different users
 username = getpass.getuser()
 match username:
@@ -409,6 +414,8 @@ def test():
 
 
 @click.group()
+@click.help_option("-h", "--help")
+@click.version_option(__version__, "-v", "--version", prog_name="bid")
 def bid():
     "Utilities for bidding."
     pass
