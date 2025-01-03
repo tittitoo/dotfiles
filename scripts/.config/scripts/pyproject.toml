@@ -6,5 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "click>=8.1.7",
+    "python-decouple>=3.8",
     "shpyx>=0.0.32",
+    "xlwings>=0.33.5",
 ]

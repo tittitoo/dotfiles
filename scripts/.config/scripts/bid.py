@@ -4,6 +4,8 @@
 # dependencies = [
 # "click",
 # "shpyx",
+# "xlwings",
+# "python-decouple"
 # ]
 # ///
 
@@ -20,11 +22,11 @@ from pathlib import Path
 import click
 
 from util import beautify
+from util import excelx
 
 # Version
 # Recommended is to define in __init__.py but I am doing it here.
 __version__ = "0.1.0"
-
 
 # Handle case for different users
 username = getpass.getuser()
@@ -181,8 +183,30 @@ def init(folder_name: str) -> None:
     new_path = new_path / folder_name
     if new_path.exists():
         click.echo("The folder already exists.")
-        if click.confirm("Do you want to open the folder?", abort=True):
+        # Create new commercial Proposal
+        if click.confirm("Do you want to create a new Commercial Proposal?"):
+            version = click.prompt(
+                "Version No, default:", default="B0", show_default=True
+            )
+            version = str(version).upper()
+            template_folder = (
+                Path(RFQ).expanduser().parent.absolute().resolve() / "@tools/resources"
+            )
+            template = "Template.xlsx"
+            commercial_folder = new_path / "01-Commercial"
+            commercial_file = folder_name + " " + str(version) + ".xlsx"
+            jobcode = folder_name.split()[0]
+            excelx.create_excel_from_template(
+                template_folder,
+                template,
+                commercial_folder,
+                commercial_file,
+                jobcode,
+                version,
+            )
+        if click.confirm("Do you want to open the project folder?", abort=True):
             open_with_default_app(new_path)
+            return
     else:
         if click.confirm(f"'{new_path}' will be created. Continue?", abort=True):
             new_path.mkdir()
@@ -208,8 +232,31 @@ def init(folder_name: str) -> None:
             toolkit = new_path / "08-Toolkit/00-Arc"
             toolkit.mkdir(parents=True, exist_ok=True)
             click.echo(f"Created fodler {new_path}")
+            # Create new commercial Proposal
+            if click.confirm("Do you want to create a new Commercial Proposal?"):
+                version = click.prompt(
+                    "Version No, default:", default="B0", show_default=True
+                )
+                version = str(version).upper()
+                template_folder = (
+                    Path(RFQ).expanduser().parent.absolute().resolve()
+                    / "@tools/resources"
+                )
+                template = "Template.xlsx"
+                commercial_folder = new_path / "01-Commercial"
+                commercial_file = folder_name + " " + str(version) + ".xlsx"
+                jobcode = folder_name.split()[0]
+                excelx.create_excel_from_template(
+                    template_folder,
+                    template,
+                    commercial_folder,
+                    commercial_file,
+                    jobcode,
+                    version,
+                )
+            # Ask for the folder to be opened
             if click.confirm(
-                "Do you want to open the folder?",
+                "Do you want to open the project folder?",
                 abort=True,
             ):
                 open_with_default_app(new_path)
@@ -380,7 +427,7 @@ def setup():
         # click.echo(f"Added {BID_ALIAS} to .bashrc")
         # Customize minttyrc
         with open(Path.home() / ".minttyrc", "w") as f:
-            f.write("FontFamily=Victor Mono \n FontSize=18 \n")
+            f.write("FontFamily=Victor Mono\nFontSize=15\n")
         # click.echo("Added font and font size to .minttyrc")
     elif platform.system() == "Darwin":
         # click.echo(RFQ)
@@ -398,13 +445,6 @@ def setup():
 def audit():
     "Plan for audit features"
     pass
-
-
-# @click.command()
-# def beautify():
-#     "Plan for beautify features"
-#     pass
-#
 
 
 @click.command()

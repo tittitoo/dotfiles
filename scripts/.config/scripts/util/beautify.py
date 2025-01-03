@@ -42,5 +42,5 @@ def beautify():
             click.echo("Invalid template")
 
 
-def test():
-    pass
+if __name__ == "__main__":
+    beautify()
