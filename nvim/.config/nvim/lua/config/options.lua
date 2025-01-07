@@ -19,3 +19,6 @@ vim.g.codeium_enabled = true
 
 -- Disable swap file. Take the risk
 vim.opt.swapfile = false
+
+-- Default python path
+vim.g.python3_host_prog = vim.fn.expand("~/Repos/github.com/tittitoo/nvim-python/.venv/bin/python3")
