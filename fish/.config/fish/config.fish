@@ -38,6 +38,10 @@ set fish_greeting
 # Enable vi mode
 set fish_vi_key_bindings
 
+# Load ssh id key
+# eval (ssh-agent -c)
+# ssh-add ~/.ssh/id_ed25519
+
 # fzf
 # fzf source
 fzf --fish | source
