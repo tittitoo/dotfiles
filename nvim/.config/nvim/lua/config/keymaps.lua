@@ -2,7 +2,7 @@
 -- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
 -- Add any additional keymaps here
 
--- Preview in Marked 2 App.
+-- Preview in Typora App.
 vim.keymap.set("n", "<leader>m", '<cmd>r!open -a "Typora.app" "%"<cr>', { desc = "Open in Typora app" })
 
 -- Undotree
