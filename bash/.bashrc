@@ -28,3 +28,7 @@ alias fp="fzf --preview 'bat --style=numbers --color=always --line-range :500 {}
 alias vf='v "$(fp)"'
 # search for a file with fzf and open in default application
 alias of='open "$(fp)"'
+
+# Env variables for xlwings
+export SHAREPOINT_MAC="/Users/infowizard/Jason Electronics Pte Ltd"
+export ONEDRIVE_COMMERCIAL_MAC="OneDrive - Jason Electronics Pte Ltd"
