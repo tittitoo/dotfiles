@@ -1,6 +1,6 @@
 # Font family, default is Jet Brains Mono
 font-family = "VictorMono Nerd Font Mono"
-font-size = 18
+font-size = 20
 
 # keymaps
 keybind = global:cmd+`=toggle_quick_terminal
