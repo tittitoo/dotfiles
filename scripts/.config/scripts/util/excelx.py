@@ -6,6 +6,7 @@ from decouple import config
 from datetime import date
 
 import xlwings as xw
+import pandas as pd
 
 # Legacy
 LEGACY = config("LEGACY", cast=str)
@@ -39,7 +40,24 @@ def create_excel_from_template(
             click.echo(f"Created {new_file_name}")
     except Exception:
         click.echo("Error creating excel file.")
-    pass
+
+
+def set_font(wb: xw.Book, font_name: str = "Arial", font_size: int = 12) -> None:
+    "Set font attributes in workbook"
+    for sheet in wb.sheets:
+        sheet.used_range.font.name = font_name
+        sheet.used_range.font.size = font_size
+        # sheet.used_range.wrap_text = True
+        sheet.used_range.columns.autofit()
+        # sheet.used_range.wrap_text = True
+        # sheet.used_range.rows.autofit()
+
+
+def decide_row_height_column_width(wb: xw.Book) -> None:
+    "Decide row height and column width based on data"
+    for sheet in wb.sheets:
+        df = pd.DataFrame(sheet.range("A1").expand().value)
+        df.apply(lambda x: x.astype(str).str.len().max(), axis=0)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,8 @@
 # "click",
 # "shpyx",
 # "xlwings",
-# "python-decouple"
+# "python-decouple",
+# "pandas",
 # ]
 # ///
 
@@ -52,6 +53,9 @@ RESTRICTED_FOLDER = [
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+def merge_pdf(input_pdf, output_pdf):
+    # Merge_pdf and output the combined pdf in the same folder
+    pass
 
 def open_with_default_app(file_path: Path):
     "Open file_path with default application"
@@ -103,6 +107,7 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     new_file_name = file.strip() + extension.lower()
 
     new_file_name = re.sub(r"(\b\w+\b)-\s", r"\1 - ", new_file_name)
+    # new_file_name = re.sub(r"-{1,}", " ", new_file_name)
     new_file_name = re.sub(r"-{2,}", "-", new_file_name)
     new_file_name = re.sub(r"_{2,}", "_", new_file_name)
     new_file_name = re.sub(r" \.+ ", " ", new_file_name)

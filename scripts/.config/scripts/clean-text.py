@@ -3,6 +3,7 @@
 # Helper scripts to clean text
 # Meant to be passed from echo command
 # Use in FZF_DEFAULT_OPTS
+# --bind "ctrl-u:execute(echo {} | clean-text | pbcopy)"
 
 import sys
 

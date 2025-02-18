@@ -5,6 +5,7 @@
 # Use in FZF_DEFAULT_OPTS
 # E.g. J12662 GOE - SAKARYA PHASE-2A FPU - COM changed to
 # J12662 COM GOE SAKARYA PHASE-2A FPU
+# --bind "ctrl-r:execute(echo {} | clean-text-outlook | pbcopy)"
 
 import sys
 import re
