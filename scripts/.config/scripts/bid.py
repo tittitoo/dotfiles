@@ -7,9 +7,11 @@
 # "xlwings",
 # "python-decouple",
 # "pandas",
+# "PyPDF2"
 # ]
 # ///
 
+# For the import, remember to put it in the script above. Script is read during runtime.
 import logging
 import os
 import platform
@@ -17,6 +19,7 @@ import re
 import shutil
 import subprocess
 import getpass
+import PyPDF2
 from datetime import datetime
 from pathlib import Path
 
@@ -53,9 +56,40 @@ RESTRICTED_FOLDER = [
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-def merge_pdf(input_pdf, output_pdf):
-    # Merge_pdf and output the combined pdf in the same folder
-    pass
+@click.command()
+def combine_pdf():
+    """
+    Combine pdf and output result pdf in the current folder.
+    If the combined file already exists, it will remove it first and re-combine.
+    """
+    directory = Path.cwd()
+    if click.confirm(f"The command will merge all the pdf in '{directory}'", abort=True):
+        filename = "00-Combined.pdf"
+        if os.path.exists(directory / filename):
+            os.remove(directory / filename)
+
+        # List pdf files
+        pdf_files = [f for f in os.listdir(directory) if f.endswith('pdf')]
+
+        # Sort the PDF files alphabetically
+        pdf_files.sort()
+
+        # Creat a PdfMerger object
+        merger = PyPDF2.PdfMerger()
+
+        # Add all the PDF files to the merger
+        for pdf_file in pdf_files:
+            file_path = os.path.join(directory, pdf_file)
+            merger.append(file_path)
+
+        # Write the ouput to a new PDF file
+        output_path = os.path.join(directory, filename)
+        with open(output_path, 'wb') as f:
+            merger.write(f)
+            click.echo(f"The file {filename} has been written in '{directory}'")
+
+        # Close the merger
+        merger.close()
 
 def open_with_default_app(file_path: Path):
     "Open file_path with default application"
@@ -470,6 +504,7 @@ bid.add_command(init)
 bid.add_command(setup)
 bid.add_command(clean)
 bid.add_command(beautify.beautify)
+bid.add_command(combine_pdf)
 # bid.add_command(test)
 
 if __name__ == "__main__":
