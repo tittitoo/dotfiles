@@ -80,20 +80,39 @@ def combine_pdf():
         # Creat a PdfMerger object
         merger = pypdf.PdfWriter()
 
+        encrypted_files: list[str] = []
         # Add all the PDF files to the merger
         try:
             for pdf_file in pdf_files:
                 file_path = os.path.join(directory, pdf_file)
-                merger.append(file_path)
+                # click.echo(f"Reading: {pdf_file}")
+                try:
+                    # Read for side effect to see if it is encrypted
+                    pypdf.PdfReader(file_path)
+                    merger.append(file_path)
+                except Exception:
+                    encrypted_files.append(pdf_file)
         except Exception:
-            click.echo("Error merging PDF files. Do you have any locked PDF file?")
+            pass
 
         # Write the ouput to a new PDF file
         output_path = os.path.join(directory, filename)
         with open(output_path, "wb") as f:
             merger.write(f)
-            click.echo(f"The file {filename} has been written in '{directory}'")
-
+            if encrypted_files:
+                click.echo(
+                    "The following files are encrypted and not included in combined file."
+                )
+                for item in encrypted_files:
+                    click.echo(item)
+            successful_pdf_files = list(set(pdf_files) - set(encrypted_files))
+            if successful_pdf_files:
+                click.echo(
+                    f"Combined {len(successful_pdf_files)} files into '{filename}'"
+                )
+                successful_pdf_files.sort()
+                for item in successful_pdf_files:
+                    click.echo(item)
         # Close the merger
         merger.close()
 
