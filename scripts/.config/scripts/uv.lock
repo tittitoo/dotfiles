@@ -30,7 +30,7 @@ name = "click"
 version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "platform_system == 'Windows'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/d3/f04c7bfcf5c1862a2a5b845c6b2b360488cf47af55dfa79c98f6a6bf98b5/click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de", size = 336121 }
 wheels = [
@@ -54,6 +54,7 @@ dependencies = [
     { name = "click" },
     { name = "pandas" },
     { name = "pydantic" },
+    { name = "pypdf" },
     { name = "pypdf2" },
     { name = "python-decouple" },
     { name = "shpyx" },
@@ -65,6 +66,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pydantic", specifier = ">=2.10.5" },
+    { name = "pypdf", specifier = ">=5.3.0" },
     { name = "pypdf2", specifier = ">=3.0.1" },
     { name = "python-decouple", specifier = ">=3.8" },
     { name = "shpyx", specifier = ">=0.0.32" },
@@ -219,6 +221,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pypdf"
+version = "5.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2a/c6/9b0920ddcb29ce980f84f2fb585b515b1431625a1b9aeb5fd5753ee0f62e/pypdf-5.3.0.tar.gz", hash = "sha256:08393660dfea25b27ec6fe863fb2f2248e6270da5103fae49e9dea8178741951", size = 5024226 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4d/2b/3b25ddd464c4265ba65cec794012aab64f1d7dbbdfd170c567d84a0b26c9/pypdf-5.3.0-py3-none-any.whl", hash = "sha256:d7b6db242f5f8fdb4990ae11815c394b8e1b955feda0befcce862efd8559c181", size = 300731 },
+]
+
+[[package]]
 name = "pypdf2"
 version = "3.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -311,9 +322,9 @@ name = "xlwings"
 version = "0.33.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appscript", marker = "sys_platform == 'darwin'" },
-    { name = "psutil", marker = "sys_platform == 'darwin'" },
-    { name = "pywin32", marker = "sys_platform == 'win32'" },
+    { name = "appscript", marker = "platform_system == 'Darwin'" },
+    { name = "psutil", marker = "platform_system == 'Darwin'" },
+    { name = "pywin32", marker = "platform_system == 'Windows'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/93/2c/c26316256fa58b8d20a6edfa0c5050004fc5b8c102abe3532fe631be0d40/xlwings-0.33.5.tar.gz", hash = "sha256:c57d83eadd068a5f1fa45898be0f433281284ca3f9dd180b1a26b1d691a72211", size = 1088079 }
 wheels = [

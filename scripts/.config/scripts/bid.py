@@ -7,7 +7,7 @@
 # "xlwings",
 # "python-decouple",
 # "pandas",
-# "PyPDF2"
+# "pypdf",
 # ]
 # ///
 
@@ -19,7 +19,7 @@ import re
 import shutil
 import subprocess
 import getpass
-import PyPDF2
+import pypdf
 from datetime import datetime
 from pathlib import Path
 
@@ -56,6 +56,7 @@ RESTRICTED_FOLDER = [
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 @click.command()
 def combine_pdf():
     """
@@ -63,33 +64,39 @@ def combine_pdf():
     If the combined file already exists, it will remove it first and re-combine.
     """
     directory = Path.cwd()
-    if click.confirm(f"The command will merge all the pdf in '{directory}'", abort=True):
+    if click.confirm(
+        f"The command will merge all the pdf in '{directory}'", abort=True
+    ):
         filename = "00-Combined.pdf"
         if os.path.exists(directory / filename):
             os.remove(directory / filename)
 
         # List pdf files
-        pdf_files = [f for f in os.listdir(directory) if f.endswith('pdf')]
+        pdf_files = [f for f in os.listdir(directory) if f.endswith("pdf")]
 
         # Sort the PDF files alphabetically
         pdf_files.sort()
 
         # Creat a PdfMerger object
-        merger = PyPDF2.PdfMerger()
+        merger = pypdf.PdfWriter()
 
         # Add all the PDF files to the merger
-        for pdf_file in pdf_files:
-            file_path = os.path.join(directory, pdf_file)
-            merger.append(file_path)
+        try:
+            for pdf_file in pdf_files:
+                file_path = os.path.join(directory, pdf_file)
+                merger.append(file_path)
+        except Exception:
+            click.echo("Error merging PDF files. Do you have any locked PDF file?")
 
         # Write the ouput to a new PDF file
         output_path = os.path.join(directory, filename)
-        with open(output_path, 'wb') as f:
+        with open(output_path, "wb") as f:
             merger.write(f)
             click.echo(f"The file {filename} has been written in '{directory}'")
 
         # Close the merger
         merger.close()
+
 
 def open_with_default_app(file_path: Path):
     "Open file_path with default application"
