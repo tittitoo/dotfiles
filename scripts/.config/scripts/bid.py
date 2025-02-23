@@ -72,7 +72,9 @@ def combine_pdf():
             os.remove(directory / filename)
 
         # List pdf files
-        pdf_files = [f for f in os.listdir(directory) if f.endswith("pdf")]
+        pdf_files = [
+            f for f in os.listdir(directory) if f.endswith("pdf") or f.endswith("PDF")
+        ]
 
         # Sort the PDF files alphabetically
         pdf_files.sort()
@@ -85,7 +87,6 @@ def combine_pdf():
         try:
             for pdf_file in pdf_files:
                 file_path = os.path.join(directory, pdf_file)
-                # click.echo(f"Reading: {pdf_file}")
                 try:
                     # Read for side effect to see if it is encrypted
                     pypdf.PdfReader(file_path)
@@ -97,22 +98,25 @@ def combine_pdf():
 
         # Write the ouput to a new PDF file
         output_path = os.path.join(directory, filename)
-        with open(output_path, "wb") as f:
-            merger.write(f)
-            if encrypted_files:
-                click.echo(
-                    "The following files are encrypted and not included in combined file."
-                )
-                for item in encrypted_files:
-                    click.echo(item)
-            successful_pdf_files = list(set(pdf_files) - set(encrypted_files))
-            if successful_pdf_files:
-                click.echo(
-                    f"Combined {len(successful_pdf_files)} files into '{filename}'"
-                )
-                successful_pdf_files.sort()
-                for item in successful_pdf_files:
-                    click.echo(item)
+        try:
+            with open(output_path, "wb") as f:
+                merger.write(f)
+                if encrypted_files:
+                    click.echo(
+                        "The following files are encrypted and not included in combined file."
+                    )
+                    for item in encrypted_files:
+                        click.echo(item)
+                successful_pdf_files = list(set(pdf_files) - set(encrypted_files))
+                if successful_pdf_files:
+                    click.echo(
+                        f"Combined {len(successful_pdf_files)} files into '{filename}'"
+                    )
+                    successful_pdf_files.sort()
+                    for item in successful_pdf_files:
+                        click.echo(item)
+        except Exception as e:
+            click.echo(f"Encountered this error {e}")
         # Close the merger
         merger.close()
 
