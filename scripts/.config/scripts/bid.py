@@ -105,16 +105,16 @@ def combine_pdf():
                     click.echo(
                         "The following files are encrypted and not included in combined file."
                     )
-                    for item in encrypted_files:
-                        click.echo(item)
+                    for index, item in enumerate(encrypted_files):
+                        click.echo(f"{index + 1}: {item}")  # Print the file name with index (item)
                 successful_pdf_files = list(set(pdf_files) - set(encrypted_files))
                 if successful_pdf_files:
                     click.echo(
                         f"Combined {len(successful_pdf_files)} files into '{filename}'"
                     )
                     successful_pdf_files.sort()
-                    for item in successful_pdf_files:
-                        click.echo(item)
+                    for index, item in enumerate(successful_pdf_files):
+                        click.echo(f"{index + 1}: {item}")  # Print the file name with index (item)
         except Exception as e:
             click.echo(f"Encountered this error {e}")
         # Close the merger
