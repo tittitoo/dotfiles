@@ -8,7 +8,7 @@ from datetime import date
 import xlwings as xw
 import pandas as pd
 
-# Legacy
+# Legacy password
 LEGACY = config("LEGACY", cast=str)
 
 
@@ -42,15 +42,16 @@ def create_excel_from_template(
         click.echo("Error creating excel file.")
 
 
-def set_font(wb: xw.Book, font_name: str = "Arial", font_size: int = 12) -> None:
+def set_format(
+    wb: xw.Book, font_name: str = "Arial", font_size: int = 12, autofit: bool = False
+) -> None:
     "Set font attributes in workbook"
     for sheet in wb.sheets:
         sheet.used_range.font.name = font_name
         sheet.used_range.font.size = font_size
-        # sheet.used_range.wrap_text = True
-        sheet.used_range.columns.autofit()
-        # sheet.used_range.wrap_text = True
-        # sheet.used_range.rows.autofit()
+        if autofit:
+            sheet.used_range.columns.autofit()
+            # sheet.used_range.wrap_text = True
 
 
 def decide_row_height_column_width(wb: xw.Book) -> None:

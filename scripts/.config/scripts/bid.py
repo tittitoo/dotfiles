@@ -110,7 +110,7 @@ def combine_pdf():
                 successful_pdf_files = list(set(pdf_files) - set(encrypted_files))
                 if successful_pdf_files:
                     click.echo(
-                        f"Combined {len(successful_pdf_files)} files into '{filename}'"
+                        f"Combined following {len(successful_pdf_files)} files into '{filename}'"
                     )
                     successful_pdf_files.sort()
                     for index, item in enumerate(successful_pdf_files):
