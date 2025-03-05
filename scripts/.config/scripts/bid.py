@@ -192,6 +192,9 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     new_file_name = re.sub(
         r"^(EXTERNAL(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
     )
+    new_file_name = re.sub(
+        r"^(EXTERNALRE(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE
+    )
     new_file_name = re.sub(r"^(FWD(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(FW(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(SV(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
