@@ -80,7 +80,7 @@ def beautify(xl_file: str, autofit: bool) -> None:
             wb = get_wb(xl_file)
             if wb is not None:
                 excelx.set_format(
-                    wb, font_name="Helvetica", font_size=11, autofit=autofit
+                    wb, font_name="Helvetica", font_size=12, autofit=autofit
                 )
         case "Helvetica, Size 11":
             wb = get_wb(xl_file)
