@@ -54,7 +54,7 @@ def set_format(
                 sheet.used_range.columns.autofit()
                 # sheet.used_range.wrap_text = True
         except Exception:
-            click.echo("Beautifying excel file not successful.")
+            click.echo(f"Beautifying excel sheet '{sheet.name}' not successful.")
 
 
 def decide_row_height_column_width(wb: xw.Book) -> None:
