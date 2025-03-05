@@ -47,11 +47,14 @@ def set_format(
 ) -> None:
     "Set font attributes in workbook"
     for sheet in wb.sheets:
-        sheet.used_range.font.name = font_name
-        sheet.used_range.font.size = font_size
-        if autofit:
-            sheet.used_range.columns.autofit()
-            # sheet.used_range.wrap_text = True
+        try:
+            sheet.used_range.font.name = font_name
+            sheet.used_range.font.size = font_size
+            if autofit:
+                sheet.used_range.columns.autofit()
+                # sheet.used_range.wrap_text = True
+        except Exception:
+            click.echo("Beautifying excel file not successful.")
 
 
 def decide_row_height_column_width(wb: xw.Book) -> None:
