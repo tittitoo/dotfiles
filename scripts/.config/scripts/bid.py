@@ -8,6 +8,7 @@
 # "python-decouple",
 # "pandas",
 # "pypdf",
+# "docx2pdf",
 # ]
 # ///
 
@@ -20,6 +21,7 @@ import shutil
 import subprocess
 import getpass
 import pypdf
+import docx2pdf
 from datetime import datetime
 from pathlib import Path
 
@@ -55,6 +57,20 @@ RESTRICTED_FOLDER = [
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+@click.command()
+def word2pdf():
+    """
+    (Batch) Convert word file to pdf in given directory.
+    Require MS Word to be installed as it is doing the conversion.
+    """
+    directory = Path.cwd()
+    if click.confirm(
+        f"The command will convert all the word files (only .docx (case sensitive)) in '{directory}'",
+        abort=True,
+    ):
+        docx2pdf.convert(directory)
 
 
 @click.command()
@@ -106,7 +122,9 @@ def combine_pdf():
                         "The following files are encrypted and not included in combined file."
                     )
                     for index, item in enumerate(encrypted_files):
-                        click.echo(f"{index + 1}: {item}")  # Print the file name with index (item)
+                        click.echo(
+                            f"{index + 1}: {item}"
+                        )  # Print the file name with index (item)
                 successful_pdf_files = list(set(pdf_files) - set(encrypted_files))
                 if successful_pdf_files:
                     click.echo(
@@ -114,7 +132,9 @@ def combine_pdf():
                     )
                     successful_pdf_files.sort()
                     for index, item in enumerate(successful_pdf_files):
-                        click.echo(f"{index + 1}: {item}")  # Print the file name with index (item)
+                        click.echo(
+                            f"{index + 1}: {item}"
+                        )  # Print the file name with index (item)
         except Exception as e:
             click.echo(f"Encountered this error {e}")
         # Close the merger
@@ -199,6 +219,9 @@ def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     new_file_name = re.sub(r"^(FW(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(SV(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
     new_file_name = re.sub(r"^(RE(_+|\s{1,}))", "", new_file_name, flags=re.IGNORECASE)
+    # new_file_name = re.sub(
+    #     r"(-+|\s{1,})", " ", new_file_name, flags=re.IGNORECASE
+    # )  # remove hyphen
     new_file_name = re.sub(r"\s{2,}", " ", new_file_name)
     if new_file_name != file_name:
         flag = True
@@ -538,6 +561,7 @@ bid.add_command(setup)
 bid.add_command(clean)
 bid.add_command(beautify.beautify)
 bid.add_command(combine_pdf)
+bid.add_command(word2pdf)
 # bid.add_command(test)
 
 if __name__ == "__main__":
