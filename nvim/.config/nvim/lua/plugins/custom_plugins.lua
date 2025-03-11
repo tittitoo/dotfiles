@@ -74,6 +74,30 @@ return {
     build = false, -- so that it doesn't build the rock https://github.com/3rd/image.nvim/issues/91#issuecomment-2453430239
     opts = {},
   },
+
+  -- This is for blink
+  {
+    "saghen/blink.cmp",
+    -- Make blink.cmp toogleable
+    opts = function(_, opts)
+      vim.b.completion = false
+
+      Snacks.toggle({
+        name = "Completion",
+        get = function()
+          return vim.b.completion
+        end,
+        set = function(state)
+          vim.b.completion = state
+        end,
+      }):map("<leader>uk")
+
+      opts.enabled = function()
+        return vim.b.completion ~= false
+      end
+      return opts
+    end,
+  },
   -- blink.compact. This is for compatibility with blink and codeium
   -- Othereise it will output "attempt to index field 'lsp' (a nil value)" error
   -- { "saghen/blink.compat", opts = { impersonate_nvim_cmp = true } },
