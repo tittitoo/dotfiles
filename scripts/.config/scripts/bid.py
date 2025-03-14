@@ -20,7 +20,6 @@ import re
 import shutil
 import subprocess
 import getpass
-import pypdf
 import docx2pdf
 from datetime import datetime
 from pathlib import Path
@@ -29,6 +28,7 @@ import click
 
 from util import beautify
 from util import excelx
+from util import pdfx
 
 # Version
 # Recommended is to define in __init__.py but I am doing it here.
@@ -71,74 +71,6 @@ def word2pdf():
         abort=True,
     ):
         docx2pdf.convert(directory)
-
-
-@click.command()
-def combine_pdf():
-    """
-    Combine pdf and output result pdf in the current folder.
-    If the combined file already exists, it will remove it first and re-combine.
-    """
-    directory = Path.cwd()
-    if click.confirm(
-        f"The command will merge all the pdf in '{directory}'", abort=True
-    ):
-        filename = "00-Combined.pdf"
-        if os.path.exists(directory / filename):
-            os.remove(directory / filename)
-
-        # List pdf files
-        pdf_files = [
-            f for f in os.listdir(directory) if f.endswith("pdf") or f.endswith("PDF")
-        ]
-
-        # Sort the PDF files alphabetically
-        pdf_files.sort()
-
-        # Creat a PdfMerger object
-        merger = pypdf.PdfWriter()
-
-        encrypted_files: list[str] = []
-        # Add all the PDF files to the merger
-        try:
-            for pdf_file in pdf_files:
-                file_path = os.path.join(directory, pdf_file)
-                try:
-                    # Read for side effect to see if it is encrypted
-                    pypdf.PdfReader(file_path)
-                    merger.append(file_path)
-                except Exception:
-                    encrypted_files.append(pdf_file)
-        except Exception:
-            pass
-
-        # Write the ouput to a new PDF file
-        output_path = os.path.join(directory, filename)
-        try:
-            with open(output_path, "wb") as f:
-                merger.write(f)
-                if encrypted_files:
-                    click.echo(
-                        "The following files are encrypted and not included in combined file."
-                    )
-                    for index, item in enumerate(encrypted_files):
-                        click.echo(
-                            f"{index + 1}: {item}"
-                        )  # Print the file name with index (item)
-                successful_pdf_files = list(set(pdf_files) - set(encrypted_files))
-                if successful_pdf_files:
-                    click.echo(
-                        f"Combined following {len(successful_pdf_files)} files into '{filename}'"
-                    )
-                    successful_pdf_files.sort()
-                    for index, item in enumerate(successful_pdf_files):
-                        click.echo(
-                            f"{index + 1}: {item}"
-                        )  # Print the file name with index (item)
-        except Exception as e:
-            click.echo(f"Encountered this error {e}")
-        # Close the merger
-        merger.close()
 
 
 def open_with_default_app(file_path: Path):
@@ -560,7 +492,7 @@ bid.add_command(init)
 bid.add_command(setup)
 bid.add_command(clean)
 bid.add_command(beautify.beautify)
-bid.add_command(combine_pdf)
+bid.add_command(pdfx.combine_pdf)
 bid.add_command(word2pdf)
 # bid.add_command(test)
 
