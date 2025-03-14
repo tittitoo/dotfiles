@@ -93,9 +93,8 @@ def add_outline(file_path: Path):
         with open(file_path, "wb") as f:
             writer.write(f)
         click.echo(f"Outline added to {filename}")
-    except Exception:
-        pass
-    pass
+    except Exception as e:
+        click.echo(f"Encountered this error {e} for some files.")
 
 
 def add_toc():
