@@ -469,6 +469,7 @@ def setup():
 
 
 @click.command()
+# TODO: Plan for audit features
 def audit():
     "Plan for audit features"
     pass
