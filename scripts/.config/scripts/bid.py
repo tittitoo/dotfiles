@@ -9,6 +9,7 @@
 # "pandas",
 # "pypdf",
 # "docx2pdf",
+# "reportlab",
 # ]
 # ///
 
