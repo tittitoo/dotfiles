@@ -102,7 +102,7 @@ def remove_folder(folder_path):
 
 def require_rename(file_name: str, flag: bool = False) -> tuple[str, bool]:
     """
-    Check if file meets requried name specs
+    Check if file meets required naming specs
     If not, suggest renaming and the name
 
     Specs:
