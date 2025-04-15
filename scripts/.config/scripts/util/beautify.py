@@ -9,6 +9,8 @@ TEMPLATE = [
     "Arial, Size 12",
     "Arial, Size 11",
     "Arial, Size 10",
+    "Calibri, Size 11",
+    "Calibri, Size 10",
     "Helvetica, Size 12",
     "Helvetica, Size 11",
     "Tahoma, Size 11",
@@ -68,6 +70,14 @@ def beautify(xl_file: str, autofit: bool) -> None:
             wb = get_wb(xl_file)
             if wb is not None:
                 excelx.set_format(wb, font_name="Arial", font_size=10, autofit=autofit)
+        case "Calibri, Size 11":
+            wb = get_wb(xl_file)
+            if wb is not None:
+                excelx.set_format(wb, font_name="Calibri", font_size=11, autofit=autofit)
+        case "Calibri, Size 10":
+            wb = get_wb(xl_file)
+            if wb is not None:
+                excelx.set_format(wb, font_name="Calibri", font_size=10, autofit=autofit)
         case "Tahoma, Size 11":
             wb = get_wb(xl_file)
             if wb is not None:
