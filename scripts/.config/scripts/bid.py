@@ -42,9 +42,14 @@ match username:
         RFQ = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@rfqs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/bid.py').expanduser().resolve()}'\""
 
+    case "carol_lim":
+        RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
+        BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - @tools/bid.py').expanduser().resolve()}'\""
+
     case _:
         RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/bid.py').expanduser().resolve()}'\""
+
 
 RESTRICTED_FOLDER = [
     "@rfqs",
