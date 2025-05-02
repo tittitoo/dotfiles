@@ -25,3 +25,7 @@ vim.keymap.set({ "o", "x" }, "aH", "<Plug>(neorg.text-objects.textobject.heading
 
 -- Remap Enter key to Shift+Enter in insert mode not to clash with blink
 vim.keymap.set("i", "<CR>", "<C-Enter>", { noremap = true })
+
+-- Enable or disable image preview
+vim.keymap.set("n", "<leader>oi", "<cmd>lua require('image').disable()<CR>", { desc = "Disable Image Preview" })
+vim.keymap.set("n", "<leader>oI", "<cmd>lua require('image').enable()<CR>", { desc = "Enable Image Preview" })

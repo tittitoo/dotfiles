@@ -22,3 +22,7 @@ vim.opt.swapfile = false
 
 -- Default python path
 vim.g.python3_host_prog = vim.fn.expand("~/Repos/github.com/tittitoo/nvim-python/.venv/bin/python3")
+
+-- Disable image preview by default
+-- To evaluate if it works
+vim.g.enable_image_preview = false
