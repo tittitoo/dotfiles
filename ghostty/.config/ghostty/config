@@ -23,5 +23,6 @@ macos-option-as-alt = true
 # theme = light:"catppuccin-latte",dark:"Kanagawa Wave"
 # theme = "catppuccin-latte"
 # theme = "catppuccin-frappe"
-theme = "catppuccin-mocha"
+# theme = "catppuccin-mocha"
+theme = "Kanagawa Dragon"
 # theme = "Kanagawa Wave"
