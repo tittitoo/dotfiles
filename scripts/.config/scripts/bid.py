@@ -66,17 +66,19 @@ logger.setLevel(logging.INFO)
 
 
 @click.command()
-def word2pdf():
+@click.option("-y", "--yes", is_flag=True, help="Answer yes to the current directory")
+def word2pdf(yes: bool):
     """
     (Batch) Convert word file to pdf in given directory.
     Require MS Word to be installed as it is doing the conversion.
     """
     directory = Path.cwd()
-    if click.confirm(
-        f"The command will convert all the word files (only .docx (case sensitive)) in '{directory}'",
-        abort=True,
-    ):
-        docx2pdf.convert(directory)
+    if not yes:
+        click.confirm(
+            f"The command will convert all the word files (only .docx (case sensitive)) in '{directory}'",
+            abort=True,
+        )
+    docx2pdf.convert(directory)
 
 
 def open_with_default_app(file_path: Path):
