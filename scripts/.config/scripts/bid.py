@@ -310,22 +310,25 @@ def init(folder_name: str) -> None:
     is_flag=True,
     help="Delete .git folder and .gitignore if exists",
 )
-def clean(folder_name: str, dry_run: bool, remove_git: bool) -> None:
+def clean(folder_name: str, dry_run: bool, remove_git: bool, yes: bool) -> None:
     """
     Clean file names in folder. Default search path is @rfqs.
     If folder is given, clean the folder.
     If not, search the folder in @rfqs and clean.
     """
     if folder_name == "":
-        folder_name = click.prompt(
-            (
-                "Please enter folder name to clean. "
-                "Default search path is in @rfqs. \n"
-                "Press `Enter` to choose current folder:"
-            ),
-            default=Path.cwd().name,
-            type=str,
-        )
+        if yes:
+            folder_name = Path.cwd().name
+        else:
+            folder_name = click.prompt(
+                (
+                    "Please enter folder name to clean. "
+                    "Default search path is in @rfqs. \n"
+                    "Press `Enter` to choose current folder:"
+                ),
+                default=Path.cwd().name,
+                type=str,
+            )
     if (
         folder_name in RESTRICTED_FOLDER
         or folder_name.isdigit()  # Main folder in @rfqs
@@ -337,12 +340,12 @@ def clean(folder_name: str, dry_run: bool, remove_git: bool) -> None:
         )
         return
     if folder_name == Path.cwd().name:
-        clean_folder(Path.cwd(), dry_run=dry_run)
+        clean_folder(Path.cwd(), dry_run=dry_run, yes=yes)
     else:
         clean_rfqs(folder_name, remove_git=remove_git, dry_run=dry_run)
 
 
-def clean_folder(start_path, dry_run=False):
+def clean_folder(start_path, dry_run=False, yes=False):
     "Clean folder"
     rename_list = []
     for root, _, files in os.walk(start_path):
@@ -358,35 +361,36 @@ def clean_folder(start_path, dry_run=False):
         for item in rename_list:
             click.echo(f"{item[1]} -> {item[2]}")
         click.echo(f"{len(rename_list)} files to rename")
-        if click.confirm("Do you want to rename the files?", abort=True):
-            click.echo("Renaming files")
-            count = 0
-            for item in rename_list:
-                check = rename_file(
-                    Path(item[0]).joinpath(item[1]), Path(item[0]).joinpath(item[2])
+        if not yes:
+            click.confirm("Do you want to rename the files?", abort=True)
+        click.echo("Renaming files")
+        count = 0
+        for item in rename_list:
+            check = rename_file(
+                Path(item[0]).joinpath(item[1]), Path(item[0]).joinpath(item[2])
+            )
+            if check:
+                count += 1
+                click.echo(f"Renamed: '{item[1]}' -> '{item[2]}'")
+            else:
+                # Handle the case where file with same name exists
+                # Append -000, try once
+                new_file_name = Path(item[2]).stem + "-000" + Path(item[2]).suffix
+                check_again = rename_file(
+                    Path(item[0]).joinpath(item[1]),
+                    Path(item[0]).joinpath(new_file_name),
                 )
-                if check:
+                if check_again:
                     count += 1
-                    click.echo(f"Renamed: '{item[1]}' -> '{item[2]}'")
-                else:
-                    # Handle the case where file with same name exists
-                    # Append -000, try once
-                    new_file_name = Path(item[2]).stem + "-000" + Path(item[2]).suffix
-                    check_again = rename_file(
-                        Path(item[0]).joinpath(item[1]),
-                        Path(item[0]).joinpath(new_file_name),
-                    )
-                    if check_again:
-                        count += 1
-                        click.echo(
-                            (
-                                f"Since the same file name exists '{item[1]}' "
-                                f"renamed to '{new_file_name}' instead appending '-000'"
-                            )
+                    click.echo(
+                        (
+                            f"Since the same file name exists '{item[1]}' "
+                            f"renamed to '{new_file_name}' instead appending '-000'"
                         )
-                    else:
-                        click.echo(f"Failed to rename '{item[1]}'")
-            click.echo(f"Total {count} files renamed.")
+                    )
+                else:
+                    click.echo(f"Failed to rename '{item[1]}'")
+        click.echo(f"Total {count} files renamed.")
         return
     else:  # if dry_run
         if not rename_list:
