@@ -303,6 +303,7 @@ def init(folder_name: str) -> None:
 @click.command()
 @click.argument("folder_name", default="")
 @click.option("-d", "--dry-run", is_flag=True, help="Dry run mode")
+@click.option("-y", "--yes", is_flag=True, help="Answer yes to the current directory")
 @click.option(
     "-r",
     "--remove-git",
