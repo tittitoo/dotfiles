@@ -81,10 +81,10 @@ def combine_pdf(outline: bool, toc: bool, yes: bool):
                 writer.append(file_path)
             except FileNotDecryptedError:
                 encrypted_files.append(pdf_file)
-            except Exception:
-                pass
-    except Exception:
-        pass
+            except Exception as e:
+                click.echo(f"Encountered this error {e}")
+    except Exception as e:
+        click.echo(f"Encountered this error {e}")
 
     # Write the ouput to a new PDF file
     output_path = os.path.join(directory, filename)
