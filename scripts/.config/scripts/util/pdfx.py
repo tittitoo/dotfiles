@@ -52,7 +52,10 @@ def combine_pdf(outline: bool, toc: bool, yes: bool):
     directory = Path.cwd()
     filename = "00-Combined.pdf"
     if os.path.exists(directory / filename):
-        os.remove(directory / filename)
+        try:
+            os.remove(directory / filename)
+        except PermissionError:
+            click.echo(f"Cannot remove {filename}. Please close the file first.")
 
     # List pdf files
     pdf_files = [
