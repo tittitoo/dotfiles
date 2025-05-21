@@ -1,5 +1,18 @@
 # TODO: window still does not work. Only sessions do.
 
+[default_session]
+startup_command = "yazi"
+
+[[session]]
+name = "dragon 🐉"
+path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
+startup_command = "tmux rename-window 'dragon'; yazi"
+
+[[session]]
+name = "drafts 📎"
+path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
+startup_command = "tmux rename-window 'drafts'; yazi"
+
 [[session]]
 name = "downloads 📥"
 path = "~/Downloads"
@@ -8,14 +21,19 @@ startup_command = "tmux rename-window 'download'; yazi"
 # [[window]]
 # name = "rfqs"
 # path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@rfqs"
-# # startup_command = "tmux rename-window 'rfqs'"
+# startup_command = "tmux rename-window 'rfqs'"
 
 # '@' symbols in name needs to be escaped. Not advisable to use.
 [[session]]
-name = "docs"
+name = "docs 📚"
 path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@docs"
 startup_command = "tmux rename-window 'docs'; yazi"
 # windows = ["rfqs"]
+
+[[session]]
+name = "dotfiles"
+path = "~/Repos/github.com/tittitoo/dotfiles"
+startup_command = "tmux rename-window 'dotfiles'; yazi"
 
 [[session]]
 name = "handover"
@@ -41,11 +59,6 @@ startup_command = "tmux rename-window 'minimalist'; yazi"
 name = "journal"
 path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/journal"
 startup_command = "tmux rename-window 'journal'; yazi"
-
-[[session]]
-name = "drafts"
-path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
-startup_command = "tmux rename-window 'drafts'; yazi"
 
 [[session]]
 name = "team"
