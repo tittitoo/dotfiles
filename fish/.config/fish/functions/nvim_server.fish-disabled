@@ -1,0 +1,41 @@
+# Configure neovim as server
+# ~/.config/fish/functions/nvim_server.fish
+
+function nvim_server
+    set -l server_address "/tmp/nvim-$USER-server"
+
+    # Check if a Neovim server is already listening at this address
+    if test -S "$server_address"
+        # Check if the process attached to the socket is still running
+        # You might need to adjust this check based on your OS and preference
+        # This is a more robust check for Linux/macOS
+        if ! command -v lsof >/dev/null
+            echo "lsof not found. Cannot reliably check if nvim server is running."
+            echo "Assuming server is running if socket exists."
+            return 0 # Assume it's running
+        end
+
+        if lsof -U "$server_address" >/dev/null
+            # Server is running and listening on the socket
+            echo "Neovim server already running at $server_address"
+            set -gx NVIM_LISTEN_ADDRESS "$server_address"
+            return 0
+        else
+            # Socket exists but no process is listening (stale socket)
+            echo "Removing stale Neovim server socket: $server_address"
+            rm "$server_address"
+        end
+    end
+
+    # If we reached here, no server was running or the socket was stale. Start a new one.
+    echo "Starting new Neovim server at $server_address"
+    set -gx NVIM_LISTEN_ADDRESS "$server_address"
+    nvim --listen "$server_address" --headless & disown
+    # Note: `disown` is crucial for background processes in Fish.
+    # `&> /dev/null` is implied for `disown`'d processes unless you redirect explicitly.
+
+    sleep 0.1 # Give it a moment to start the socket
+end
+
+# Call the function when the shell starts
+nvim_server

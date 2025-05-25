@@ -85,7 +85,6 @@ set -x FZF_ALT_C_OPTS '
 # \e means ALT, \c means CTRL
 fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ca --git_status=\cg --git_log= --processes=\cp #--gi_log=\cl
 
-
 # fiz.fish
 # set fzf_preview_dir_cmd eza --all --color=always
 
@@ -114,6 +113,9 @@ starship init fish | source
 
 # zoxide
 zoxide init fish | source
+
+# # Start the Neovim server if not already running
+# nvim_server
 
 # Added by `rbenv init` on Tue Oct 22 13:11:31 +08 2024
 status --is-interactive; and rbenv init - --no-rehash fish | source
