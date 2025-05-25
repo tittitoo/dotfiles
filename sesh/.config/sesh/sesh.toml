@@ -4,44 +4,14 @@
 startup_command = "yazi"
 
 [[session]]
-name = "programming "
-path = "~/Repos/github.com/tittitoo/minimalist"
-startup_command = """
-tmux rename-window 'minimalist'; 
-tmux new-window -n 'scripts' -c "~/Repos/github.com/tittitoo/minimalist/scripts";
-"""
-
-[[session]]
-name = "dragon 🐲"
+name = "dragon"
 path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
-startup_command = "tmux rename-window 'dragon 🐲'; yazi"
-
-[[session]]
-name = "drafts 📎"
-path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
-startup_command = "tmux rename-window 'drafts 📎'; yazi"
+startup_command = "tmux rename-window 'dragon'; yazi"
 
 [[session]]
 name = "downloads 📥"
 path = "~/Downloads"
 startup_command = "tmux rename-window 'download 📥'; yazi"
-
-[[session]]
-name = "rfqs 🥚"
-path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@rfqs"
-startup_command = "tmux rename-window 'rfqs 🥚'; clear"
-
-# [[window]]
-# name = "rfqs"
-# path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@rfqs"
-# startup_command = "tmux rename-window 'rfqs'"
-
-# '@' symbols in name needs to be escaped. Not advisable to use.
-[[session]]
-name = "docs 📚"
-path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@docs"
-startup_command = "tmux rename-window 'docs 📚'; yazi"
-# windows = ["rfqs"]
 
 [[session]]
 name = "dotfiles"
@@ -59,11 +29,6 @@ path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/B
 startup_command = "tmux rename-window 'costing'; yazi"
 
 [[session]]
-name = "tmux"
-path = "~/Repos/github.com/tittitoo/dotfiles/tmux/.config/tmux"
-startup_command = "tmux rename-window 'tmux'; nvim tmux.conf"
-
-[[session]]
 name = "minimalist"
 path = "~/Repos/github.com/tittitoo/minimalist"
 startup_command = "tmux rename-window 'minimalist'; yazi"
@@ -74,16 +39,6 @@ path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/journal"
 startup_command = "tmux rename-window 'journal'; yazi"
 
 [[session]]
-name = "team"
-path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team"
-startup_command = "tmux rename-window 'team'; yazi"
-
-[[session]]
 name = "btop"
 path = "~/Downloads"
 startup_command = "tmux rename-window 'btop'; btop"
-
-[[session]]
-name = "ghostty"
-path = "~/Repos/github.com/tittitoo/dotfiles/ghostty/.config/ghostty"
-startup_command = "tmux rename-window 'ghostty'; nvim config"
