@@ -4,11 +4,6 @@
 startup_command = "yazi"
 
 [[session]]
-name = "dragon"
-path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
-startup_command = "tmux rename-window 'dragon'; yazi"
-
-[[session]]
 name = "downloads 📥"
 path = "~/Downloads"
 startup_command = "tmux rename-window 'download 📥'; yazi"
@@ -27,16 +22,6 @@ startup_command = "tmux rename-window 'handover'; yazi"
 name = "costing"
 path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@costing"
 startup_command = "tmux rename-window 'costing'; yazi"
-
-[[session]]
-name = "minimalist"
-path = "~/Repos/github.com/tittitoo/minimalist"
-startup_command = "tmux rename-window 'minimalist'; yazi"
-
-[[session]]
-name = "journal"
-path = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/journal"
-startup_command = "tmux rename-window 'journal'; yazi"
 
 [[session]]
 name = "btop"

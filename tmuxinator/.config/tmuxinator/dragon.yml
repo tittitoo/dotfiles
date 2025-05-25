@@ -1,7 +1,7 @@
 # /Users/infowizard/.config/tmuxinator/office.yml
 
-name: office
-root: "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@rfqs"
+name: dragon
+root: "~/Repos/github.com/tittitoo/dotfiles"
 
 # Optional tmux socket
 # socket_name: foo
@@ -21,7 +21,7 @@ root: "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bi
 # on_project_restart: command
 
 # Run on project exit ( detaching from tmux session )
-# on_project_exit: "rsync -av --exclude='.*' '/Users/infowizard/Library/Mobile Documents/iCloud~md~obsidian/Documents/team/' '/Users/infowizard/Repos/github.com/tittitoo/team/"
+# on_project_exit: command
 
 # Run on project stop
 # on_project_stop: command
@@ -45,20 +45,11 @@ root: "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bi
 # attach: false
 
 windows:
-  - rfqs:
+  - dragon:
+      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
       panes:
-  - rfqs:
+        - nvim
+  - journal:
+      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/journal"
       panes:
-        - yazi
-  - drafts:
-      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
-      panes:
-        - yazi
-  - docs:
-      root: "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@docs"
-      panes:
-        - yazi
-  - team:
-      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team"
-      panes:
-        - yazi
+        - nvim
