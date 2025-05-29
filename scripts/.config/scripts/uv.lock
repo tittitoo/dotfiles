@@ -39,7 +39,7 @@ name = "click"
 version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/d3/f04c7bfcf5c1862a2a5b845c6b2b360488cf47af55dfa79c98f6a6bf98b5/click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de", size = 336121 }
 wheels = [
@@ -81,7 +81,6 @@ dependencies = [
     { name = "pypdf" },
     { name = "python-decouple" },
     { name = "reportlab" },
-    { name = "shpyx" },
     { name = "xlwings" },
 ]
 
@@ -94,7 +93,6 @@ requires-dist = [
     { name = "pypdf", specifier = ">=5.3.0" },
     { name = "python-decouple", specifier = ">=3.8" },
     { name = "reportlab", specifier = ">=4.3.1" },
-    { name = "shpyx", specifier = ">=0.0.32" },
     { name = "xlwings", specifier = ">=0.33.5" },
 ]
 
@@ -349,15 +347,6 @@ wheels = [
 ]
 
 [[package]]
-name = "shpyx"
-version = "0.0.32"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/9c/80/9323a3ebf11d24d16d897f69733e121bc1beaac7cfa513b8254224cca776/shpyx-0.0.32.tar.gz", hash = "sha256:4ac7387bb1f20a68e54891c50466ce725b57c23ca0c730f3499665e002479a13", size = 10578 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/60/c03fbe63508c4592135aa37444862344630450e736aa610d7d877a606f6e/shpyx-0.0.32-py3-none-any.whl", hash = "sha256:87ec828b3ebca9f072c7f43f648472fa3773a797a689d5e25496ccd4ca75b1a7", size = 10504 },
-]
-
-[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -371,7 +360,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
 wheels = [
@@ -401,9 +390,9 @@ name = "xlwings"
 version = "0.33.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appscript", marker = "platform_system == 'Darwin'" },
-    { name = "psutil", marker = "platform_system == 'Darwin'" },
-    { name = "pywin32", marker = "platform_system == 'Windows'" },
+    { name = "appscript", marker = "sys_platform == 'darwin'" },
+    { name = "psutil", marker = "sys_platform == 'darwin'" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/93/2c/c26316256fa58b8d20a6edfa0c5050004fc5b8c102abe3532fe631be0d40/xlwings-0.33.5.tar.gz", hash = "sha256:c57d83eadd068a5f1fa45898be0f433281284ca3f9dd180b1a26b1d691a72211", size = 1088079 }
 wheels = [

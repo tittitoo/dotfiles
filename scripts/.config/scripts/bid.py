@@ -3,7 +3,6 @@
 # requires-python = ">=3.12"
 # dependencies = [
 # "click",
-# "shpyx",
 # "xlwings",
 # "python-decouple",
 # "pandas",
