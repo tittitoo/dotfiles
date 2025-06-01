@@ -1,7 +1,7 @@
-# /Users/infowizard/.config/tmuxinator/office.yml
+# /Users/infowizard/.config/tmuxinator/dragon.yml
 
 name: dragon
-root: "~/Repos/github.com/tittitoo/dotfiles"
+root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
 
 # Optional tmux socket
 # socket_name: foo
@@ -52,4 +52,6 @@ windows:
   - journal:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/journal"
       panes:
-        - nvim
+        - nvim README.md
+  - playground:
+      panes:

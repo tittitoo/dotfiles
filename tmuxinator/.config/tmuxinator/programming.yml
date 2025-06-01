@@ -53,3 +53,5 @@ windows:
       root: "~/.config/scripts"
       panes:
         - source .venv/bin/activate.fish; clear
+  - krabi:
+      root: "~/Repos/github.com/tittitoo/krabi/"
