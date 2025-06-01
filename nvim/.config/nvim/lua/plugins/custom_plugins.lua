@@ -26,7 +26,7 @@ return {
       --   vim.cmd("TWDisable")
       -- end,
       window = {
-        width = 80,
+        width = "50%",
       },
       plugins = {
         twilight = { enabled = false },
