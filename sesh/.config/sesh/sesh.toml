@@ -1,29 +1,29 @@
-# TODO: window still does not work. Only sessions do.
+# settings mainly set in tmuxinator. tmuxinator needs to be install through homebrew
 
 [default_session]
 startup_command = "yazi"
 
-[[session]]
-name = "downloads 📥"
-path = "~/Downloads"
-startup_command = "tmux rename-window 'download 📥'; yazi"
-
-[[session]]
-name = "dotfiles"
-path = "~/Repos/github.com/tittitoo/dotfiles"
-startup_command = "tmux rename-window 'dotfiles'; yazi"
-
-[[session]]
-name = "handover"
-path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@handover"
-startup_command = "tmux rename-window 'handover'; yazi"
-
-[[session]]
-name = "costing"
-path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@costing"
-startup_command = "tmux rename-window 'costing'; yazi"
-
-[[session]]
-name = "btop"
-path = "~/Downloads"
-startup_command = "tmux rename-window 'btop'; btop"
+# [[session]]
+# name = "downloads"
+# path = "~/Downloads"
+# startup_command = "tmux rename-window 'download'; yazi"
+#
+# [[session]]
+# name = "dotfiles"
+# path = "~/Repos/github.com/tittitoo/dotfiles"
+# startup_command = "tmux rename-window 'dotfiles'; yazi"
+#
+# [[session]]
+# name = "handover"
+# path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@handover"
+# startup_command = "tmux rename-window 'handover'; yazi"
+#
+# [[session]]
+# name = "costing"
+# path = "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@costing"
+# startup_command = "tmux rename-window 'costing'; yazi"
+#
+# [[session]]
+# name = "btop"
+# path = "~/Downloads"
+# startup_command = "tmux rename-window 'btop'; btop"
