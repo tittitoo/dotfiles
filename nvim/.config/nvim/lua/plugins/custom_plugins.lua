@@ -19,21 +19,17 @@ return {
   {
     "folke/zen-mode.nvim",
     opts = {
-      -- on_open = function()
-      --   vim.cmd("TWEnable")
-      -- end,
-      -- on_close = function()
-      --   vim.cmd("TWDisable")
-      -- end,
       window = {
-        width = "50%",
+        backdrop = 0.8,
+        width = 0.5,
+        -- height = 0.8,
       },
       plugins = {
         twilight = { enabled = false },
       },
     },
   },
-  { "folke/twilight.nvim", opts = {} },
+  -- { "folke/twilight.nvim", opts = {} },
   {
     "jiaoshijie/undotree",
     dependencies = "nvim-lua/plenary.nvim",
