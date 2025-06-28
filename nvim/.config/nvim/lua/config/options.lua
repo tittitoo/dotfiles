@@ -14,8 +14,8 @@ vim.opt.expandtab = true -- Use spaces instead of tabs
 -- Enable Codeium status
 vim.g.codeium_enabled = true
 
--- Disable AI completion
--- vim.g.ai_cmp = false
+-- Enable AI completion
+vim.g.ai_cmp = true
 
 -- Disable swap file. Take the risk
 vim.opt.swapfile = false
