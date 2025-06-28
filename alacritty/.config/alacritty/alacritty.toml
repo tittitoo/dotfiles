@@ -1,7 +1,8 @@
 
 [font]
-normal = { family = "VictorMono Nerd Font Mono", style = "Regular" }
-size = 17
+# normal = { family = "VictorMono Nerd Font Mono", style = "Regular" }
+normal = { family = "VictorMono Nerd Font Mono", style = "Light" }
+size = 21
 
 [window]
 decorations = "none"
@@ -27,6 +28,6 @@ import = [
     # "~/.config/alacritty/themes/pencil_light.toml"
     # "~/.config/alacritty/themes/papercolor_light.toml",
     # "~/.config/alacritty/themes/kanagawa_wave.toml",
-    # "~/.config/alacritty/themes/kanagawa_dragon.toml",
-    "~/.config/alacritty/themes/kanagawa_lotus.toml",
+    "~/.config/alacritty/themes/kanagawa_dragon.toml",
+    # "~/.config/alacritty/themes/kanagawa_lotus.toml",
 ]
