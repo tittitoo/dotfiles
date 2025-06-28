@@ -53,5 +53,21 @@ windows:
       root: "~/.config/scripts"
       panes:
         - source .venv/bin/activate.fish; clear
+  - egg:
+      root: "~/Repos/github.com/tittitoo/egg/"
+      panes:
+        - clear
+  - okp:
+      root: "~/Repos/github.com/tittitoo/okp/"
+      panes:
+        - source .venv/bin/activate.fish; clear
   - krabi:
       root: "~/Repos/github.com/tittitoo/krabi/"
+  - scratch:
+      root: "~/Repos/github.com/tittitoo/scratch/"
+      panes:
+        - source .venv/bin/activate.fish; clear
+  - jupyter-evn:
+      root: "~/Repos/github.com/tittitoo/jupyter-env/"
+      panes:
+        - source .venv/bin/activate.fish; clear
