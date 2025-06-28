@@ -1,6 +1,6 @@
 # Font family, default is Jet Brains Mono
 font-family = "VictorMono Nerd Font Mono"
-font-size = 21
+font-size = 22
 
 # keymaps
 keybind = global:cmd+`=toggle_quick_terminal
@@ -27,5 +27,5 @@ cursor-invert-fg-bg = true
 # theme = "catppuccin-latte"
 # theme = "catppuccin-frappe"
 # theme = "catppuccin-mocha"
-# theme = "Kanagawa Dragon"
-theme = "Kanagawa Wave"
+theme = "Kanagawa Dragon"
+# theme = "Kanagawa Wave"
