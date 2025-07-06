@@ -1,6 +1,6 @@
-# /Users/infowizard/.config/tmuxinator/programming.yml
+# /Users/infowizard/.config/tmuxinator/dotfiles.yml
 
-name: programming
+name: dotfiles
 root: "~/Repos/github.com/tittitoo/dotfiles"
 
 # Optional tmux socket
@@ -45,33 +45,11 @@ root: "~/Repos/github.com/tittitoo/dotfiles"
 # attach: false
 
 windows:
-  - mini:
-      root: "~/Repos/github.com/tittitoo/minimalist/"
+  - nvim:
+      root: "~/Repos/github.com/tittitoo/dotfiles/nvim/.config/nvim"
       panes:
-        - source .venv/bin/activate.fish; clear
-  - scripts:
-      root: "~/.config/scripts"
+        - yazi
+  - tmuxinator:
+      root: "~/Repos/github.com/tittitoo/dotfiles/tmuxinator/.config/tmuxinator"
       panes:
-        - source .venv/bin/activate.fish; clear
-  - egg:
-      root: "~/Repos/github.com/tittitoo/egg/"
-      panes:
-        - clear
-  - okp:
-      root: "~/Repos/github.com/tittitoo/okp/"
-      panes:
-        - source .venv/bin/activate.fish; clear
-  - bid:
-      root: "~/Repos/github.com/tittitoo/bid/"
-      panes:
-        - source .venv/bin/activate.fish; clear
-  - krabi:
-      root: "~/Repos/github.com/tittitoo/krabi/"
-  - scratch:
-      root: "~/Repos/github.com/tittitoo/scratch/"
-      panes:
-        - source .venv/bin/activate.fish; clear
-  - jupyter-evn:
-      root: "~/Repos/github.com/tittitoo/jupyter-env/"
-      panes:
-        - source .venv/bin/activate.fish; clear
+        - yazi
