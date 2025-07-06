@@ -27,5 +27,6 @@ cursor-invert-fg-bg = true
 # theme = "catppuccin-latte"
 # theme = "catppuccin-frappe"
 # theme = "catppuccin-mocha"
-theme = "Kanagawa Dragon"
+# theme = "Kanagawa Dragon"
+theme = "kanagawa_dragon"
 # theme = "Kanagawa Wave"
