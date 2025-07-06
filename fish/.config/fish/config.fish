@@ -57,10 +57,11 @@ set -x FZF_DEFAULT_OPTS '
   --info=inline
   --preview="echo {}"
   --preview-window=down:3:wrap
-  --color=fg:#dcd7ba,hl:#7e9cd8 
-  --color=fg+:#c8c093,bg+:#2d4f67,hl+:#957fb8 
-  --color=info:#a3d4d5,prompt:#dca561,pointer:#e46876,marker:#98bb6c,spinner:#7fb4ca
-  --border 
+  --color=fg:#DCD7BA,hl:#7E9CD8 
+  --color=fg+:#C8C093,bg:#1F1F28,bg+:#2D4F67,hl+:#957FB8 
+  --color=info:#727169,prompt:#7E9CD8,pointer:#957FB8,marker:#98BB6C,spinner:#658594 
+  --color=header:#727169,border:#54546D,preview-fg:#DCD7BA,preview-bg:#2A2A37 
+  --border=rounded
   --multi
   --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / CTRL-U / CTRL-R / CTRL-/"
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
