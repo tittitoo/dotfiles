@@ -58,7 +58,7 @@ set -x FZF_DEFAULT_OPTS '
   --preview="echo {}"
   --preview-window=down:3:wrap
   --color=fg:#DCD7BA,hl:#7E9CD8 
-  --color=fg+:#C8C093,bg:#1F1F28,bg+:#2D4F67,hl+:#957FB8 
+  --color=fg+:#C5C9C5,bg:#1F1F28,bg+:#2D4F67,hl+:#957FB8 
   --color=info:#727169,prompt:#7E9CD8,pointer:#957FB8,marker:#98BB6C,spinner:#658594 
   --color=header:#727169,border:#54546D,preview-fg:#DCD7BA,preview-bg:#2A2A37 
   --border=rounded
