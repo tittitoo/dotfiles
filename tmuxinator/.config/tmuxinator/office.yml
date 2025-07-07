@@ -66,3 +66,5 @@ windows:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team"
       panes:
         - yazi
+  - playground:
+      panes:

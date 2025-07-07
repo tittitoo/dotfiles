@@ -45,12 +45,12 @@ root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
 # attach: false
 
 windows:
-  - dragon:
-      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
-      panes:
-        - yazi
   - inbox:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox"
+      panes:
+        - yazi
+  - dragon:
+      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
       panes:
         - yazi
   - drafts:

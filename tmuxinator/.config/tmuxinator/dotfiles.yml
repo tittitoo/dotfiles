@@ -53,3 +53,5 @@ windows:
       root: "~/Repos/github.com/tittitoo/dotfiles/tmuxinator/.config/tmuxinator"
       panes:
         - yazi
+  - playground:
+      panes:
