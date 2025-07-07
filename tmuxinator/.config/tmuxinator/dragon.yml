@@ -48,7 +48,15 @@ windows:
   - dragon:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
       panes:
-        - nvim
+        - yazi
+  - inbox:
+      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox"
+      panes:
+        - yazi
+  - drafts:
+      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
+      panes:
+        - yazi
   - journal:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/journal"
       panes:
