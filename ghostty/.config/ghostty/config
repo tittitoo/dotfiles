@@ -22,6 +22,10 @@ cursor-invert-fg-bg = true
 # Try for Myanmar Font
 # U+1000-U+109F="Noto Sans Myanmar"
 
+# Set background
+background-opacity = 0.95
+# background-blur-radius = 20
+
 # Theme
 # theme = light:"catppuccin-latte",dark:"Kanagawa Wave"
 # theme = "catppuccin-latte"
@@ -30,3 +34,5 @@ cursor-invert-fg-bg = true
 # theme = "Kanagawa Dragon"
 theme = "kanagawa_dragon"
 # theme = "Kanagawa Wave"
+# theme = "tokyonight-day"
+# theme = "tokyonight_night"
