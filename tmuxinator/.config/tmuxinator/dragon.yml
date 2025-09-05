@@ -49,6 +49,10 @@ windows:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox"
       panes:
         - yazi
+  - literature:
+      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/literature"
+      panes:
+        - yazi
   - dragon:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
       panes:

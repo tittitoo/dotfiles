@@ -1,0 +1,24 @@
+name: files
+root: "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@rfqs"
+
+windows:
+  - rfqs:
+      panes:
+        - yazi
+  - rfqs:
+      panes:
+        - yazi
+  - rfqs:
+      panes:
+        - yazi
+  - rfqs:
+      panes:
+        - yazi
+  - rfqs:
+      panes:
+        - yazi
+  - rfqs:
+      panes:
+        - yazi
+  - playground:
+      panes:
