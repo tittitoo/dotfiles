@@ -86,6 +86,19 @@ set -x FZF_ALT_C_OPTS '
 # \e means ALT, \c means CTRL
 fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ca --git_status=\cg --git_log= --processes=\cp #--gi_log=\cl
 
+# Add ssh key
+if test (uname -s) = Darwin
+    if not test -S $SSH_AUTH_SOCK
+        eval (ssh-agent -c) >/dev/null # make the output silent
+        # eval (ssh-agent -c)
+    end
+    if test $hostname = infowizardAir
+        ssh-add --apple-use-keychain -q ~/.ssh/id_ed25519
+    else if test $hostmane = infowizardMac
+        ssh-add --apple-use-keychain -q ~/.ssh/id_ecdsa
+    end
+end
+
 # fiz.fish
 # set fzf_preview_dir_cmd eza --all --color=always
 
