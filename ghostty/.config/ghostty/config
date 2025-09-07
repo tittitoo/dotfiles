@@ -23,7 +23,7 @@ cursor-invert-fg-bg = true
 # U+1000-U+109F="Noto Sans Myanmar"
 
 # Set background
-background-opacity = 0.85
+background-opacity = 0.75
 # background-blur-radius = 20
 
 # Theme
