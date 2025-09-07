@@ -13,7 +13,7 @@ return {
     config = function(opts)
       require("kanagawa").setup(opts)
       vim.cmd.colorscheme("kanagawa-dragon") -- change theme here for wave, dragon and lotus
-      vim.cmd.colorscheme("kanagawa-wave") -- change theme here for wave, dragon and lotus
+      -- vim.cmd.colorscheme("kanagawa-wave") -- change theme here for wave, dragon and lotus
 
       -- Overriding the background for UI elements to be transparent
       vim.cmd([[
