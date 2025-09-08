@@ -94,7 +94,7 @@ if test (uname -s) = Darwin
     end
     if test $hostname = infowizardAir
         ssh-add --apple-use-keychain -q ~/.ssh/id_ed25519
-    else if test $hostmane = infowizardMac
+    else if test $hostname = infowizardMac
         ssh-add --apple-use-keychain -q ~/.ssh/id_ecdsa
     end
 end
