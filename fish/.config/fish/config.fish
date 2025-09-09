@@ -57,15 +57,15 @@ set -x FZF_DEFAULT_OPTS '
   --info=inline
   --preview="echo {}"
   --preview-window=down:3:wrap
-  --color=fg:#DCD7BA,hl:#7E9CD8 
-  --color=fg+:#C5C9C5,bg:#1F1F28,bg+:#2D4F67,hl+:#957FB8 
-  --color=info:#727169,prompt:#7E9CD8,pointer:#957FB8,marker:#98BB6C,spinner:#658594 
-  --color=header:#727169,border:#54546D,preview-fg:#DCD7BA,preview-bg:#2A2A37 
+  --color=hl:#658594 
+  --color=fg:#DCD7BA,fg+:#C5C9C5,bg:-1,bg+:-1
+  --color=info:#727169,prompt:#7E9CD8,pointer:#957FB8,marker:#98BB6C,spinner:-1 
+  --color=header:#727169,border:-1,preview-fg:-1,preview-bg:-1 
   --border=rounded
   --multi
   --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / CTRL-U / CTRL-R / CTRL-/"
-  --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
-  --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
+  --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d --color=always)"
+  --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f --color=always)"
   --bind "ctrl-o:execute(open {})" 
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
   --bind "ctrl-u:execute(echo {} | clean-text | pbcopy)"
