@@ -30,5 +30,6 @@ vim.keymap.set({ "o", "x" }, "aH", "<Plug>(neorg.text-objects.textobject.heading
 vim.keymap.set("i", "<CR>", "<C-Enter>", { noremap = true })
 
 -- Enable or disable image preview
-vim.keymap.set("n", "<leader>oi", "<cmd>lua require('image').disable()<CR>", { desc = "Disable Image Preview" })
-vim.keymap.set("n", "<leader>oI", "<cmd>lua require('image').enable()<CR>", { desc = "Enable Image Preview" })
+-- Since floating option is set in image.nvim the below keymap no longer applicable
+-- vim.keymap.set("n", "<leader>oi", "<cmd>lua require('image').disable()<CR>", { desc = "Disable Image Preview" })
+-- vim.keymap.set("n", "<leader>oI", "<cmd>lua require('image').enable()<CR>", { desc = "Enable Image Preview" })
