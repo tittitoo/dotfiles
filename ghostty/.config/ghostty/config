@@ -1,6 +1,6 @@
 # Font family, default is Jet Brains Mono
 font-family = "VictorMono Nerd Font Mono"
-font-size = 22
+font-size = 24
 
 # keymaps
 keybind = global:cmd+`=toggle_quick_terminal
@@ -23,7 +23,7 @@ cursor-invert-fg-bg = true
 # U+1000-U+109F="Noto Sans Myanmar"
 
 # Set background
-background-opacity = 0.75
+background-opacity = 0.85
 # background-blur-radius = 20
 
 # Theme
