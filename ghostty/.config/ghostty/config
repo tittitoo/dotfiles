@@ -1,9 +1,5 @@
 # Font family, default is Jet Brains Mono
 font-family = "VictorMono Nerd Font Mono"
-font-size = 20
-# font-style = "SemiBold"
-# font-style = "Medium"
-font-thicken = true
 
 # keymaps
 keybind = global:cmd+`=toggle_quick_terminal
@@ -26,8 +22,14 @@ cursor-invert-fg-bg = true
 # U+1000-U+109F="Noto Sans Myanmar"
 
 # Set background
-# background-opacity = 0.95
+background-opacity = 0.95
 # background-blur-radius = 20
+
+# Font size for light theme 20 and dark theme 24
+font-size = 20
+font-thicken = true
+# font-style = "SemiBold"
+# font-style = "Medium"
 
 # Theme
 # theme = light:"catppuccin-latte",dark:"Kanagawa Wave"
