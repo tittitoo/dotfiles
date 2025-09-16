@@ -22,11 +22,11 @@ cursor-invert-fg-bg = true
 # U+1000-U+109F="Noto Sans Myanmar"
 
 # Set background
-background-opacity = 0.95
+background-opacity = 0.85
 # background-blur-radius = 20
 
-# Font size for light theme 20 and dark theme 24
-font-size = 20
+# Font size for light theme 21 and dark theme 24
+font-size = 21
 font-thicken = true
 # font-style = "SemiBold"
 # font-style = "Medium"
@@ -37,7 +37,8 @@ theme = catppuccin-latte.conf
 # theme = catppuccin-frappe.conf
 # theme = catppuccin-mocha.conf
 # theme = catppuccin-macchiato.conf
-# theme = "Kanagawa Dragon"
-# theme = "Kanagawa Wave"
+# theme = kanagawa-lotus.conf
+# theme = kanagawa-dragon.conf
+# theme = kanagawa-wave.conf
 # theme = "tokyonight-day"
 # theme = "tokyonight_night"
