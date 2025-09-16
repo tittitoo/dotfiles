@@ -33,11 +33,11 @@ font-thicken = true
 
 # Theme
 # theme = light:"catppuccin-latte",dark:"Kanagawa Wave"
-theme = catppuccin-latte.conf
+# theme = catppuccin-latte.conf
 # theme = catppuccin-frappe.conf
 # theme = catppuccin-mocha.conf
 # theme = catppuccin-macchiato.conf
-# theme = kanagawa-lotus.conf
+theme = kanagawa-lotus.conf
 # theme = kanagawa-dragon.conf
 # theme = kanagawa-wave.conf
 # theme = "tokyonight-day"
