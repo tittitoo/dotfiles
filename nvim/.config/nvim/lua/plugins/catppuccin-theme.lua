@@ -8,7 +8,7 @@ return {
       -- background = { -- :h background
       --   light = "latte",
       --   dark = "mocha",
-      },
+      -- },
       transparent_background = true,
       integrations = {
         cmp = true,
