@@ -26,7 +26,7 @@ background-opacity = 0.85
 # background-blur-radius = 20
 
 # Font size for light theme 21 and dark theme 24
-font-size = 21
+font-size = 24
 font-thicken = true
 # font-style = "SemiBold"
 # font-style = "Medium"
