@@ -1,2 +1,4 @@
 [flavor]
-use = "kanagawa-dragon"
+# use = "kanagawa-dragon"
+use = "catppuccin-latte"
+# use = "catppuccin-mocha"
