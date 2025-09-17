@@ -2,6 +2,7 @@ return {
   {
     "catppuccin/nvim",
     name = "catppuccin",
+    lazy = true,
     priority = 1000,
     opts = {
       flavour = "latte", -- auto, latte, frappe, macchiato, mocha
@@ -14,6 +15,7 @@ return {
         cmp = true,
         gitsigns = true,
         treesitter = true,
+        mini = true,
         -- Disable the default nvimtree integration as it can conflict
         -- if you are using other file tree plugins
         nvimtree = false,
@@ -25,7 +27,18 @@ return {
     },
     config = function(_, opts)
       require("catppuccin").setup(opts)
-
+      --
+      -- -- Use vim.schedule to ensure this runs after Neovim's initial startup
+      -- vim.schedule(function()
+      --   -- Check if the system's background is "light"
+      --   if vim.o.background == "light" then
+      --     -- Set the light theme
+      --     vim.cmd.colorscheme("catppuccin-latte")
+      --   else
+      --     -- Otherwise, set the dark theme
+      --     vim.cmd.colorscheme("catppuccin-mocha")
+      --   end
+      -- end)
       -- Overriding the background for UI elements to be transparent
       vim.cmd([[
   hi Normal       guibg=NONE ctermbg=NONE
