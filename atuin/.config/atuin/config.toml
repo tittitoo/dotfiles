@@ -236,5 +236,6 @@ enabled = true
 # Add theme
 [theme]
 # name = "kanagawa" # Defaut to wave theme
-name = "kanagawa-dragon"
+# name = "kanagawa-dragon"
+name = "catppuccin-latte-lavender"
 background = "transparent"
