@@ -22,7 +22,7 @@ cursor-invert-fg-bg = true
 # U+1000-U+109F="Noto Sans Myanmar"
 
 # Set background
-background-opacity = 0.85
+# background-opacity = 0.85
 # background-blur-radius = 20
 
 # Font size for light theme 21 and dark theme 24
@@ -32,8 +32,8 @@ font-thicken = true
 # font-style = "Medium"
 
 # Theme
-# theme = light:"catppuccin-latte",dark:"Kanagawa Wave"
-theme = catppuccin-latte.conf
+theme = light:catppuccin-latte.conf,dark:catppuccin-mocha.conf
+# theme = catppuccin-latte.conf
 # theme = catppuccin-frappe.conf
 # theme = catppuccin-mocha.conf
 # theme = catppuccin-macchiato.conf
