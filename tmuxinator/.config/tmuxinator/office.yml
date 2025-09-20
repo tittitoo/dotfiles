@@ -50,6 +50,10 @@ windows:
   - rfqs:
       panes:
         - yazi
+  - inbox:
+      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox"
+      panes:
+        - yazi
   - drafts:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
       panes:
