@@ -36,7 +36,9 @@ set -gx PATH (echo $PATH | tr ' ' '\n' | sort -u | sed 's/:$//')
 set fish_greeting
 
 # Enable vi mode
-set fish_vi_key_bindings
+fish_vi_key_bindings
+# set -g fish_key_bindings fish_vi_key_binding
+# fish_key_bindings fish_mode_vi
 
 # Load ssh id key
 # eval (ssh-agent -c)
@@ -136,3 +138,5 @@ status --is-interactive; and rbenv init - --no-rehash fish | source
 
 # Added by Windsurf
 fish_add_path /Users/infowizard/.codeium/windsurf/bin
+
+set -gx XDG_CONFIG_HOME ~/.config
