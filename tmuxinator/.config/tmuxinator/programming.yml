@@ -53,10 +53,18 @@ windows:
       root: "~/.config/scripts"
       panes:
         - source .venv/bin/activate.fish; clear
-  - egg:
-      root: "~/Repos/github.com/tittitoo/egg/"
+  # - egg:
+  #     root: "~/Repos/github.com/tittitoo/egg/"
+  #     panes:
+  #       - clear
+  - js:
+      root: "~/Repos/github.com/tittitoo/js/"
       panes:
         - clear
+  - html-css-js:
+      root: "~/Repos/github.com/tittitoo/html-css-and-javascript-building-the-web/"
+      panes:
+        - source .venv/bin/activate.fish; clear
   - okp:
       root: "~/Repos/github.com/tittitoo/okp/"
       panes:
@@ -64,10 +72,10 @@ windows:
   - playground:
       root: "~/Downloads/"
       panes:
-  - bid:
-      root: "~/Repos/github.com/tittitoo/bid/"
-      panes:
-        - source .venv/bin/activate.fish; clear
+  # - bid:
+  #     root: "~/Repos/github.com/tittitoo/bid/"
+  #     panes:
+  #       - source .venv/bin/activate.fish; clear
   - krabi:
       root: "~/Repos/github.com/tittitoo/krabi/"
   - scratch:
