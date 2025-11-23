@@ -22,3 +22,6 @@ vim.opt.swapfile = false
 
 -- Default python path
 vim.g.python3_host_prog = vim.fn.expand("~/Repos/github.com/tittitoo/nvim-python/.venv/bin/python3")
+
+-- Disable appending new line to txt files
+vim.opt.fixeol = false
