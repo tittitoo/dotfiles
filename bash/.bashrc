@@ -32,3 +32,5 @@ alias of='open "$(fp)"'
 # Env variables for xlwings
 export SHAREPOINT_MAC="/Users/infowizard/Jason Electronics Pte Ltd"
 export ONEDRIVE_COMMERCIAL_MAC="OneDrive - Jason Electronics Pte Ltd"
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
