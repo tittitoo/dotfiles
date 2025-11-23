@@ -140,3 +140,5 @@ status --is-interactive; and rbenv init - --no-rehash fish | source
 fish_add_path /Users/infowizard/.codeium/windsurf/bin
 
 set -gx XDG_CONFIG_HOME ~/.config
+set -gx VOLTA_HOME "$HOME/.volta"
+set -gx PATH "$VOLTA_HOME/bin" $PATH
