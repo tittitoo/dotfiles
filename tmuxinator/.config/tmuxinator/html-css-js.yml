@@ -1,0 +1,12 @@
+# /Users/infowizard/.config/tmuxinator/html-css-js.yml
+
+name: html-css-js
+root: "~/Repos/github.com/tittitoo/html-css-and-javascript-building-the-web/"
+
+windows:
+  - html-css-js:
+      panes:
+        - source .venv/bin/activate.fish; clear
+  - mkdocs:
+      panes:
+        - source .venv/bin/activate.fish; clear; mkdocs serve

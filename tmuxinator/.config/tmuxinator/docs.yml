@@ -1,0 +1,16 @@
+# /Users/infowizard/.config/tmuxinator/programming.yml
+
+name: docs
+root: "~/Repos/github.com/tittitoo/docs/"
+
+windows:
+  - docs:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - docs-server:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - playground:
+      # root: "~/.config/scripts"
+      panes:
+        - source .venv/bin/activate.fish; clear

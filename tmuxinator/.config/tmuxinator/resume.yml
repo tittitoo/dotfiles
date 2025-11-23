@@ -1,0 +1,16 @@
+# /Users/infowizard/.config/tmuxinator/resume.yml
+
+name: resume
+root: "~/Repos/github.com/tittitoo/resume/"
+
+windows:
+  - resume:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - files:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - playground:
+      # root: "~/.config/scripts"
+      panes:
+        - source .venv/bin/activate.fish; clear
