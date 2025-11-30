@@ -25,3 +25,4 @@ vim.g.python3_host_prog = vim.fn.expand("~/Repos/github.com/tittitoo/nvim-python
 
 -- Disable appending new line to txt files
 vim.opt.fixeol = false
+vim.opt.eol = false
