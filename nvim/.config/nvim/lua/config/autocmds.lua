@@ -43,3 +43,18 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = { "gitcommit", "markdown", "pandoc", "norg" },
   command = "set formatoptions-=cro", -- Disable auto-comment
 })
+
+-- For html file recognition
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  pattern = {
+    "*.html",
+    "*.jinja",
+    "*.jinja2",
+    "*.html.j2",
+    "*.html.jinja",
+  },
+  callback = function()
+    -- Set the filetype to htmldjango for comprehensive Jinja/Django support
+    vim.opt_local.filetype = "htmldjango"
+  end,
+})

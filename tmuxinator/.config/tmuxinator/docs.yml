@@ -4,10 +4,22 @@ name: docs
 root: "~/Repos/github.com/tittitoo/docs/"
 
 windows:
-  - docs:
+  - bid-proposal:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - tittitoo:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - meemee:
       panes:
         - source .venv/bin/activate.fish; clear; yazi
   - docs-server:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - tittitoo-server:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - meemee-server:
       panes:
         - source .venv/bin/activate.fish; clear; yazi
   - playground:
