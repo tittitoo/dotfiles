@@ -1,0 +1,16 @@
+name: drawings
+root: "~/Repos/github.com/tittitoo/drawings/"
+
+windows:
+  - drawings:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - resources:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - utils:
+      panes:
+        - source .venv/bin/activate.fish; clear; yazi
+  - playground:
+      panes:
+        - source .venv/bin/activate.fish; clear
