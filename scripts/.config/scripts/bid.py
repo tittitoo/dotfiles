@@ -245,8 +245,6 @@ def init(folder_name: str) -> None:
     else:
         if click.confirm(f"'{new_path}' will be created. Continue?", abort=True):
             new_path.mkdir()
-            itb = new_path / "00-ITB/00-Arc"
-            itb.mkdir(parents=True, exist_ok=True)
             iso_date = datetime.now().strftime("%Y-%m-%d")
             itb_specs = new_path / "00-ITB" / iso_date
             itb_specs.mkdir(parents=True, exist_ok=True)
@@ -262,7 +260,7 @@ def init(folder_name: str) -> None:
             drawing.mkdir(parents=True, exist_ok=True)
             po = new_path / "06-PO/00-Arc"
             po.mkdir(parents=True, exist_ok=True)
-            vo = new_path / "07-VO/00-Arc"
+            vo = new_path / "07-VO"
             vo.mkdir(parents=True, exist_ok=True)
             toolkit = new_path / "08-Toolkit/00-Arc"
             toolkit.mkdir(parents=True, exist_ok=True)
