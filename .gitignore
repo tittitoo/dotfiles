@@ -12,3 +12,4 @@ fabric/.config/fabric/unique_patterns.txt
 scripts/.config/scripts/.env
 nvim/.config/nvim/lazyvim.json
 karabiner/.config/karabiner/automatic_backups
+scripts/.config/scripts/CLAUDE.md

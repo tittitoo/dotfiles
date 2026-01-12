@@ -13,6 +13,7 @@
 # ///
 
 # For the import, remember to put it in the script above. Script is read during runtime.
+# Heavy imports (docx2pdf, xlwings, pypdf, etc.) are lazy-loaded in commands that need them
 import logging
 import os
 import platform
@@ -20,15 +21,10 @@ import re
 import shutil
 import subprocess
 import getpass
-import docx2pdf
 from datetime import datetime
 from pathlib import Path
 
 import click
-
-from util import beautify
-from util import excelx
-from util import pdfx
 
 # Version
 # Recommended is to define in __init__.py but I am doing it here.
@@ -71,6 +67,8 @@ def word2pdf(yes: bool):
     (Batch) Convert word file to pdf in given directory.
     Require MS Word to be installed as it is doing the conversion.
     """
+    import docx2pdf
+
     directory = Path.cwd()
     if not yes:
         click.confirm(
@@ -196,6 +194,8 @@ def init(folder_name: str) -> None:
     Search for the latest year, create one if it does not exists.
     Then create the required folder structure in it.
     """
+    from util import excelx
+
     # Handle case where @rfqs does not exists
     if not Path(RFQ).expanduser().exists():
         click.echo("The folder @rfqs does not exist. Check if you have access.")
@@ -494,6 +494,35 @@ def test():
     open_with_default_app(test)
 
 
+@click.command()
+@click.argument("xl_file", default="")
+@click.option("-a", "--autofit", is_flag=True, help="Auto fit columns")
+def beautify(xl_file: str, autofit: bool) -> None:
+    "Beautify excel file based on template."
+    from util.beautify import beautify as _beautify
+
+    # Get the underlying callback and invoke it
+    ctx = click.Context(_beautify)
+    ctx.invoke(_beautify, xl_file=xl_file, autofit=autofit)
+
+
+@click.command()
+@click.option("-o", "--outline", is_flag=True, help="Add outline to file from filename")
+@click.option("-y", "--yes", is_flag=True, help="Answer yes to the current directory")
+@click.option(
+    "-t", "--toc", is_flag=True, help="Add table of contends in separate page"
+)
+def combine_pdf(outline: bool, toc: bool, yes: bool):
+    """
+    Combine pdf and output result pdf in the current folder.
+    If the combined file already exists, it will remove it first and re-combine.
+    """
+    from util.pdfx import combine_pdf as _combine_pdf
+
+    ctx = click.Context(_combine_pdf)
+    ctx.invoke(_combine_pdf, outline=outline, toc=toc, yes=yes)
+
+
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
@@ -505,8 +534,8 @@ def bid():
 bid.add_command(init)
 bid.add_command(setup)
 bid.add_command(clean)
-bid.add_command(beautify.beautify)
-bid.add_command(pdfx.combine_pdf)
+bid.add_command(beautify)
+bid.add_command(combine_pdf)
 bid.add_command(word2pdf)
 # bid.add_command(test)
 
