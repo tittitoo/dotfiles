@@ -10,6 +10,9 @@ keybind = ctrl+j=goto_split:bottom
 keybind = ctrl+k=goto_split:top
 keybind = ctrl+l=goto_split:right
 keybind = ctrl+super+u=equalize_splits
+
+# Disable dimming for unfocused splits
+unfocused-split-opacity = 1
 # macos options
 macos-titlebar-style = tabs
 macos-titlebar-proxy-icon = hidden
