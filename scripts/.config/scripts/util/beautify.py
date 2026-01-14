@@ -21,8 +21,13 @@ TEMPLATE = [
 
 @click.command()
 @click.argument("xl_file", default="")
-@click.option("-a", "--autofit", is_flag=True, help="Auto fit columns")
-def beautify(xl_file: str, autofit: bool) -> None:
+@click.option(
+    "-w",
+    "--smart-width",
+    is_flag=True,
+    help="Set column width based on content (max 80 chars, word wrap)",
+)
+def beautify(xl_file: str, smart_width: bool) -> None:
     "Beautify excel file based on template."
     while True:
         if xl_file == "":
@@ -57,59 +62,27 @@ def beautify(xl_file: str, autofit: bool) -> None:
             if template_number.lower() == "q":
                 return
         click.echo("Not a valid value.")
-    match templates[template_number]:
-        case "Arial, Size 12":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(wb, font_name="Arial", font_size=12, autofit=autofit)
-        case "Arial, Size 11":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(wb, font_name="Arial", font_size=11, autofit=autofit)
-        case "Arial, Size 10":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(wb, font_name="Arial", font_size=10, autofit=autofit)
-        case "Calibri, Size 11":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(
-                    wb, font_name="Calibri", font_size=11, autofit=autofit
-                )
-        case "Calibri, Size 10":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(
-                    wb, font_name="Calibri", font_size=10, autofit=autofit
-                )
-        case "Tahoma, Size 11":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(wb, font_name="Tahoma", font_size=11, autofit=autofit)
-        case "Tahoma, Size 10":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(wb, font_name="Tahoma", font_size=10, autofit=autofit)
-        case "Helvetica, Size 12":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(
-                    wb, font_name="Helvetica", font_size=12, autofit=autofit
-                )
-        case "Helvetica, Size 11":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(
-                    wb, font_name="Helvetica", font_size=11, autofit=autofit
-                )
-        case "Times New Roman, Size 11":
-            wb = get_wb(xl_file)
-            if wb is not None:
-                excelx.set_format(
-                    wb, font_name="Times New Roman", font_size=11, autofit=autofit
-                )
-        case _:
-            click.echo("Invalid option.")
+
+    # Parse template string: "Font Name, Size N"
+    template = templates[template_number]
+    parts = template.rsplit(", Size ", 1)
+    if len(parts) != 2:
+        click.echo("Invalid template format.")
+        return
+    font_name = parts[0]
+    font_size = int(parts[1])
+
+    wb = get_wb(xl_file)
+    if wb is None:
+        return
+
+    excelx.set_format(wb, font_name=font_name, font_size=font_size)
+
+    if smart_width:
+        excelx.set_column_width_by_content(wb)
+
+    wb.save()
+    click.echo(f"Saved {wb.fullname}")
 
 
 def get_wb(file_name: str) -> xw.Book | None:

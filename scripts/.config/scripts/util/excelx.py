@@ -43,25 +43,86 @@ def create_excel_from_template(
 
 
 def set_format(
-    wb: xw.Book, font_name: str = "Arial", font_size: int = 12, autofit: bool = False
+    wb: xw.Book, font_name: str = "Arial", font_size: int = 12
 ) -> None:
     "Set font attributes in workbook"
     for sheet in wb.sheets:
         try:
             sheet.used_range.font.name = font_name
             sheet.used_range.font.size = font_size
-            if autofit:
-                sheet.used_range.columns.autofit()
-                # sheet.used_range.wrap_text = True
         except Exception:
             click.echo(f"Beautifying excel sheet '{sheet.name}' not successful.")
 
 
-def decide_row_height_column_width(wb: xw.Book) -> None:
-    "Decide row height and column width based on data"
+def set_column_width_by_content(
+    wb: xw.Book, max_width: int = 80, min_width: int = 8
+) -> None:
+    """
+    Set column width based on average content length.
+
+    - Calculates average content length per column (avoids outlier skew)
+    - Caps width at max_width characters
+    - Enables word wrap for cells exceeding the column width
+    - Sets minimum width to min_width
+    """
     for sheet in wb.sheets:
-        df = pd.DataFrame(sheet.range("A1").expand().value)
-        df.apply(lambda x: x.astype(str).str.len().max(), axis=0)
+        try:
+            used_range = sheet.used_range
+            if used_range is None:
+                continue
+
+            # Get all values as a 2D list
+            values = used_range.value
+            if values is None:
+                continue
+
+            # Handle single cell case
+            if not isinstance(values, list):
+                values = [[values]]
+            # Handle single row case
+            elif not isinstance(values[0], list):
+                values = [values]
+
+            num_cols = len(values[0]) if values else 0
+
+            for col_idx in range(num_cols):
+                lengths = []
+
+                for row in values:
+                    if col_idx < len(row) and row[col_idx] is not None:
+                        cell_value = str(row[col_idx])
+                        # For multiline content, get the longest line
+                        lines = cell_value.split("\n")
+                        line_max = max(len(line) for line in lines)
+                        lengths.append(line_max)
+
+                # Calculate average length, default to min_width if no data
+                if lengths:
+                    avg_len = sum(lengths) / len(lengths)
+                else:
+                    avg_len = min_width
+
+                # Use average but ensure minimum width
+                col_width = max(avg_len, min_width)
+                # Cap at max_width
+                col_width = min(col_width, max_width)
+
+                # Get the column range (1-indexed in xlwings)
+                col_range = used_range.columns[col_idx]
+
+                # Set column width (add small padding for readability)
+                col_range.column_width = col_width + 2
+
+                # Enable word wrap for cells exceeding the column width
+                if lengths and max(lengths) > col_width:
+                    col_range.wrap_text = True
+
+            # Auto-fit row heights to show wrapped text
+            used_range.rows.autofit()
+
+            click.echo(f"Set column widths for sheet '{sheet.name}'")
+        except Exception as e:
+            click.echo(f"Error setting column width for sheet '{sheet.name}': {e}")
 
 
 if __name__ == "__main__":

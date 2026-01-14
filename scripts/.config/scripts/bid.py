@@ -494,14 +494,13 @@ def test():
 
 @click.command()
 @click.argument("xl_file", default="")
-@click.option("-a", "--autofit", is_flag=True, help="Auto fit columns")
-def beautify(xl_file: str, autofit: bool) -> None:
+@click.option("-w", "--smart-width", is_flag=True, help="Set column width based on content (max 80 chars, word wrap)")
+def beautify(xl_file: str, smart_width: bool) -> None:
     "Beautify excel file based on template."
     from util.beautify import beautify as _beautify
 
-    # Get the underlying callback and invoke it
     ctx = click.Context(_beautify)
-    ctx.invoke(_beautify, xl_file=xl_file, autofit=autofit)
+    ctx.invoke(_beautify, xl_file=xl_file, smart_width=smart_width)
 
 
 @click.command()
