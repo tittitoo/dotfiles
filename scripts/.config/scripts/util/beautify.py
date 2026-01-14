@@ -82,22 +82,26 @@ def beautify(xl_file: str, smart_width: bool) -> None:
         excelx.set_column_width_by_content(wb)
 
     wb.save()
-    click.echo(f"Saved {wb.fullname}")
+    # Use wb.name instead of wb.fullname to avoid hanging on SharePoint files
+    click.echo(f"Saved {wb.name}")
 
 
 def get_wb(file_name: str) -> xw.Book | None:
+    """
+    Get workbook by name or active workbook.
+    Uses wb.name instead of wb.fullname to avoid hanging on SharePoint/OneDrive files.
+    """
     try:
         if file_name == "current workbook":
             wb = xw.apps.active.books.active  # type: ignore
         else:
             wb = xw.App(visible=False).books.open(file_name)
-        try:
-            if wb.fullname:
-                return wb
-        except Exception:
-            return
+        # Use wb.name instead of wb.fullname - fullname can hang for SharePoint URLs
+        if wb.name:
+            return wb
     except Exception:
         click.echo("File not found.")
+    return None
 
 
 if __name__ == "__main__":

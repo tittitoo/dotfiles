@@ -494,7 +494,12 @@ def test():
 
 @click.command()
 @click.argument("xl_file", default="")
-@click.option("-w", "--smart-width", is_flag=True, help="Set column width based on content (max 80 chars, word wrap)")
+@click.option(
+    "-w",
+    "--smart-width",
+    is_flag=True,
+    help="Set column width based on content (max 80 chars, word wrap)",
+)
 def beautify(xl_file: str, smart_width: bool) -> None:
     "Beautify excel file based on template."
     from util.beautify import beautify as _beautify
@@ -523,18 +528,19 @@ def combine_pdf(outline: bool, toc: bool, yes: bool):
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
-def bid():
+def bid() -> None:
     "Utilities for bidding."
     pass
 
 
-bid.add_command(init)
-bid.add_command(setup)
-bid.add_command(clean)
-bid.add_command(beautify)
-bid.add_command(combine_pdf)
-bid.add_command(word2pdf)
-# bid.add_command(test)
+# Cast to Group to satisfy type checker (click.group decorator returns Group)
+bid_group: click.Group = bid  # type: ignore[assignment]
+bid_group.add_command(init)
+bid_group.add_command(setup)
+bid_group.add_command(clean)
+bid_group.add_command(beautify)
+bid_group.add_command(combine_pdf)
+bid_group.add_command(word2pdf)
 
 if __name__ == "__main__":
     bid()
