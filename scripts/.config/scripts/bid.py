@@ -495,17 +495,22 @@ def test():
 @click.command()
 @click.argument("xl_file", default="")
 @click.option(
-    "-w",
-    "--smart-width",
+    "-f",
+    "--font",
     is_flag=True,
-    help="Set column width based on content (max 80 chars, word wrap)",
+    help="Apply font formatting (shows template menu, default: Arial Size 12)",
 )
-def beautify(xl_file: str, smart_width: bool) -> None:
-    "Beautify excel file based on template."
+def beautify(xl_file: str, font: bool) -> None:
+    """
+    Beautify excel file with smart column widths.
+
+    Always applies smart width (based on content, max 80 chars, word wrap).
+    Use -f to also apply font formatting.
+    """
     from util.beautify import beautify as _beautify
 
     ctx = click.Context(_beautify)
-    ctx.invoke(_beautify, xl_file=xl_file, smart_width=smart_width)
+    ctx.invoke(_beautify, xl_file=xl_file, font=font)
 
 
 @click.command()
