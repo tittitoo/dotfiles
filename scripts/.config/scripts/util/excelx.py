@@ -42,9 +42,7 @@ def create_excel_from_template(
         click.echo("Error creating excel file.")
 
 
-def set_format(
-    wb: xw.Book, font_name: str = "Arial", font_size: int = 12
-) -> None:
+def set_format(wb: xw.Book, font_name: str = "Arial", font_size: int = 12) -> None:
     "Set font attributes in workbook"
     for sheet in wb.sheets:
         try:
@@ -135,7 +133,9 @@ def set_column_width_by_content(
             if not table_data:
                 continue
 
-            num_cols = max(len(row) if isinstance(row, list) else 1 for row in table_data)
+            num_cols = max(
+                len(row) if isinstance(row, list) else 1 for row in table_data
+            )
 
             for col_idx in range(num_cols):
                 lengths = []
@@ -154,11 +154,18 @@ def set_column_width_by_content(
                         lengths.append(line_max)
 
                 # Get the column range
-                col_range = used_range.columns[col_idx]
+                try:
+                    col_range = used_range.columns[col_idx]
+                except Exception:
+                    # Skip if merged cells cause issues
+                    continue
 
                 # If no data in column, set width to 0
                 if not lengths:
-                    col_range.column_width = 0
+                    try:
+                        col_range.column_width = 0
+                    except Exception:
+                        pass
                     continue
 
                 # Calculate average length
@@ -170,18 +177,26 @@ def set_column_width_by_content(
                 col_width = min(col_width, max_width)
 
                 # Set column width (add small padding for readability)
-                col_range.column_width = col_width + 2
+                try:
+                    col_range.column_width = col_width + 2
+                except Exception:
+                    # Skip if merged cells cause issues
+                    pass
 
                 # Enable word wrap for table cells exceeding the column width
                 if max(lengths) > col_width:
                     # Only wrap text in table data rows
-                    table_range = sheet.range(
-                        used_range.row + table_start,
-                        used_range.column + col_idx,
-                        used_range.row + len(values) - 1,
-                        used_range.column + col_idx,
-                    )
-                    table_range.wrap_text = True
+                    try:
+                        table_range = sheet.range(
+                            used_range.row + table_start,
+                            used_range.column + col_idx,
+                            used_range.row + len(values) - 1,
+                            used_range.column + col_idx,
+                        )
+                        table_range.wrap_text = True
+                    except Exception:
+                        # Skip if merged cells cause issues
+                        pass
 
             # Auto-fit row heights to show wrapped text
             used_range.rows.autofit()
