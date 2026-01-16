@@ -4,21 +4,21 @@ root: "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bi
 windows:
   - rfqs:
       panes:
-        - yazi
+        # - yazi
   - rfqs:
       panes:
-        - yazi
+        # - yazi
   - rfqs:
       panes:
-        - yazi
+        # - yazi
   - rfqs:
       panes:
-        - yazi
+        # - yazi
   - rfqs:
       panes:
-        - yazi
+        # - yazi
   - rfqs:
       panes:
-        - yazi
+        # - yazi
   - playground:
       panes:

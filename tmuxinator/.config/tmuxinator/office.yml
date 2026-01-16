@@ -49,26 +49,26 @@ windows:
       panes:
   - rfqs:
       panes:
-        - yazi
+        # - yazi
   - inbox:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox"
       panes:
-        - yazi
+        # - yazi
   - drafts:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
       panes:
-        - yazi
+        # - yazi
   - docs:
       root: "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@docs"
       panes:
-        - yazi
+        # - yazi
   - downloads:
       root: "~/Downloads"
       panes:
-        - yazi
+        # - yazi
   - team:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team"
       panes:
-        - yazi
+        # - yazi
   - playground:
       panes:
