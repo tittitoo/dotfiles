@@ -25,14 +25,14 @@ TEMPLATES = [
     "-f",
     "--font",
     is_flag=True,
-    help="Apply font formatting (shows template menu, default: Arial Size 12)",
+    help="Apply font formatting only (shows template menu, default: Arial Size 12)",
 )
 def beautify(xl_file: str, font: bool) -> None:
     """
-    Beautify excel file with smart column widths.
+    Beautify excel file.
 
-    Always applies smart width (based on content, max 80 chars, word wrap).
-    Use -f to also apply font formatting.
+    By default, applies smart width (based on content, max 80 chars, word wrap).
+    Use -f to apply font formatting only (no smart width).
     """
     while True:
         if xl_file == "":
@@ -81,9 +81,9 @@ def beautify(xl_file: str, font: bool) -> None:
         font_size = int(parts[1])
         excelx.set_format(wb, font_name=font_name, font_size=font_size)
         click.echo(f"Applied font: {template}")
-
-    # Always apply smart width
-    excelx.set_column_width_by_content(wb)
+    else:
+        # Apply smart width only when -f flag is not used
+        excelx.set_column_width_by_content(wb)
 
     click.echo(f"Done. Please review and save {wb.name} manually.")
 

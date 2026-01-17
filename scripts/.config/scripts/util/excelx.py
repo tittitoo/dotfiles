@@ -6,7 +6,8 @@ from decouple import config
 from datetime import date
 
 import xlwings as xw
-import pandas as pd
+
+# import pandas as pd
 
 # Legacy password
 LEGACY = config("LEGACY", cast=str)
@@ -96,6 +97,37 @@ def find_table_start(values: list, min_columns: int = 3) -> int:
     return 0
 
 
+def is_numeric_like(value) -> bool:
+    """
+    Check if a value is numeric-like (numbers, currency, dates).
+    These cannot wrap in Excel and will show as ### if too wide.
+    """
+    import re
+    from datetime import datetime
+
+    # Already a number or date type
+    if isinstance(value, (int, float, datetime)):
+        return True
+
+    # String that looks like a number or currency
+    if isinstance(value, str):
+        s = value.strip()
+        # Currency patterns: $1,234.56 or 1,234.56 USD or €1.234,56
+        currency_pattern = r"^[\$€£¥₹]?\s*[\d,.\s]+[\$€£¥₹]?\s*[A-Z]{0,3}$"
+        if re.match(currency_pattern, s):
+            return True
+        # Plain number with possible thousands separators
+        try:
+            # Remove common thousand separators and try to parse
+            cleaned = s.replace(",", "").replace(" ", "")
+            float(cleaned)
+            return True
+        except ValueError:
+            pass
+
+    return False
+
+
 def set_column_width_by_content(
     wb: xw.Book, max_width: int = 80, min_width: int = 8
 ) -> None:
@@ -103,9 +135,11 @@ def set_column_width_by_content(
     Set column width based on average content length of table data.
 
     - Detects table start (skips headers/project info at top)
-    - Calculates average content length per column (avoids outlier skew)
+    - Calculates average content length per column from table data (avoids outlier skew)
+    - Scans ALL data (including headers, merged cells) for numeric values
+    - Ensures numeric values (which can't wrap) always fit to avoid ###
     - Caps width at max_width characters
-    - Enables word wrap for cells exceeding the column width
+    - Enables word wrap for text cells exceeding the column width
     - Sets minimum width to min_width
     """
     for sheet in wb.sheets:
@@ -133,23 +167,40 @@ def set_column_width_by_content(
             if not table_data:
                 continue
 
-            num_cols = max(
-                len(row) if isinstance(row, list) else 1 for row in table_data
-            )
+            # Use all data for column count (not just table data)
+            num_cols = max(len(row) if isinstance(row, list) else 1 for row in values)
 
             for col_idx in range(num_cols):
-                lengths = []
+                lengths = []  # For average calculation (table data only)
+                max_numeric_len = 0  # Track longest numeric in ALL data
 
+                # Scan ALL data for numeric values (they can't wrap, show as ###)
+                for row in values:
+                    if not isinstance(row, list):
+                        row = [row]
+                    if col_idx < len(row) and row[col_idx] is not None:
+                        cell_value = row[col_idx]
+                        cell_str = str(cell_value)
+                        if not cell_str.strip():
+                            continue
+                        # For multiline content, get the longest line
+                        lines = cell_str.split("\n")
+                        line_max = max(len(line) for line in lines)
+
+                        # Track max numeric length from ALL rows
+                        if is_numeric_like(cell_value):
+                            max_numeric_len = max(max_numeric_len, line_max)
+
+                # Calculate average from table data only (avoids header skew)
                 for row in table_data:
                     if not isinstance(row, list):
                         row = [row]
                     if col_idx < len(row) and row[col_idx] is not None:
-                        cell_value = str(row[col_idx])
-                        # Skip empty strings
-                        if not cell_value.strip():
+                        cell_value = row[col_idx]
+                        cell_str = str(cell_value)
+                        if not cell_str.strip():
                             continue
-                        # For multiline content, get the longest line
-                        lines = cell_value.split("\n")
+                        lines = cell_str.split("\n")
                         line_max = max(len(line) for line in lines)
                         lengths.append(line_max)
 
@@ -160,19 +211,27 @@ def set_column_width_by_content(
                     # Skip if merged cells cause issues
                     continue
 
-                # If no data in column, set width to 0
-                if not lengths:
+                # If no data in column at all, set width to 0
+                if not lengths and max_numeric_len == 0:
                     try:
                         col_range.column_width = 0
                     except Exception:
                         pass
                     continue
 
-                # Calculate average length
-                avg_len = sum(lengths) / len(lengths)
+                # Calculate average length from table data (if available)
+                if lengths:
+                    avg_len = sum(lengths) / len(lengths)
+                    col_width = max(avg_len, min_width)
+                else:
+                    # No table data, start with minimum
+                    col_width = min_width
 
-                # Use average but ensure minimum width
-                col_width = max(avg_len, min_width)
+                # Ensure numeric values fit (they can't wrap, will show as ###)
+                # This covers numeric data anywhere in the sheet
+                if max_numeric_len > col_width:
+                    col_width = max_numeric_len
+
                 # Cap at max_width
                 col_width = min(col_width, max_width)
 
@@ -183,8 +242,9 @@ def set_column_width_by_content(
                     # Skip if merged cells cause issues
                     pass
 
-                # Enable word wrap for table cells exceeding the column width
-                if max(lengths) > col_width:
+                # Enable word wrap for text cells exceeding the column width
+                # (numeric cells won't wrap anyway)
+                if lengths and max(lengths) > col_width:
                     # Only wrap text in table data rows
                     try:
                         table_range = sheet.range(
