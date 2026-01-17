@@ -23,11 +23,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 def is_cover_file(filename: str) -> bool:
     """
     Check if a file is a cover file.
-    Matches patterns like: 00-Cover.pdf, 00_Cover.pdf, 01_Cover.pdf, Cover.pdf, etc.
+    Matches any PDF file containing 'cover' in the filename (case-insensitive).
     """
-    # Match: optional digits, then optional - or _, then "cover", then .pdf
-    pattern = r"^\d*[-_]?cover\.pdf$"
-    return bool(re.match(pattern, filename.lower()))
+    name_lower = filename.lower()
+    return name_lower.endswith(".pdf") and "cover" in name_lower
 
 
 ACRONYMS = [
@@ -80,6 +79,21 @@ def combine_pdf(outline: bool, toc: bool, yes: bool):
 
     # Sort the PDF files alphabetically
     pdf_files.sort()
+
+    # Check for multiple cover files
+    cover_files = [f for f in pdf_files if is_cover_file(f)]
+    if len(cover_files) > 1:
+        click.echo("Error: Multiple cover files found:")
+        for f in cover_files:
+            click.echo(f"  - {f}")
+        click.echo("Please ensure only one file contains 'cover' in the filename.")
+        return
+
+    # Ensure cover file is first (regardless of alphabetical order)
+    if cover_files:
+        cover_file = cover_files[0]
+        pdf_files.remove(cover_file)
+        pdf_files.insert(0, cover_file)
 
     # Creat a PdfMerger object
     writer = pypdf.PdfWriter()
