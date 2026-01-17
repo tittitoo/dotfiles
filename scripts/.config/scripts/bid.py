@@ -498,14 +498,14 @@ def test():
     "-f",
     "--font",
     is_flag=True,
-    help="Apply font formatting (shows template menu, default: Arial Size 12)",
+    help="Apply font formatting only (shows template menu, default: Arial Size 12)",
 )
 def beautify(xl_file: str, font: bool) -> None:
     """
-    Beautify excel file with smart column widths.
+    Beautify excel file.
 
-    Always applies smart width (based on content, max 80 chars, word wrap).
-    Use -f to also apply font formatting.
+    By default, applies smart width (based on content, max 80 chars, word wrap).
+    Use -f to apply font formatting only (no smart width).
     """
     from util.beautify import beautify as _beautify
 

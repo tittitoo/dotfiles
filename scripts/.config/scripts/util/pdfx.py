@@ -1,18 +1,34 @@
 import click
 import pypdf
+from pypdf.generic import (
+    ArrayObject,
+    DictionaryObject,
+    FloatObject,
+    NameObject,
+    NumberObject,
+)
 import os
 import re
 import logging
+import tempfile
 from pathlib import Path
 from pypdf.errors import FileNotDecryptedError
 
 from reportlab.pdfgen import canvas
-
-from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import Paragraph, SimpleDocTemplate
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.colors import blue
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+
+def is_cover_file(filename: str) -> bool:
+    """
+    Check if a file is a cover file.
+    Matches patterns like: 00-Cover.pdf, 00_Cover.pdf, 01_Cover.pdf, Cover.pdf, etc.
+    """
+    # Match: optional digits, then optional - or _, then "cover", then .pdf
+    pattern = r"^\d*[-_]?cover\.pdf$"
+    return bool(re.match(pattern, filename.lower()))
+
 
 ACRONYMS = [
     "BR",
@@ -69,15 +85,21 @@ def combine_pdf(outline: bool, toc: bool, yes: bool):
     writer = pypdf.PdfWriter()
 
     encrypted_files: list[str] = []
+
     # Add all the PDF files to the merger
     try:
         for pdf_file in pdf_files:
             file_path = os.path.join(directory, pdf_file)
+            is_cover = is_cover_file(pdf_file)
             try:
                 # Read for side effect to see if it is encrypted
                 pypdf.PdfReader(file_path)
-                if outline:
+                if outline and not is_cover:
+                    # Add outline to non-cover files only
                     add_outline(Path(file_path))
+                elif is_cover:
+                    # Clear any existing outline from cover file
+                    clear_outline(Path(file_path))
                 writer.append(file_path)
             except FileNotDecryptedError:
                 encrypted_files.append(pdf_file)
@@ -110,10 +132,9 @@ def combine_pdf(outline: bool, toc: bool, yes: bool):
                         f"{index + 1}: {item}"
                     )  # Print the file name with index (item)
         if toc:
-            # TODO: Add code to add toc
-            click.echo("Still in implementation stage")
-            # toc_list = find_toc(Path(output_path))
-            # make_toc("00-toc.pdf", toc_list)
+            # Check if cover page exists
+            has_cover = any(is_cover_file(f) for f in successful_pdf_files)
+            add_toc_to_pdf(Path(output_path), has_cover=has_cover)
 
     except Exception as e:
         click.echo(f"Encountered this error {e}")
@@ -151,19 +172,41 @@ def add_outline(file_path: Path):
         click.echo(f"Encountered this error {e} for some files.")
 
 
-def find_toc(file_path: Path) -> list[str] | None:
+def clear_outline(file_path: Path):
     """
-    Add toc in a separate page
+    Clear any existing outline from a PDF file.
+    Used to ensure cover pages don't have outline entries.
     """
+    try:
+        reader = pypdf.PdfReader(file_path)
+        # Check if there's an outline to clear
+        if not reader.outline:
+            return
+
+        writer = pypdf.PdfWriter()
+        for page in reader.pages:
+            writer.add_page(page)
+        writer.outline.clear()
+        with open(file_path, "wb") as f:
+            writer.write(f)
+    except Exception:
+        pass  # Silently ignore errors for cover files
+
+
+def get_outline_data(file_path: Path) -> list[tuple[str, int]]:
+    """
+    Extract outline data from a PDF file.
+
+    Returns:
+        List of (title, page_number) tuples where page_number is 0-indexed.
+    """
+    toc_lines = []
     try:
         reader = pypdf.PdfReader(file_path)
         outline = reader.outline
 
         if not outline:
-            click.echo("PDF has no outline")
-            return
-        # # Create TOC page content
-        toc_lines = []
+            return toc_lines
 
         def process_outline(outline_items, level=0):
             for item in outline_items:
@@ -172,118 +215,301 @@ def find_toc(file_path: Path) -> list[str] | None:
                 else:
                     title = item.title
                     page_number = reader.get_destination_page_number(item)
-                    # indent = "   " * level
                     toc_lines.append((title, page_number))
 
         process_outline(outline)
-        for line in toc_lines:
-            click.echo(line)
-        return toc_lines
-        # toc_content = "\n".join(toc_lines)
-
-        # # Create a new page for toc
-        # toc_page = writer.add_blank_page(
-        #     width=reader.pages[0].mediabox.width, height=reader.pages[0].mediabox.height
-        # )
-        # y = toc_page.mediabox.height - 50
-        # annotation = FreeText(
-        #     rect=(50, y, 500, y + 20),
-        #     text="Table of Contents",
-        #     font="Helvetica-Bold",
-        # )
-        # writer.add_annotation(page_number=0, annotation=annotation)
-        #
-        # y -= 30
-        # for line in toc_lines:
-        #     annotation = FreeText(
-        #         rect=(75, y, 500, y + 12),
-        #         text=line,
-        #         font="Helvetica",
-        #         font_size="10pt",
-        #         border_color="ffffff",
-        #     )
-        #     writer.add_annotation(page_number=0, annotation=annotation)
-        #     y -= 15
-        #
-        # # writer.insert_page(toc_page, 0)
-        #
-        # # toc_page.add_text(
-        # #     "Table of Contents",
-        # #     50,
-        # #     toc_page.mediabox.width / 2,
-        # #     toc_page.mediabox.height - 50,
-        # #     align="center",
-        # #     font="Helvetica-Bold",
-        # #     fontsize=20,
-        # # )
-        # # y = toc_page.mediabox.height - 100
-        # # for line in toc_lines:
-        # #     toc_page.add_text(
-        # #         line,
-        # #         50,
-        # #         toc_page.mediabox.width / 2,
-        # #         y,
-        # #         align="center",
-        # #         font="Helvetica",
-        # #         fontsize=12,
-        # #     )
-        # #     y -= 20
-        # #
-        # # # Add the toc page to the writer
-        # # writer.add_page(toc_page, 0)
-        # #
-        # # Add all other pages from the original PDF
-        # for page in reader.pages:
-        #     writer.add_page(page)
-        #
-        # # Write the updated PDF file
-        # with open(file_path, "wb") as f:
-        #     writer.write(f)
-        # click.echo(f"TOC added to {file_path}")
-
     except Exception as e:
-        click.echo(f"Encountered this error {e}.")
+        click.echo(f"Error reading outline: {e}")
+
+    return toc_lines
 
 
-def make_toc(output_pdf, outline_data):
+def _register_arial_font() -> str:
     """
-    Generates a PDF with a clickable table of contents using reportlab.
+    Register Arial font for reportlab. Returns the font name to use.
+    Falls back to Helvetica if Arial is not available.
+    """
+    # Common Arial font paths
+    arial_paths = [
+        # Windows
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/Arial.ttf",
+        # Mac
+        "/Library/Fonts/Arial.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        # Linux
+        "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf",
+        "/usr/share/fonts/TTF/arial.ttf",
+    ]
+
+    for path in arial_paths:
+        if os.path.exists(path):
+            try:
+                pdfmetrics.registerFont(TTFont("Arial", path))
+                return "Arial"
+            except Exception:
+                continue
+
+    # Fallback to Helvetica (built-in, similar to Arial)
+    return "Helvetica"
+
+
+def create_toc_pdf(
+    toc_data: list[tuple[str, int]],
+    output_path: str,
+    toc_page_count: int,
+    page_size=A4,
+    cover_pages: int = 0,
+) -> tuple[int, list[dict]]:
+    """
+    Create a PDF with table of contents (visual only, links added later).
 
     Args:
-        output_pdf (str): Path to the output PDF.
-        outline_data (list): A list of tuples, where each tuple is (title, page_number).
+        toc_data: List of (title, page_number) tuples (0-indexed page numbers)
+        output_path: Path for the TOC PDF
+        toc_page_count: Number of TOC pages (for adjusting target page numbers)
+        page_size: Page size (default A4)
+        cover_pages: Number of cover pages that precede TOC in final PDF
+
+    Returns:
+        Tuple of (number of pages created, list of link info dicts)
     """
+    font_name = _register_arial_font()
 
-    doc = SimpleDocTemplate(output_pdf, pagesize=A4)
-    styles = getSampleStyleSheet()
-    normal_style = styles["Normal"]
-    normal_style.textColor = blue
+    c = canvas.Canvas(output_path, pagesize=page_size)
+    width, height = page_size
 
-    elements = []
-    destinations = []
-    y_position = 700
+    # Margins and layout
+    left_margin = 50
+    right_margin = width - 50
+    top_margin = height - 50
+    bottom_margin = 60
+    line_height = 20
+    title_font_size = 16
+    entry_font_size = 11
 
-    for title, page_number in outline_data:
-        link_id = f"page_{page_number}"
-        destinations.append((link_id, page_number - 1))
-        text = f'<a href="#{link_id}">{title}</a>'
-        p = Paragraph(text, normal_style)
-        elements.append(p)
+    pages_created = 0
+    link_info = []  # Store link positions for later
 
-        temp_canvas = canvas.Canvas("temp.pdf")
-        p.wrapOn(temp_canvas, 6 * inch, 1 * inch)
-        height = p.height
+    def start_new_page(is_first=False):
+        nonlocal pages_created
+        if not is_first:
+            c.showPage()
+        pages_created += 1
 
-        y_position -= height + 5
+        # Draw title on each page
+        if font_name == "Helvetica":
+            c.setFont("Helvetica-Bold", title_font_size)
+        else:
+            c.setFont(font_name, title_font_size)
+        c.drawString(left_margin, top_margin, "Table of Contents")
 
-    def add_destinations(canvas, doc):
-        for dest_id, page_num in destinations:
-            canvas.bookmarkPage(dest_id, page_num)
-            canvas.addOutlineEntry(
-                dest_id, dest_id, level=0, actionType="GoTo", targetPageNum=page_num + 1
-            )  # add outline entry
+        return top_margin - 35  # Return starting y position for entries
 
-    doc.build(elements, onFirstPage=add_destinations, onLaterPages=add_destinations)
+    y = start_new_page(is_first=True)
+    c.setFont(font_name, entry_font_size)
+
+    for title, original_page_num in toc_data:
+        if y < bottom_margin:
+            y = start_new_page()
+            c.setFont(font_name, entry_font_size)
+
+        # Target page in final PDF:
+        # cover_pages + toc_page_count + (original_page_num - cover_pages)
+        # = original_page_num + toc_page_count
+        target_page = original_page_num + toc_page_count
+
+        # Display page number (1-indexed for human readability)
+        display_page = target_page + 1
+
+        # Draw title in dark blue
+        c.setFillColorRGB(0, 0, 0.8)
+        c.drawString(left_margin, y, title)
+
+        # Draw page number (right-aligned) in black
+        c.setFillColorRGB(0, 0, 0)
+        c.drawRightString(right_margin, y, str(display_page))
+
+        # Draw dotted line between title and page number
+        title_width = c.stringWidth(title, font_name, entry_font_size)
+        page_width = c.stringWidth(str(display_page), font_name, entry_font_size)
+        dot_start = left_margin + title_width + 10
+        dot_end = right_margin - page_width - 10
+
+        if dot_end > dot_start:
+            c.setFillColorRGB(0.5, 0.5, 0.5)  # Gray dots
+            dot_x = dot_start
+            while dot_x < dot_end:
+                c.drawString(dot_x, y, ".")
+                dot_x += 5
+
+        # Store link info for adding via pypdf later
+        link_info.append(
+            {
+                "toc_page": pages_created - 1,  # 0-indexed within TOC
+                "rect": (left_margin, y - 3, right_margin, y + entry_font_size),
+                "target_page": target_page,
+                "height": height,
+            }
+        )
+
+        y -= line_height
+
+    c.save()
+    return pages_created, link_info
+
+
+def estimate_toc_pages(toc_data: list[tuple[str, int]], page_size=A4) -> int:
+    """
+    Estimate how many pages the TOC will need.
+    """
+    if not toc_data:
+        return 0
+
+    _, height = page_size
+    top_margin = height - 50
+    bottom_margin = 60
+    line_height = 20
+    title_space = 35
+
+    usable_height = top_margin - bottom_margin - title_space
+    entries_per_page = int(usable_height / line_height)
+
+    if entries_per_page <= 0:
+        return len(toc_data)
+
+    return (len(toc_data) + entries_per_page - 1) // entries_per_page
+
+
+def add_toc_to_pdf(file_path: Path, has_cover: bool = False) -> None:
+    """
+    Add a clickable table of contents to a PDF.
+    The TOC is based on the PDF's outline/bookmarks.
+
+    Args:
+        file_path: Path to the PDF file
+        has_cover: If True, TOC is inserted after the first page (cover).
+                   Cover page should not have an outline entry.
+    """
+    try:
+        # Get outline data from the PDF (cover is already excluded from outline)
+        toc_data = get_outline_data(file_path)
+
+        if not toc_data:
+            click.echo("PDF has no outline. Use -o flag to add outline first.")
+            return
+
+        # Number of cover pages (inserted before TOC)
+        cover_pages = 1 if has_cover else 0
+
+        # Estimate TOC pages needed
+        estimated_pages = estimate_toc_pages(toc_data)
+
+        # Create TOC PDF in temp file
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            toc_pdf_path = tmp.name
+
+        # Create TOC (visual content + link positions)
+        # Adjust page numbers: entries already account for cover, TOC goes after cover
+        actual_toc_pages, link_info = create_toc_pdf(
+            toc_data, toc_pdf_path, estimated_pages, cover_pages=cover_pages
+        )
+
+        # If estimate was wrong, recreate with correct page count
+        if actual_toc_pages != estimated_pages:
+            actual_toc_pages, link_info = create_toc_pdf(
+                toc_data, toc_pdf_path, actual_toc_pages, cover_pages=cover_pages
+            )
+
+        # Merge: Cover (if any) + TOC + rest of original PDF
+        writer = pypdf.PdfWriter()
+        original_reader = pypdf.PdfReader(file_path)
+
+        # Add cover page(s) first if present
+        for i in range(cover_pages):
+            if i < len(original_reader.pages):
+                writer.add_page(original_reader.pages[i])
+
+        # Add TOC pages
+        toc_reader = pypdf.PdfReader(toc_pdf_path)
+        toc_start_idx = cover_pages  # Where TOC pages start in final PDF
+        for page in toc_reader.pages:
+            writer.add_page(page)
+
+        # Add remaining original PDF pages (after cover)
+        for i in range(cover_pages, len(original_reader.pages)):
+            writer.add_page(original_reader.pages[i])
+
+        # Add clickable links to TOC pages
+        for info in link_info:
+            toc_page_idx = toc_start_idx + info["toc_page"]
+            target_page_idx = info["target_page"]
+            rect = info["rect"]
+
+            x1, y1, x2, y2 = rect
+
+            # Create link annotation
+            link_annotation = DictionaryObject()
+            link_annotation.update(
+                {
+                    NameObject("/Type"): NameObject("/Annot"),
+                    NameObject("/Subtype"): NameObject("/Link"),
+                    NameObject("/Rect"): ArrayObject(
+                        [
+                            FloatObject(x1),
+                            FloatObject(y1),
+                            FloatObject(x2),
+                            FloatObject(y2),
+                        ]
+                    ),
+                    NameObject("/Border"): ArrayObject(
+                        [
+                            NumberObject(0),
+                            NumberObject(0),
+                            NumberObject(0),
+                        ]
+                    ),
+                    NameObject("/Dest"): ArrayObject(
+                        [
+                            writer.pages[target_page_idx].indirect_reference,
+                            NameObject("/Fit"),
+                        ]
+                    ),
+                }
+            )
+
+            # Add annotation to the TOC page
+            page = writer.pages[toc_page_idx]
+            if "/Annots" not in page:
+                page[NameObject("/Annots")] = ArrayObject()
+            page["/Annots"].append(link_annotation)
+
+        # Rebuild outline with adjusted page numbers
+        # Cover page has no outline entry, so all entries need TOC offset
+        writer.outline.clear()
+        for title, original_page_num in toc_data:
+            new_page_num = original_page_num + actual_toc_pages
+            writer.add_outline_item(title, new_page_num)
+
+        # Write the final PDF
+        with open(file_path, "wb") as f:
+            writer.write(f)
+
+        # Cleanup temp file
+        try:
+            os.remove(toc_pdf_path)
+        except Exception:
+            pass
+
+        if has_cover:
+            click.echo(
+                f"Added {actual_toc_pages} TOC page(s) after cover to {file_path.name}"
+            )
+        else:
+            click.echo(f"Added {actual_toc_pages} TOC page(s) to {file_path.name}")
+
+    except Exception as e:
+        click.echo(f"Error adding TOC: {e}")
 
 
 if __name__ == "__main__":
