@@ -4,13 +4,13 @@ root: "~/Repos/github.com/tittitoo/drawings/"
 windows:
   - drawings:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - resources:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - utils:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - playground:
       panes:
         - source .venv/bin/activate.fish; clear

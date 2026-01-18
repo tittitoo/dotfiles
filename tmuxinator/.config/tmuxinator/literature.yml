@@ -6,15 +6,15 @@ root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/literature"
 windows:
   - literature:
       panes:
-        - yazi
+        # - yazi
   - inbox:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox"
       panes:
-        - yazi
+        # - yazi
   - dragon:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon"
       panes:
-        - yazi
+        # - yazi
   - journal:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/journal"
       panes:

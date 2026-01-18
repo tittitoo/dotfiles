@@ -6,10 +6,10 @@ root: "~/Repos/github.com/tittitoo/resume/"
 windows:
   - resume:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - files:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - playground:
       # root: "~/.config/scripts"
       panes:

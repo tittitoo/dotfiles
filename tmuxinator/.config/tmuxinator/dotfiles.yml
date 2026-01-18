@@ -48,10 +48,10 @@ windows:
   - nvim:
       root: "~/Repos/github.com/tittitoo/dotfiles/nvim/.config/nvim"
       panes:
-        - yazi
+        # - yazi
   - tmuxinator:
       root: "~/Repos/github.com/tittitoo/dotfiles/tmuxinator/.config/tmuxinator"
       panes:
-        - yazi
+        # - yazi
   - playground:
       panes:

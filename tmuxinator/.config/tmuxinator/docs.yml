@@ -6,22 +6,22 @@ root: "~/Repos/github.com/tittitoo/docs/"
 windows:
   - bid-proposal:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - tittitoo:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - meemee:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - docs-server:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - tittitoo-server:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - meemee-server:
       panes:
-        - source .venv/bin/activate.fish; clear; yazi
+        - source .venv/bin/activate.fish; clear
   - playground:
       # root: "~/.config/scripts"
       panes:
