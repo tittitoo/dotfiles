@@ -49,51 +49,170 @@ logger = logging.getLogger("pypdf")
 logger.setLevel(logging.ERROR)
 
 
+def find_manifest_file(directory: Path) -> Path | None:
+    """
+    Find a manifest file (md or txt) in the directory.
+    Markdown files take precedence over txt files.
+    If multiple files of same type exist, prompt user to choose.
+    """
+    md_files = list(directory.glob("*.md"))
+    txt_files = list(directory.glob("*.txt"))
+
+    # Markdown takes precedence
+    if md_files:
+        candidates = md_files
+    elif txt_files:
+        candidates = txt_files
+    else:
+        click.echo("Error: No manifest file (.md or .txt) found in current directory")
+        return None
+
+    if len(candidates) == 1:
+        return candidates[0]
+
+    # Multiple files found - let user choose
+    click.echo("Multiple manifest files found:")
+    for i, f in enumerate(candidates, 1):
+        click.echo(f"  {i}. {f.name}")
+
+    while True:
+        choice = click.prompt("Select file number", type=int)
+        if 1 <= choice <= len(candidates):
+            return candidates[choice - 1]
+        click.echo(f"Please enter a number between 1 and {len(candidates)}")
+
+
+def parse_manifest_file(file_path: Path) -> tuple[str, list[str]] | None:
+    """
+    Parse a markdown/txt manifest file for PDF combining.
+
+    Expected format:
+        # Output Filename
+        - file1.pdf
+        - file2.pdf
+
+    Returns:
+        Tuple of (output_filename, list_of_pdf_files) or None if parsing fails.
+    """
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        lines = content.strip().split("\n")
+        title = None
+        pdf_files = []
+
+        for line in lines:
+            line = line.strip()
+            # Parse title (# Title)
+            if line.startswith("# "):
+                title = line[2:].strip()
+            # Parse list items (- filename.pdf)
+            elif line.startswith("- "):
+                filename = line[2:].strip()
+                if filename:
+                    pdf_files.append(filename)
+
+        if not title:
+            click.echo("Error: No title found in manifest file (expected '# Title')")
+            return None
+
+        if not pdf_files:
+            click.echo("Error: No PDF files listed in manifest file")
+            return None
+
+        # Add .pdf extension to title if not present
+        output_filename = title if title.lower().endswith(".pdf") else f"{title}.pdf"
+
+        return output_filename, pdf_files
+
+    except Exception as e:
+        click.echo(f"Error reading manifest file: {e}")
+        return None
+
+
 @click.command()
 @click.option("-o", "--outline", is_flag=True, help="Add outline to file from filename")
 @click.option("-y", "--yes", is_flag=True, help="Answer yes to the current directory")
 @click.option(
     "-t", "--toc", is_flag=True, help="Add table of contends in separate page"
 )
-def combine_pdf(outline: bool, toc: bool, yes: bool):
+@click.option(
+    "--manifest",
+    "use_manifest",
+    is_flag=True,
+    help="Use manifest file (md/txt) specifying output name and files to combine",
+)
+def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     """
     Combine pdf and output result pdf in the current folder.
     If the combined file already exists, it will remove it first and re-combine.
+
+    With --file flag, reads a manifest file (md/txt) where:
+    - The '# Title' becomes the output filename
+    - Listed files (- file.pdf) are combined in order
     """
     if not yes:
         click.confirm(
             "The command will merge all the pdf in the current directory", abort=True
         )
     directory = Path.cwd()
-    filename = "00-Combined.pdf"
+
+    # Use manifest file if --file flag is set
+    if use_manifest:
+        manifest_path = find_manifest_file(directory)
+        if manifest_path is None:
+            return
+
+        click.echo(f"Using manifest: {manifest_path.name}")
+        result = parse_manifest_file(manifest_path)
+        if result is None:
+            return
+        filename, pdf_files = result
+
+        # Verify all listed files exist
+        missing_files = [f for f in pdf_files if not (directory / f).exists()]
+        if missing_files:
+            click.echo("Error: The following files were not found:")
+            for f in missing_files:
+                click.echo(f"  - {f}")
+            return
+
+        # Files are already in the order specified in manifest
+        # No need to sort or reorder for cover
+    else:
+        filename = "00-Combined.pdf"
+
+        # List pdf files
+        pdf_files = [
+            f for f in os.listdir(directory) if f.endswith("pdf") or f.endswith("PDF")
+        ]
+
+        # Sort the PDF files alphabetically
+        pdf_files.sort()
+
+        # Check for multiple cover files
+        cover_files = [f for f in pdf_files if is_cover_file(f)]
+        if len(cover_files) > 1:
+            click.echo("Error: Multiple cover files found:")
+            for f in cover_files:
+                click.echo(f"  - {f}")
+            click.echo("Please ensure only one file contains 'cover' in the filename.")
+            return
+
+        # Ensure cover file is first (regardless of alphabetical order)
+        if cover_files:
+            cover_file = cover_files[0]
+            pdf_files.remove(cover_file)
+            pdf_files.insert(0, cover_file)
+
+    # Remove existing output file if present
     if os.path.exists(directory / filename):
         try:
             os.remove(directory / filename)
         except PermissionError:
             click.echo(f"Cannot remove {filename}. Please close the file first.")
-
-    # List pdf files
-    pdf_files = [
-        f for f in os.listdir(directory) if f.endswith("pdf") or f.endswith("PDF")
-    ]
-
-    # Sort the PDF files alphabetically
-    pdf_files.sort()
-
-    # Check for multiple cover files
-    cover_files = [f for f in pdf_files if is_cover_file(f)]
-    if len(cover_files) > 1:
-        click.echo("Error: Multiple cover files found:")
-        for f in cover_files:
-            click.echo(f"  - {f}")
-        click.echo("Please ensure only one file contains 'cover' in the filename.")
-        return
-
-    # Ensure cover file is first (regardless of alphabetical order)
-    if cover_files:
-        cover_file = cover_files[0]
-        pdf_files.remove(cover_file)
-        pdf_files.insert(0, cover_file)
+            return
 
     # Creat a PdfMerger object
     writer = pypdf.PdfWriter()

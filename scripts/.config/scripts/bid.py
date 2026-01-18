@@ -519,7 +519,13 @@ def beautify(xl_file: str, font: bool) -> None:
 @click.option(
     "-t", "--toc", is_flag=True, help="Add table of contends in separate page"
 )
-def combine_pdf(outline: bool, toc: bool, yes: bool):
+@click.option(
+    "--manifest",
+    "use_manifest",
+    is_flag=True,
+    help="Use manifest file (md/txt) specifying output name and files to combine",
+)
+def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     """
     Combine pdf and output result pdf in the current folder.
     If the combined file already exists, it will remove it first and re-combine.
@@ -527,7 +533,9 @@ def combine_pdf(outline: bool, toc: bool, yes: bool):
     from util.pdfx import combine_pdf as _combine_pdf
 
     ctx = click.Context(_combine_pdf)
-    ctx.invoke(_combine_pdf, outline=outline, toc=toc, yes=yes)
+    ctx.invoke(
+        _combine_pdf, outline=outline, toc=toc, yes=yes, use_manifest=use_manifest
+    )
 
 
 @click.group()
