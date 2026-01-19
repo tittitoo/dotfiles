@@ -35,14 +35,17 @@ username = getpass.getuser()
 match username:
     case "oliver":
         RFQ = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@rfqs/"
+        DOCS = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@docs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/bid.py').expanduser().resolve()}'\""
 
     case "carol_lim":
         RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
+        DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - @tools/bid.py').expanduser().resolve()}'\""
 
     case _:
         RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
+        DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/bid.py').expanduser().resolve()}'\""
 
 
@@ -530,12 +533,22 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     """
     Combine pdf and output result pdf in the current folder.
     If the combined file already exists, it will remove it first and re-combine.
+
+    With --manifest flag, also searches for PDFs in the @docs SharePoint folder.
     """
     from util.pdfx import combine_pdf as _combine_pdf
 
+    # Use DOCS as fallback directory when in manifest mode
+    docs_path = DOCS if use_manifest else None
+
     ctx = click.Context(_combine_pdf)
     ctx.invoke(
-        _combine_pdf, outline=outline, toc=toc, yes=yes, use_manifest=use_manifest
+        _combine_pdf,
+        outline=outline,
+        toc=toc,
+        yes=yes,
+        use_manifest=use_manifest,
+        docs_path=docs_path,
     )
 
 

@@ -82,36 +82,63 @@ def find_manifest_file(directory: Path) -> Path | None:
         click.echo(f"Please enter a number between 1 and {len(candidates)}")
 
 
-def resolve_pdf_file(directory: Path, name: str) -> str | None:
+def resolve_pdf_file(
+    directory: Path, name: str, fallback_dirs: list[Path] | None = None
+) -> str | None:
     """
     Try to find a PDF file matching the given name.
 
     Tries in order:
-    1. Exact match (name as-is)
-    2. With .pdf extension added
-    3. Case-insensitive search for similar names
+    1. Exact match (name as-is) in primary directory
+    2. With .pdf extension added in primary directory
+    3. Case-insensitive search in primary directory
+    4. If fallback_dirs provided, repeat steps 1-3 in each fallback directory
 
     Args:
-        directory: Directory to search in
+        directory: Primary directory to search in
         name: Filename or potential filename (with or without .pdf)
+        fallback_dirs: Optional list of fallback directories to search if not found locally
 
     Returns:
-        The actual filename if found, None otherwise.
+        The filename if found locally, full path if found in fallback directory, None otherwise.
     """
-    # Try exact match first
-    if (directory / name).exists():
-        return name
 
-    # Try adding .pdf extension
-    name_with_pdf = name if name.lower().endswith(".pdf") else f"{name}.pdf"
-    if (directory / name_with_pdf).exists():
-        return name_with_pdf
+    def search_in_dir(search_dir: Path, return_full_path: bool = False) -> str | None:
+        """Search for the file in a directory."""
+        # Try exact match first
+        if (search_dir / name).exists():
+            return str(search_dir / name) if return_full_path else name
 
-    # Try case-insensitive search
-    name_lower = name_with_pdf.lower()
-    for f in directory.iterdir():
-        if f.is_file() and f.name.lower() == name_lower:
-            return f.name
+        # Try adding .pdf extension
+        name_with_pdf = name if name.lower().endswith(".pdf") else f"{name}.pdf"
+        if (search_dir / name_with_pdf).exists():
+            return (
+                str(search_dir / name_with_pdf) if return_full_path else name_with_pdf
+            )
+
+        # Try case-insensitive search
+        name_lower = name_with_pdf.lower()
+        try:
+            for f in search_dir.iterdir():
+                if f.is_file() and f.name.lower() == name_lower:
+                    return str(f) if return_full_path else f.name
+        except (PermissionError, FileNotFoundError):
+            pass
+
+        return None
+
+    # Search in primary directory first
+    result = search_in_dir(directory, return_full_path=False)
+    if result:
+        return result
+
+    # Search in fallback directories
+    if fallback_dirs:
+        for fallback_dir in fallback_dirs:
+            if fallback_dir.exists():
+                result = search_in_dir(fallback_dir, return_full_path=True)
+                if result:
+                    return result
 
     return None
 
@@ -119,6 +146,7 @@ def resolve_pdf_file(directory: Path, name: str) -> str | None:
 def parse_manifest_file(
     file_path: Path,
     directory: Path | None = None,
+    fallback_dirs: list[Path] | None = None,
 ) -> tuple[str, list[str], list[dict]] | None:
     """
     Parse a markdown/txt manifest file for PDF combining with hierarchical outline.
@@ -144,11 +172,13 @@ def parse_manifest_file(
 
     All headings and list items are treated as potential PDF filenames.
     The .pdf extension is optional - files will be matched with or without it.
+    Files are searched in the local directory first, then in fallback directories.
     Files that cannot be found are skipped and logged.
 
     Args:
         file_path: Path to the manifest file
         directory: Directory to search for PDF files (defaults to manifest's directory)
+        fallback_dirs: Optional list of fallback directories (e.g., @docs) to search
 
     Returns:
         Tuple of (output_filename, list_of_pdf_files, outline_structure) or None.
@@ -185,7 +215,7 @@ def parse_manifest_file(
 
         def try_resolve_file(name: str) -> str | None:
             """Try to resolve a potential filename, log if not found."""
-            resolved = resolve_pdf_file(directory, name)
+            resolved = resolve_pdf_file(directory, name, fallback_dirs)
             if resolved is None:
                 not_found_files.append(name)
             return resolved
@@ -215,7 +245,7 @@ def parse_manifest_file(
             heading_title = heading_text
 
             # First, try the whole heading as a filename
-            resolved_whole = resolve_pdf_file(directory, heading_text)
+            resolved_whole = resolve_pdf_file(directory, heading_text, fallback_dirs)
             if resolved_whole:
                 heading_file = resolved_whole
                 # Use the text without .pdf as title
@@ -228,7 +258,7 @@ def parse_manifest_file(
             parts = heading_text.rsplit(" ", 1)
             if len(parts) == 2:
                 potential_file = parts[1]
-                resolved = resolve_pdf_file(directory, potential_file)
+                resolved = resolve_pdf_file(directory, potential_file, fallback_dirs)
                 if resolved:
                     heading_title = parts[0]
                     heading_file = resolved
@@ -355,7 +385,17 @@ def parse_manifest_file(
     is_flag=True,
     help="Use manifest file (md/txt) specifying output name and files to combine",
 )
-def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
+@click.option(
+    "-d",
+    "--docs-path",
+    "docs_path",
+    type=click.Path(exists=False),
+    default=None,
+    help="Fallback directory for datasheets (e.g., @docs folder in SharePoint)",
+)
+def combine_pdf(
+    outline: bool, toc: bool, yes: bool, use_manifest: bool, docs_path: str | None
+):
     """
     Combine pdf and output result pdf in the current folder.
     If the combined file already exists, it will remove it first and re-combine.
@@ -365,12 +405,23 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     - '## Section' creates level 1 outline (links to first child if no file)
     - '## Section file.pdf' creates level 1 outline with that file
     - '- file.pdf' items become level 2 outline entries
+
+    Files are searched locally first, then in --docs-path if provided.
     """
     if not yes:
         click.confirm(
-            "The command will merge the pdf in the current directory", abort=True
+            "The command will merge the pdf into the current directory", abort=True
         )
     directory = Path.cwd()
+
+    # Build fallback directories list
+    fallback_dirs = None
+    if docs_path:
+        docs_dir = Path(docs_path).expanduser()
+        if docs_dir.exists():
+            fallback_dirs = [docs_dir]
+        else:
+            click.echo(f"Warning: docs-path '{docs_path}' does not exist, ignoring")
 
     outline_structure = None  # For manifest mode
 
@@ -381,7 +432,7 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
             return
 
         click.echo(f"Using manifest: {manifest_path.name}")
-        result = parse_manifest_file(manifest_path, directory)
+        result = parse_manifest_file(manifest_path, directory, fallback_dirs)
         if result is None:
             return
         filename, pdf_files, outline_structure = result
@@ -432,7 +483,11 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     # Add all the PDF files to the merger
     try:
         for pdf_file in pdf_files:
-            file_path = os.path.join(directory, pdf_file)
+            # Handle both relative paths (local) and absolute paths (from fallback dirs)
+            if os.path.isabs(pdf_file):
+                file_path = pdf_file
+            else:
+                file_path = os.path.join(directory, pdf_file)
             is_cover = is_cover_file(pdf_file)
             try:
                 # Read to check encryption and get page count
@@ -514,10 +569,13 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
 def clean_outline_title(filename: str) -> str:
     """
     Clean a filename to create a nice outline title.
+    Handles full paths by extracting basename first.
     Removes leading numbers and common acronyms.
     """
+    # Extract just the filename if it's a full path
+    title = os.path.basename(filename)
     # Remove .pdf extension
-    title = os.path.splitext(filename)[0]
+    title = os.path.splitext(title)[0]
     # Remove leading number such as 2, 02, 002 etc
     title = re.sub(r"^\b0*[1-9]\d*\b|\b0+\b|\b0\b", "", title)
     # Remove word from acronyms at the start of sentence
@@ -525,6 +583,39 @@ def clean_outline_title(filename: str) -> str:
     title = re.sub(pattern, "", title, 1)
     # Remove any leading or trailing spaces
     return title.strip()
+
+
+def truncate_title_to_fit(
+    title: str, max_width: float, font_name: str, font_size: float, canvas_obj
+) -> str:
+    """
+    Truncate a title to fit within max_width, adding ellipsis if needed.
+
+    Args:
+        title: The title text to truncate
+        max_width: Maximum width in points
+        font_name: Font name for width calculation
+        font_size: Font size for width calculation
+        canvas_obj: Canvas object for stringWidth calculation
+
+    Returns:
+        The title, truncated with '...' if necessary
+    """
+    title_width = canvas_obj.stringWidth(title, font_name, font_size)
+    if title_width <= max_width:
+        return title
+
+    ellipsis = "..."
+    ellipsis_width = canvas_obj.stringWidth(ellipsis, font_name, font_size)
+    available_width = max_width - ellipsis_width
+
+    # Binary search for the right truncation point
+    while (
+        title and canvas_obj.stringWidth(title, font_name, font_size) > available_width
+    ):
+        title = title[:-1]
+
+    return title.rstrip() + ellipsis
 
 
 def add_hierarchical_outline(
@@ -784,17 +875,24 @@ def create_toc_pdf(
         # Display page number (1-indexed for human readability)
         display_page = target_page + 1
 
+        # Calculate max title width and truncate if needed
+        page_width = c.stringWidth(str(display_page), font_name, entry_font_size)
+        min_dot_space = 30
+        max_title_width = right_margin - left_margin - page_width - min_dot_space
+        display_title = truncate_title_to_fit(
+            title, max_title_width, font_name, entry_font_size, c
+        )
+
         # Draw title in dark blue
         c.setFillColorRGB(0, 0, 0.8)
-        c.drawString(left_margin, y, title)
+        c.drawString(left_margin, y, display_title)
 
         # Draw page number (right-aligned) in black
         c.setFillColorRGB(0, 0, 0)
         c.drawRightString(right_margin, y, str(display_page))
 
         # Draw dotted line between title and page number
-        title_width = c.stringWidth(title, font_name, entry_font_size)
-        page_width = c.stringWidth(str(display_page), font_name, entry_font_size)
+        title_width = c.stringWidth(display_title, font_name, entry_font_size)
         dot_start = left_margin + title_width + 10
         dot_end = right_margin - page_width - 10
 
@@ -1000,20 +1098,29 @@ def create_hierarchical_toc_pdf(
 
         entry_left = left_margin + indent
 
+        # Calculate max title width (leave space for page number and dots)
+        page_width = c.stringWidth(str(display_page), font_name, font_size)
+        min_dot_space = 30  # Minimum space for dots between title and page number
+        max_title_width = right_margin - entry_left - page_width - min_dot_space
+
+        # Truncate title if needed
+        display_title = truncate_title_to_fit(
+            title, max_title_width, font_name, font_size, c
+        )
+
         # Draw title in dark blue (darker for level 1)
         if level == 1:
             c.setFillColorRGB(0, 0, 0.7)
         else:
             c.setFillColorRGB(0.1, 0.1, 0.6)
-        c.drawString(entry_left, y, title)
+        c.drawString(entry_left, y, display_title)
 
         # Draw page number (right-aligned) in black
         c.setFillColorRGB(0, 0, 0)
         c.drawRightString(right_margin, y, str(display_page))
 
         # Draw dotted line between title and page number
-        title_width = c.stringWidth(title, font_name, font_size)
-        page_width = c.stringWidth(str(display_page), font_name, font_size)
+        title_width = c.stringWidth(display_title, font_name, font_size)
         dot_start = entry_left + title_width + 10
         dot_end = right_margin - page_width - 10
 
@@ -1096,7 +1203,14 @@ def add_toc_to_pdf(
             outline_structure is not None and file_page_starts is not None
         )
 
+        # Initialize variables to avoid "possibly unbound" errors
+        hierarchical_toc_data: list[tuple[str, int, int]] = []
+        toc_data: list[tuple[str, int]] = []
+
         if use_hierarchical:
+            # Type narrowing for pyright
+            assert outline_structure is not None
+            assert file_page_starts is not None
             # Flatten the hierarchical structure for TOC rendering
             hierarchical_toc_data = flatten_outline_structure(
                 outline_structure, file_page_starts
@@ -1221,6 +1335,11 @@ def add_toc_to_pdf(
         writer.outline.clear()
 
         if use_hierarchical:
+            # Type narrowing for pyright (already checked in use_hierarchical)
+            assert outline_structure is not None
+            assert file_page_starts is not None
+            page_starts = file_page_starts  # Local reference for nested function
+
             # Rebuild hierarchical outline
             def add_outline_items(items: list[dict], parent=None):
                 for item in items:
@@ -1230,16 +1349,14 @@ def add_toc_to_pdf(
 
                     # Get page number
                     page_num = None
-                    if file and file in file_page_starts:
-                        page_num = file_page_starts[file] + actual_toc_pages
+                    if file and file in page_starts:
+                        page_num = page_starts[file] + actual_toc_pages
                     elif children:
                         # Link to first child
                         for child in children:
                             child_file = child.get("file")
-                            if child_file and child_file in file_page_starts:
-                                page_num = (
-                                    file_page_starts[child_file] + actual_toc_pages
-                                )
+                            if child_file and child_file in page_starts:
+                                page_num = page_starts[child_file] + actual_toc_pages
                                 break
 
                     display_title = (
