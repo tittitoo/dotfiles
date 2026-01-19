@@ -520,6 +520,7 @@ def beautify(xl_file: str, font: bool) -> None:
     "-t", "--toc", is_flag=True, help="Add table of contends in separate page"
 )
 @click.option(
+    "-m",
     "--manifest",
     "use_manifest",
     is_flag=True,

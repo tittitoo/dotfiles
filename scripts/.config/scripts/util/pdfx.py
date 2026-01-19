@@ -82,8 +82,43 @@ def find_manifest_file(directory: Path) -> Path | None:
         click.echo(f"Please enter a number between 1 and {len(candidates)}")
 
 
+def resolve_pdf_file(directory: Path, name: str) -> str | None:
+    """
+    Try to find a PDF file matching the given name.
+
+    Tries in order:
+    1. Exact match (name as-is)
+    2. With .pdf extension added
+    3. Case-insensitive search for similar names
+
+    Args:
+        directory: Directory to search in
+        name: Filename or potential filename (with or without .pdf)
+
+    Returns:
+        The actual filename if found, None otherwise.
+    """
+    # Try exact match first
+    if (directory / name).exists():
+        return name
+
+    # Try adding .pdf extension
+    name_with_pdf = name if name.lower().endswith(".pdf") else f"{name}.pdf"
+    if (directory / name_with_pdf).exists():
+        return name_with_pdf
+
+    # Try case-insensitive search
+    name_lower = name_with_pdf.lower()
+    for f in directory.iterdir():
+        if f.is_file() and f.name.lower() == name_lower:
+            return f.name
+
+    return None
+
+
 def parse_manifest_file(
     file_path: Path,
+    directory: Path | None = None,
 ) -> tuple[str, list[str], list[dict]] | None:
     """
     Parse a markdown/txt manifest file for PDF combining with hierarchical outline.
@@ -92,23 +127,28 @@ def parse_manifest_file(
         # Output Filename
 
         ## Section Title
-        - file1.pdf
+        - file1
         - file2.pdf
 
         ### Subsection Title
-        - file3.pdf
+        - file3
 
         ## Section With File section.pdf
-        - file4.pdf
+        - file4
 
     Heading levels:
     - # Title: Output filename (required)
-    - ## Section: Level 1 heading
+    - ## Section: Level 1 heading (can be a PDF filename)
     - ### Subsection: Level 2 heading
     - #### Sub-subsection: Level 3 heading (and so on)
 
-    Headings can optionally include a PDF file at the end (e.g., "## Section file.pdf").
-    List items (-) become entries under their parent heading.
+    All headings and list items are treated as potential PDF filenames.
+    The .pdf extension is optional - files will be matched with or without it.
+    Files that cannot be found are skipped and logged.
+
+    Args:
+        file_path: Path to the manifest file
+        directory: Directory to search for PDF files (defaults to manifest's directory)
 
     Returns:
         Tuple of (output_filename, list_of_pdf_files, outline_structure) or None.
@@ -126,6 +166,9 @@ def parse_manifest_file(
             ...
         ]
     """
+    if directory is None:
+        directory = file_path.parent
+
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -134,16 +177,26 @@ def parse_manifest_file(
         title = None
         pdf_files = []
         outline_structure = []
+        not_found_files = []
 
         # Stack to track parent sections at each level
         # level_stack[i] contains the section dict for heading level i+1 (## = level 1)
         level_stack: list[dict | None] = [None] * 10  # Support up to 10 levels
 
+        def try_resolve_file(name: str) -> str | None:
+            """Try to resolve a potential filename, log if not found."""
+            resolved = resolve_pdf_file(directory, name)
+            if resolved is None:
+                not_found_files.append(name)
+            return resolved
+
         def parse_heading_line(line: str) -> tuple[int, str, str | None]:
             """
             Parse a heading line to extract level, title, and optional file.
-            Returns (level, title, file_or_none).
+            Returns (level, title, resolved_file_or_none).
             Level 1 = ##, Level 2 = ###, etc.
+
+            The heading text itself is treated as a potential filename.
             """
             # Count # characters
             hash_count = 0
@@ -157,21 +210,32 @@ def parse_manifest_file(
             level = hash_count - 1
             heading_text = line[hash_count:].strip()
 
-            # Check if heading includes a PDF file
+            # Try to parse as "Title filename" or just "filename"
             heading_file = None
             heading_title = heading_text
 
-            if heading_text.lower().endswith(".pdf"):
-                parts = heading_text.rsplit(" ", 1)
-                if len(parts) == 2 and parts[1].lower().endswith(".pdf"):
-                    heading_title = parts[0]
-                    heading_file = parts[1]
-                else:
-                    # The whole thing is a filename
-                    heading_file = heading_text
-                    heading_title = os.path.splitext(heading_text)[0]
+            # First, try the whole heading as a filename
+            resolved_whole = resolve_pdf_file(directory, heading_text)
+            if resolved_whole:
+                heading_file = resolved_whole
+                # Use the text without .pdf as title
+                heading_title = os.path.splitext(heading_text)[0]
+                if heading_title.lower().endswith(".pdf"):
+                    heading_title = heading_title[:-4]
+                return level, heading_title, heading_file
 
-            return level, heading_title, heading_file
+            # Try splitting: "Title filename" where filename is the last word
+            parts = heading_text.rsplit(" ", 1)
+            if len(parts) == 2:
+                potential_file = parts[1]
+                resolved = resolve_pdf_file(directory, potential_file)
+                if resolved:
+                    heading_title = parts[0]
+                    heading_file = resolved
+                    return level, heading_title, heading_file
+
+            # No file found - this is just a section title
+            return level, heading_title, None
 
         def find_parent_for_level(level: int) -> dict | None:
             """Find the appropriate parent section for a given level."""
@@ -216,44 +280,56 @@ def parse_manifest_file(
                 for i in range(level + 1, len(level_stack)):
                     level_stack[i] = None
 
-            # Parse list items (- filename.pdf)
+            # Parse list items (- filename)
             elif stripped.startswith("- "):
-                filename = stripped[2:].strip()
-                if filename:
-                    pdf_files.append(filename)
+                item_text = stripped[2:].strip()
+                if item_text:
+                    # Try to resolve as a PDF file
+                    resolved_file = try_resolve_file(item_text)
 
-                    # Find the current parent (most recent heading at any level)
-                    parent = None
-                    for i in range(len(level_stack) - 1, 0, -1):
-                        if level_stack[i] is not None:
-                            parent = level_stack[i]
-                            break
+                    if resolved_file:
+                        pdf_files.append(resolved_file)
 
-                    if parent is not None:
-                        # Add as a child entry (with level one deeper than parent)
-                        child_entry = {
-                            "title": None,  # Will use cleaned filename
-                            "level": parent["level"] + 1,
-                            "file": filename,
-                            "children": [],
-                        }
-                        parent["children"].append(child_entry)
-                    else:
-                        # No parent, create implicit root section
-                        child_entry = {
-                            "title": None,
-                            "level": 1,
-                            "file": filename,
-                            "children": [],
-                        }
-                        outline_structure.append(child_entry)
+                        # Find the current parent (most recent heading at any level)
+                        parent = None
+                        for i in range(len(level_stack) - 1, 0, -1):
+                            if level_stack[i] is not None:
+                                parent = level_stack[i]
+                                break
+
+                        if parent is not None:
+                            # Add as a child entry (with level one deeper than parent)
+                            child_entry = {
+                                "title": None,  # Will use cleaned filename
+                                "level": parent["level"] + 1,
+                                "file": resolved_file,
+                                "children": [],
+                            }
+                            parent["children"].append(child_entry)
+                        else:
+                            # No parent, create implicit root section
+                            child_entry = {
+                                "title": None,
+                                "level": 1,
+                                "file": resolved_file,
+                                "children": [],
+                            }
+                            outline_structure.append(child_entry)
+
+        # Log files that couldn't be found
+        if not_found_files:
+            click.echo(
+                "Warning: The following items could not be matched to PDF files:"
+            )
+            for f in not_found_files:
+                click.echo(f"  - {f}")
 
         if not title:
             click.echo("Error: No title found in manifest file (expected '# Title')")
             return None
 
         if not pdf_files:
-            click.echo("Error: No PDF files listed in manifest file")
+            click.echo("Error: No PDF files found from manifest entries")
             return None
 
         # Add .pdf extension to title if not present
@@ -273,6 +349,7 @@ def parse_manifest_file(
     "-t", "--toc", is_flag=True, help="Add table of contends in separate page"
 )
 @click.option(
+    "-m",
     "--manifest",
     "use_manifest",
     is_flag=True,
@@ -304,21 +381,13 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
             return
 
         click.echo(f"Using manifest: {manifest_path.name}")
-        result = parse_manifest_file(manifest_path)
+        result = parse_manifest_file(manifest_path, directory)
         if result is None:
             return
         filename, pdf_files, outline_structure = result
 
-        # Verify all listed files exist
-        missing_files = [f for f in pdf_files if not (directory / f).exists()]
-        if missing_files:
-            click.echo("Error: The following files were not found:")
-            for f in missing_files:
-                click.echo(f"  - {f}")
-            return
-
-        # Files are already in the order specified in manifest
-        # No need to sort or reorder for cover
+        # Files are already resolved and validated during parsing
+        # Missing files are logged as warnings and skipped
     else:
         filename = "00-Combined.pdf"
 
@@ -420,14 +489,18 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
         if toc:
             # Check if cover page exists
             has_cover = any(is_cover_file(f) for f in successful_pdf_files)
-            add_toc_to_pdf(Path(output_path), has_cover=has_cover)
             if use_manifest and outline_structure:
+                # Filter out cover files from file_page_starts for TOC
+                # Cover pages should not appear in TOC
+                toc_file_page_starts = {
+                    f: p for f, p in file_page_starts.items() if not is_cover_file(f)
+                }
                 # Use hierarchical TOC for manifest mode
                 add_toc_to_pdf(
                     Path(output_path),
                     has_cover=has_cover,
                     outline_structure=outline_structure,
-                    file_page_starts=file_page_starts,
+                    file_page_starts=toc_file_page_starts,
                 )
             else:
                 add_toc_to_pdf(Path(output_path), has_cover=has_cover)
