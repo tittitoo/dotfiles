@@ -82,17 +82,49 @@ def find_manifest_file(directory: Path) -> Path | None:
         click.echo(f"Please enter a number between 1 and {len(candidates)}")
 
 
-def parse_manifest_file(file_path: Path) -> tuple[str, list[str]] | None:
+def parse_manifest_file(
+    file_path: Path,
+) -> tuple[str, list[str], list[dict]] | None:
     """
-    Parse a markdown/txt manifest file for PDF combining.
+    Parse a markdown/txt manifest file for PDF combining with hierarchical outline.
 
     Expected format:
         # Output Filename
+
+        ## Section Title
         - file1.pdf
         - file2.pdf
 
+        ### Subsection Title
+        - file3.pdf
+
+        ## Section With File section.pdf
+        - file4.pdf
+
+    Heading levels:
+    - # Title: Output filename (required)
+    - ## Section: Level 1 heading
+    - ### Subsection: Level 2 heading
+    - #### Sub-subsection: Level 3 heading (and so on)
+
+    Headings can optionally include a PDF file at the end (e.g., "## Section file.pdf").
+    List items (-) become entries under their parent heading.
+
     Returns:
-        Tuple of (output_filename, list_of_pdf_files) or None if parsing fails.
+        Tuple of (output_filename, list_of_pdf_files, outline_structure) or None.
+        outline_structure is a list of dicts with recursive children:
+        [
+            {
+                "title": "Section Title",
+                "level": 1,
+                "file": None or "section.pdf",
+                "children": [
+                    {"title": "Subsection", "level": 2, "file": None, "children": [...]},
+                    ...
+                ]
+            },
+            ...
+        ]
     """
     try:
         with open(file_path, "r", encoding="utf-8") as f:
@@ -101,17 +133,120 @@ def parse_manifest_file(file_path: Path) -> tuple[str, list[str]] | None:
         lines = content.strip().split("\n")
         title = None
         pdf_files = []
+        outline_structure = []
+
+        # Stack to track parent sections at each level
+        # level_stack[i] contains the section dict for heading level i+1 (## = level 1)
+        level_stack: list[dict | None] = [None] * 10  # Support up to 10 levels
+
+        def parse_heading_line(line: str) -> tuple[int, str, str | None]:
+            """
+            Parse a heading line to extract level, title, and optional file.
+            Returns (level, title, file_or_none).
+            Level 1 = ##, Level 2 = ###, etc.
+            """
+            # Count # characters
+            hash_count = 0
+            for char in line:
+                if char == "#":
+                    hash_count += 1
+                else:
+                    break
+
+            # Level is hash_count - 1 (## = level 1, ### = level 2, etc.)
+            level = hash_count - 1
+            heading_text = line[hash_count:].strip()
+
+            # Check if heading includes a PDF file
+            heading_file = None
+            heading_title = heading_text
+
+            if heading_text.lower().endswith(".pdf"):
+                parts = heading_text.rsplit(" ", 1)
+                if len(parts) == 2 and parts[1].lower().endswith(".pdf"):
+                    heading_title = parts[0]
+                    heading_file = parts[1]
+                else:
+                    # The whole thing is a filename
+                    heading_file = heading_text
+                    heading_title = os.path.splitext(heading_text)[0]
+
+            return level, heading_title, heading_file
+
+        def find_parent_for_level(level: int) -> dict | None:
+            """Find the appropriate parent section for a given level."""
+            # Look for the nearest parent at a higher level (lower number)
+            for i in range(level - 1, 0, -1):
+                if level_stack[i] is not None:
+                    return level_stack[i]
+            return None
 
         for line in lines:
-            line = line.strip()
-            # Parse title (# Title)
-            if line.startswith("# "):
-                title = line[2:].strip()
+            stripped = line.strip()
+
+            # Parse main title (# Title) - exactly one #
+            if stripped.startswith("# ") and not stripped.startswith("## "):
+                title = stripped[2:].strip()
+
+            # Parse heading (## or more)
+            elif stripped.startswith("## "):
+                level, heading_title, heading_file = parse_heading_line(stripped)
+
+                if heading_file:
+                    pdf_files.append(heading_file)
+
+                new_section = {
+                    "title": heading_title,
+                    "level": level,
+                    "file": heading_file,
+                    "children": [],
+                }
+
+                # Find parent and add to appropriate place
+                parent = find_parent_for_level(level)
+                if parent is not None:
+                    parent["children"].append(new_section)
+                else:
+                    # Top-level section
+                    outline_structure.append(new_section)
+
+                # Update level stack
+                level_stack[level] = new_section
+                # Clear lower levels (they're no longer current)
+                for i in range(level + 1, len(level_stack)):
+                    level_stack[i] = None
+
             # Parse list items (- filename.pdf)
-            elif line.startswith("- "):
-                filename = line[2:].strip()
+            elif stripped.startswith("- "):
+                filename = stripped[2:].strip()
                 if filename:
                     pdf_files.append(filename)
+
+                    # Find the current parent (most recent heading at any level)
+                    parent = None
+                    for i in range(len(level_stack) - 1, 0, -1):
+                        if level_stack[i] is not None:
+                            parent = level_stack[i]
+                            break
+
+                    if parent is not None:
+                        # Add as a child entry (with level one deeper than parent)
+                        child_entry = {
+                            "title": None,  # Will use cleaned filename
+                            "level": parent["level"] + 1,
+                            "file": filename,
+                            "children": [],
+                        }
+                        parent["children"].append(child_entry)
+                    else:
+                        # No parent, create implicit root section
+                        child_entry = {
+                            "title": None,
+                            "level": 1,
+                            "file": filename,
+                            "children": [],
+                        }
+                        outline_structure.append(child_entry)
 
         if not title:
             click.echo("Error: No title found in manifest file (expected '# Title')")
@@ -124,7 +259,7 @@ def parse_manifest_file(file_path: Path) -> tuple[str, list[str]] | None:
         # Add .pdf extension to title if not present
         output_filename = title if title.lower().endswith(".pdf") else f"{title}.pdf"
 
-        return output_filename, pdf_files
+        return output_filename, pdf_files, outline_structure
 
     except Exception as e:
         click.echo(f"Error reading manifest file: {e}")
@@ -148,17 +283,21 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     Combine pdf and output result pdf in the current folder.
     If the combined file already exists, it will remove it first and re-combine.
 
-    With --file flag, reads a manifest file (md/txt) where:
+    With --manifest flag, reads a manifest file (md/txt) where:
     - The '# Title' becomes the output filename
-    - Listed files (- file.pdf) are combined in order
+    - '## Section' creates level 1 outline (links to first child if no file)
+    - '## Section file.pdf' creates level 1 outline with that file
+    - '- file.pdf' items become level 2 outline entries
     """
     if not yes:
         click.confirm(
-            "The command will merge all the pdf in the current directory", abort=True
+            "The command will merge the pdf in the current directory", abort=True
         )
     directory = Path.cwd()
 
-    # Use manifest file if --file flag is set
+    outline_structure = None  # For manifest mode
+
+    # Use manifest file if --manifest flag is set
     if use_manifest:
         manifest_path = find_manifest_file(directory)
         if manifest_path is None:
@@ -168,7 +307,7 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
         result = parse_manifest_file(manifest_path)
         if result is None:
             return
-        filename, pdf_files = result
+        filename, pdf_files, outline_structure = result
 
         # Verify all listed files exist
         missing_files = [f for f in pdf_files if not (directory / f).exists()]
@@ -214,10 +353,12 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
             click.echo(f"Cannot remove {filename}. Please close the file first.")
             return
 
-    # Creat a PdfMerger object
+    # Create a PdfWriter object
     writer = pypdf.PdfWriter()
 
     encrypted_files: list[str] = []
+    file_page_starts: dict[str, int] = {}  # Track start page for each file
+    current_page = 0
 
     # Add all the PDF files to the merger
     try:
@@ -225,15 +366,21 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
             file_path = os.path.join(directory, pdf_file)
             is_cover = is_cover_file(pdf_file)
             try:
-                # Read for side effect to see if it is encrypted
-                pypdf.PdfReader(file_path)
-                if outline and not is_cover:
-                    # Add outline to non-cover files only
+                # Read to check encryption and get page count
+                reader = pypdf.PdfReader(file_path)
+                page_count = len(reader.pages)
+
+                # Track where this file starts
+                file_page_starts[pdf_file] = current_page
+
+                if outline and not is_cover and not use_manifest:
+                    # Add outline to non-cover files only (non-manifest mode)
                     add_outline(Path(file_path))
                 elif is_cover:
                     # Clear any existing outline from cover file
                     clear_outline(Path(file_path))
                 writer.append(file_path)
+                current_page += page_count
             except FileNotDecryptedError:
                 encrypted_files.append(pdf_file)
             except Exception as e:
@@ -241,7 +388,7 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     except Exception as e:
         click.echo(f"Encountered this error {e}")
 
-    # Write the ouput to a new PDF file
+    # Write the output to a new PDF file
     output_path = os.path.join(directory, filename)
     try:
         with open(output_path, "wb") as f:
@@ -259,20 +406,129 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
                 click.echo(
                     f"Combined following {len(successful_pdf_files)} files into '{filename}'"
                 )
-                successful_pdf_files.sort()
-                for index, item in enumerate(successful_pdf_files):
-                    click.echo(
-                        f"{index + 1}: {item}"
-                    )  # Print the file name with index (item)
+                # Preserve order from pdf_files for display
+                ordered_successful = [f for f in pdf_files if f in successful_pdf_files]
+                for index, item in enumerate(ordered_successful):
+                    click.echo(f"{index + 1}: {item}")
+
+        # Add hierarchical outline for manifest mode
+        if use_manifest and outline_structure:
+            add_hierarchical_outline(
+                Path(output_path), outline_structure, file_page_starts
+            )
+
         if toc:
             # Check if cover page exists
             has_cover = any(is_cover_file(f) for f in successful_pdf_files)
             add_toc_to_pdf(Path(output_path), has_cover=has_cover)
+            if use_manifest and outline_structure:
+                # Use hierarchical TOC for manifest mode
+                add_toc_to_pdf(
+                    Path(output_path),
+                    has_cover=has_cover,
+                    outline_structure=outline_structure,
+                    file_page_starts=file_page_starts,
+                )
+            else:
+                add_toc_to_pdf(Path(output_path), has_cover=has_cover)
 
     except Exception as e:
         click.echo(f"Encountered this error {e}")
     # Close the writer
     writer.close()
+
+
+def clean_outline_title(filename: str) -> str:
+    """
+    Clean a filename to create a nice outline title.
+    Removes leading numbers and common acronyms.
+    """
+    # Remove .pdf extension
+    title = os.path.splitext(filename)[0]
+    # Remove leading number such as 2, 02, 002 etc
+    title = re.sub(r"^\b0*[1-9]\d*\b|\b0+\b|\b0\b", "", title)
+    # Remove word from acronyms at the start of sentence
+    pattern = r"^\s*(" + "|".join(re.escape(word) for word in ACRONYMS) + r")\b\s*"
+    title = re.sub(pattern, "", title, 1)
+    # Remove any leading or trailing spaces
+    return title.strip()
+
+
+def add_hierarchical_outline(
+    file_path: Path,
+    outline_structure: list[dict],
+    file_page_starts: dict[str, int],
+) -> None:
+    """
+    Add hierarchical outline to a PDF based on manifest structure.
+
+    Args:
+        file_path: Path to the combined PDF
+        outline_structure: List of section dicts from parse_manifest_file
+                          Each dict has: title, level, file, children (recursive)
+        file_page_starts: Dict mapping filename to starting page number (0-indexed)
+    """
+    try:
+        reader = pypdf.PdfReader(file_path)
+        writer = pypdf.PdfWriter()
+
+        # Copy all pages
+        for page in reader.pages:
+            writer.add_page(page)
+
+        # Clear existing outline
+        writer.outline.clear()
+
+        def get_first_file_page(item: dict) -> int | None:
+            """Recursively find the first file's page in an item and its children."""
+            file = item.get("file")
+            if file and file in file_page_starts:
+                return file_page_starts[file]
+            for child in item.get("children", []):
+                page = get_first_file_page(child)
+                if page is not None:
+                    return page
+            return None
+
+        def add_outline_items(items: list[dict], parent=None):
+            """Recursively add outline items."""
+            for item in items:
+                title = item.get("title")
+                file = item.get("file")
+                children = item.get("children", [])
+
+                # Determine page for this item
+                if file and file in file_page_starts:
+                    page = file_page_starts[file]
+                else:
+                    page = get_first_file_page(item)
+
+                if page is None:
+                    continue  # Skip if no valid page
+
+                # Use title or cleaned filename
+                display_title = (
+                    title if title else (clean_outline_title(file) if file else None)
+                )
+
+                if display_title:
+                    outline_item = writer.add_outline_item(
+                        display_title, page, parent=parent
+                    )
+                    # Recursively add children
+                    if children:
+                        add_outline_items(children, parent=outline_item)
+
+        add_outline_items(outline_structure)
+
+        # Write back
+        with open(file_path, "wb") as f:
+            writer.write(f)
+
+        click.echo(f"Added hierarchical outline to {file_path.name}")
+
+    except Exception as e:
+        click.echo(f"Error adding hierarchical outline: {e}")
 
 
 def add_outline(file_path: Path):
@@ -291,7 +547,7 @@ def add_outline(file_path: Path):
         # Clean file name
         # Remove leading number such as 2, 02, 002 etc
         filename = re.sub(r"^\b0*[1-9]\d*\b|\b0+\b|\b0\b", "", filename)
-        # Remove word from acronums at the start of sentence
+        # Remove word from acronyms at the start of sentence
         pattern = r"^\s*(" + "|".join(re.escape(word) for word in ACRONYMS) + r")\b\s*"
         filename = re.sub(pattern, "", filename, 1)
         # Remove any leading or trailing spaces
@@ -514,45 +770,316 @@ def estimate_toc_pages(toc_data: list[tuple[str, int]], page_size=A4) -> int:
     return (len(toc_data) + entries_per_page - 1) // entries_per_page
 
 
-def add_toc_to_pdf(file_path: Path, has_cover: bool = False) -> None:
+def flatten_outline_structure(
+    outline_structure: list[dict],
+    file_page_starts: dict[str, int],
+) -> list[tuple[str, int, int]]:
+    """
+    Flatten hierarchical outline structure into a list for TOC rendering.
+
+    Args:
+        outline_structure: Hierarchical outline from parse_manifest_file
+        file_page_starts: Dict mapping filename to starting page number (0-indexed)
+
+    Returns:
+        List of (title, page_number, level) tuples for TOC rendering.
+    """
+    flattened = []
+
+    def process_item(item: dict):
+        title = item.get("title")
+        level = item.get("level", 1)
+        file = item.get("file")
+        children = item.get("children", [])
+
+        # Determine page for this item
+        page = None
+        if file and file in file_page_starts:
+            page = file_page_starts[file]
+        elif children:
+            # Link to first child's page
+            for child in children:
+                child_file = child.get("file")
+                if child_file and child_file in file_page_starts:
+                    page = file_page_starts[child_file]
+                    break
+
+        # Use title or cleaned filename
+        display_title = (
+            title if title else (clean_outline_title(file) if file else None)
+        )
+
+        if display_title and page is not None:
+            flattened.append((display_title, page, level))
+
+        # Process children recursively
+        for child in children:
+            process_item(child)
+
+    for item in outline_structure:
+        process_item(item)
+
+    return flattened
+
+
+def create_hierarchical_toc_pdf(
+    toc_data: list[tuple[str, int, int]],
+    output_path: str,
+    toc_page_count: int,
+    page_size=A4,
+    cover_pages: int = 0,
+) -> tuple[int, list[dict]]:
+    """
+    Create a PDF with hierarchical table of contents.
+
+    Levels have different font sizes and indentation:
+    - Level 1: 13pt font, no indent (section headers)
+    - Level 2: 11pt font, 20px indent
+    - Level 3: 10pt font, 40px indent
+    - Level 4+: 9pt font, 60px indent
+
+    Args:
+        toc_data: List of (title, page_number, level) tuples
+        output_path: Path for the TOC PDF
+        toc_page_count: Number of TOC pages (for adjusting target page numbers)
+        page_size: Page size (default A4)
+        cover_pages: Number of cover pages that precede TOC in final PDF
+
+    Returns:
+        Tuple of (number of pages created, list of link info dicts)
+    """
+    font_name = _register_arial_font()
+
+    c = canvas.Canvas(output_path, pagesize=page_size)
+    width, height = page_size
+
+    # Margins and layout
+    left_margin = 50
+    right_margin = width - 50
+    top_margin = height - 50
+    bottom_margin = 60
+    title_font_size = 16
+
+    # Font sizes and indentation by level
+    level_config = {
+        1: {"font_size": 13, "indent": 0, "line_height": 24, "bold": True},
+        2: {"font_size": 11, "indent": 20, "line_height": 20, "bold": False},
+        3: {"font_size": 10, "indent": 40, "line_height": 18, "bold": False},
+        4: {"font_size": 9, "indent": 60, "line_height": 16, "bold": False},
+    }
+
+    def get_level_config(level: int) -> dict:
+        """Get config for a level, defaulting to level 4+ config for deep nesting."""
+        if level in level_config:
+            return level_config[level]
+        # For deeper levels, increase indent but keep font size at 9
+        return {
+            "font_size": 9,
+            "indent": 60 + (level - 4) * 15,
+            "line_height": 16,
+            "bold": False,
+        }
+
+    pages_created = 0
+    link_info = []
+
+    def start_new_page(is_first=False):
+        nonlocal pages_created
+        if not is_first:
+            c.showPage()
+        pages_created += 1
+
+        # Draw title on each page
+        if font_name == "Helvetica":
+            c.setFont("Helvetica-Bold", title_font_size)
+        else:
+            c.setFont(font_name, title_font_size)
+        c.drawString(left_margin, top_margin, "Table of Contents")
+
+        return top_margin - 35
+
+    y = start_new_page(is_first=True)
+
+    for title, original_page_num, level in toc_data:
+        config = get_level_config(level)
+        font_size = config["font_size"]
+        indent = config["indent"]
+        line_height = config["line_height"]
+        is_bold = config["bold"]
+
+        if y < bottom_margin:
+            y = start_new_page()
+
+        # Target page in final PDF
+        target_page = original_page_num + toc_page_count
+
+        # Display page number (1-indexed)
+        display_page = target_page + 1
+
+        # Set font
+        if is_bold and font_name == "Helvetica":
+            c.setFont("Helvetica-Bold", font_size)
+        elif is_bold:
+            # For Arial, we use the same font (no bold variant registered)
+            c.setFont(font_name, font_size)
+        else:
+            c.setFont(font_name, font_size)
+
+        entry_left = left_margin + indent
+
+        # Draw title in dark blue (darker for level 1)
+        if level == 1:
+            c.setFillColorRGB(0, 0, 0.7)
+        else:
+            c.setFillColorRGB(0.1, 0.1, 0.6)
+        c.drawString(entry_left, y, title)
+
+        # Draw page number (right-aligned) in black
+        c.setFillColorRGB(0, 0, 0)
+        c.drawRightString(right_margin, y, str(display_page))
+
+        # Draw dotted line between title and page number
+        title_width = c.stringWidth(title, font_name, font_size)
+        page_width = c.stringWidth(str(display_page), font_name, font_size)
+        dot_start = entry_left + title_width + 10
+        dot_end = right_margin - page_width - 10
+
+        if dot_end > dot_start:
+            c.setFillColorRGB(0.5, 0.5, 0.5)
+            dot_x = dot_start
+            while dot_x < dot_end:
+                c.drawString(dot_x, y, ".")
+                dot_x += 5
+
+        # Store link info
+        link_info.append(
+            {
+                "toc_page": pages_created - 1,
+                "rect": (left_margin, y - 3, right_margin, y + font_size),
+                "target_page": target_page,
+                "height": height,
+            }
+        )
+
+        y -= line_height
+
+    c.save()
+    return pages_created, link_info
+
+
+def estimate_hierarchical_toc_pages(
+    toc_data: list[tuple[str, int, int]], page_size=A4
+) -> int:
+    """
+    Estimate how many pages the hierarchical TOC will need.
+    """
+    if not toc_data:
+        return 0
+
+    _, height = page_size
+    top_margin = height - 50
+    bottom_margin = 60
+    title_space = 35
+
+    usable_height = top_margin - bottom_margin - title_space
+
+    # Calculate total height needed based on level-specific line heights
+    level_line_heights = {1: 24, 2: 20, 3: 18, 4: 16}
+    total_height = 0
+    for _, _, level in toc_data:
+        line_height = level_line_heights.get(level, 16)
+        total_height += line_height
+
+    if usable_height <= 0:
+        return len(toc_data)
+
+    return max(1, (total_height + usable_height - 1) // usable_height)
+
+
+def add_toc_to_pdf(
+    file_path: Path,
+    has_cover: bool = False,
+    outline_structure: list[dict] | None = None,
+    file_page_starts: dict[str, int] | None = None,
+) -> None:
     """
     Add a clickable table of contents to a PDF.
-    The TOC is based on the PDF's outline/bookmarks.
+    The TOC is based on the PDF's outline/bookmarks, or a hierarchical
+    outline structure from a manifest file.
 
     Args:
         file_path: Path to the PDF file
         has_cover: If True, TOC is inserted after the first page (cover).
                    Cover page should not have an outline entry.
+        outline_structure: Optional hierarchical outline from manifest parsing.
+                          When provided, creates a hierarchical TOC with
+                          different font sizes and indentation per level.
+        file_page_starts: Dict mapping filename to page number (required
+                         when outline_structure is provided).
     """
     try:
-        # Get outline data from the PDF (cover is already excluded from outline)
-        toc_data = get_outline_data(file_path)
+        # Determine if using hierarchical mode (manifest)
+        use_hierarchical = (
+            outline_structure is not None and file_page_starts is not None
+        )
 
-        if not toc_data:
-            click.echo("PDF has no outline. Use -o flag to add outline first.")
-            return
+        if use_hierarchical:
+            # Flatten the hierarchical structure for TOC rendering
+            hierarchical_toc_data = flatten_outline_structure(
+                outline_structure, file_page_starts
+            )
+            if not hierarchical_toc_data:
+                click.echo("No TOC entries found in outline structure.")
+                return
+        else:
+            # Get outline data from the PDF (cover is already excluded from outline)
+            toc_data = get_outline_data(file_path)
+
+            if not toc_data:
+                click.echo("PDF has no outline. Use -o flag to add outline first.")
+                return
 
         # Number of cover pages (inserted before TOC)
         cover_pages = 1 if has_cover else 0
-
-        # Estimate TOC pages needed
-        estimated_pages = estimate_toc_pages(toc_data)
 
         # Create TOC PDF in temp file
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             toc_pdf_path = tmp.name
 
-        # Create TOC (visual content + link positions)
-        # Adjust page numbers: entries already account for cover, TOC goes after cover
-        actual_toc_pages, link_info = create_toc_pdf(
-            toc_data, toc_pdf_path, estimated_pages, cover_pages=cover_pages
-        )
+        if use_hierarchical:
+            # Estimate TOC pages needed for hierarchical
+            estimated_pages = estimate_hierarchical_toc_pages(hierarchical_toc_data)
 
-        # If estimate was wrong, recreate with correct page count
-        if actual_toc_pages != estimated_pages:
-            actual_toc_pages, link_info = create_toc_pdf(
-                toc_data, toc_pdf_path, actual_toc_pages, cover_pages=cover_pages
+            # Create hierarchical TOC
+            actual_toc_pages, link_info = create_hierarchical_toc_pdf(
+                hierarchical_toc_data,
+                toc_pdf_path,
+                estimated_pages,
+                cover_pages=cover_pages,
             )
+
+            # If estimate was wrong, recreate with correct page count
+            if actual_toc_pages != estimated_pages:
+                actual_toc_pages, link_info = create_hierarchical_toc_pdf(
+                    hierarchical_toc_data,
+                    toc_pdf_path,
+                    actual_toc_pages,
+                    cover_pages=cover_pages,
+                )
+        else:
+            # Estimate TOC pages needed
+            estimated_pages = estimate_toc_pages(toc_data)
+
+            # Create TOC (visual content + link positions)
+            actual_toc_pages, link_info = create_toc_pdf(
+                toc_data, toc_pdf_path, estimated_pages, cover_pages=cover_pages
+            )
+
+            # If estimate was wrong, recreate with correct page count
+            if actual_toc_pages != estimated_pages:
+                actual_toc_pages, link_info = create_toc_pdf(
+                    toc_data, toc_pdf_path, actual_toc_pages, cover_pages=cover_pages
+                )
 
         # Merge: Cover (if any) + TOC + rest of original PDF
         writer = pypdf.PdfWriter()
@@ -618,11 +1145,50 @@ def add_toc_to_pdf(file_path: Path, has_cover: bool = False) -> None:
             page["/Annots"].append(link_annotation)
 
         # Rebuild outline with adjusted page numbers
-        # Cover page has no outline entry, so all entries need TOC offset
         writer.outline.clear()
-        for title, original_page_num in toc_data:
-            new_page_num = original_page_num + actual_toc_pages
-            writer.add_outline_item(title, new_page_num)
+
+        if use_hierarchical:
+            # Rebuild hierarchical outline
+            def add_outline_items(items: list[dict], parent=None):
+                for item in items:
+                    title = item.get("title")
+                    file = item.get("file")
+                    children = item.get("children", [])
+
+                    # Get page number
+                    page_num = None
+                    if file and file in file_page_starts:
+                        page_num = file_page_starts[file] + actual_toc_pages
+                    elif children:
+                        # Link to first child
+                        for child in children:
+                            child_file = child.get("file")
+                            if child_file and child_file in file_page_starts:
+                                page_num = (
+                                    file_page_starts[child_file] + actual_toc_pages
+                                )
+                                break
+
+                    display_title = (
+                        title
+                        if title
+                        else (clean_outline_title(file) if file else None)
+                    )
+
+                    if display_title and page_num is not None:
+                        outline_item = writer.add_outline_item(
+                            display_title, page_num, parent=parent
+                        )
+                        # Add children recursively
+                        if children:
+                            add_outline_items(children, parent=outline_item)
+
+            add_outline_items(outline_structure)
+        else:
+            # Cover page has no outline entry, so all entries need TOC offset
+            for title, original_page_num in toc_data:
+                new_page_num = original_page_num + actual_toc_pages
+                writer.add_outline_item(title, new_page_num)
 
         # Write the final PDF
         with open(file_path, "wb") as f:
