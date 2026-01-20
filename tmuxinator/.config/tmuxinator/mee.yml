@@ -1,6 +1,6 @@
 # /Users/infowizard/.config/tmuxinator/programming.yml
 
-name: programming
+name: mee
 root: "~/Repos/github.com/tittitoo/mee/"
 
 windows:
