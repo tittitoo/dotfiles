@@ -1,0 +1,14 @@
+# /Users/infowizard/.config/tmuxinator/programming.yml
+
+name: programming
+root: "~/Repos/github.com/tittitoo/mee/"
+
+windows:
+  - mee:
+      root: "~/Repos/github.com/tittitoo/mee/"
+      panes:
+        - source .venv/bin/activate.fish; clear
+  - playground:
+      root: "~/Repos/github.com/tittitoo/mee/"
+      panes:
+        - source .venv/bin/activate.fish; clear
