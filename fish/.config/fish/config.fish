@@ -142,3 +142,10 @@ fish_add_path /Users/infowizard/.codeium/windsurf/bin
 set -gx XDG_CONFIG_HOME ~/.config
 set -gx VOLTA_HOME "$HOME/.volta"
 set -gx PATH "$VOLTA_HOME/bin" $PATH
+
+# pnpm
+set -gx PNPM_HOME "/Users/infowizard/Library/pnpm"
+if not string match -q -- $PNPM_HOME $PATH
+  set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
