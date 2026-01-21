@@ -134,7 +134,7 @@ def audit_sharepoint_csv(csv_path: Path) -> dict:
         "by_contributor": defaultdict(
             lambda: {"created": 0, "modified": 0, "last_active": None}
         ),
-        "by_month": defaultdict(lambda: {"count": 0}),
+        "by_month": defaultdict(lambda: {"created": 0, "modified": 0}),
         "recent_activity": [],
         "files": [],
     }
@@ -213,23 +213,29 @@ def audit_sharepoint_csv(csv_path: Path) -> dict:
                 if current_last is None or str(modified) > current_last:
                     stats["by_contributor"][modified_by]["last_active"] = str(modified)
 
-        # Track by month
-        if modified:
-            try:
-                # Try various date formats
-                for fmt in ["%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%dT%H:%M:%S"]:
-                    try:
-                        dt = datetime.strptime(str(modified)[:10], fmt[:10])
-                        month_key = dt.strftime("%Y-%m")
-                        stats["by_month"][month_key]["count"] += 1
-                        break
-                    except ValueError:
-                        continue
-            except Exception:
-                pass
+        # Track by month (both created and modified)
+        def parse_date_to_month(date_str):
+            """Parse date string to YYYY-MM format."""
+            if not date_str:
+                return None
+            for fmt in ["%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%dT%H:%M:%S"]:
+                try:
+                    dt = datetime.strptime(str(date_str)[:10], fmt[:10])
+                    return dt.strftime("%Y-%m")
+                except ValueError:
+                    continue
+            return None
 
-    # Sort recent activity
-    stats["files"].sort(key=lambda x: x.get("modified") or "", reverse=True)
+        created_month = parse_date_to_month(created)
+        if created_month:
+            stats["by_month"][created_month]["created"] += 1
+
+        modified_month = parse_date_to_month(modified)
+        if modified_month:
+            stats["by_month"][modified_month]["modified"] += 1
+
+    # Sort recent activity by created date
+    stats["files"].sort(key=lambda x: x.get("created") or "", reverse=True)
     stats["recent_activity"] = stats["files"][:20]
 
     return stats
@@ -321,22 +327,22 @@ def print_sharepoint_report(stats: dict) -> None:
     # By month
     if stats["by_month"]:
         click.echo(click.style("Activity by Month", fg="green", bold=True))
-        click.echo(f"  {'Month':<12} {'Files Modified':>15}")
-        click.echo(f"  {'-' * 12} {'-' * 15}")
+        click.echo(f"  {'Month':<12} {'Files Created':>15} {'Files Modified':>15}")
+        click.echo(f"  {'-' * 12} {'-' * 15} {'-' * 15}")
         sorted_months = sorted(stats["by_month"].items(), reverse=True)
         for month, data in sorted_months[:12]:
-            click.echo(f"  {month:<12} {data['count']:>15}")
+            click.echo(f"  {month:<12} {data['created']:>15} {data['modified']:>15}")
         click.echo()
 
     # Recent activity
     click.echo(click.style("Recent Activity", fg="green", bold=True))
-    click.echo(f"  {'Modified':<12} {'By':<20} {'File'}")
-    click.echo(f"  {'-' * 12} {'-' * 20} {'-' * 25}")
+    click.echo(f"  {'Created':<12} {'Created By':<25} {'File'}")
+    click.echo(f"  {'-' * 12} {'-' * 25} {'-' * 40}")
     for f in stats["recent_activity"][:15]:
-        modified = str(f.get("modified") or "-")[:10]
-        by = str(f.get("modified_by") or "-")[:20]
-        name = f["name"][:35] + "..." if len(f["name"]) > 35 else f["name"]
-        click.echo(f"  {modified:<12} {by:<20} {name}")
+        created = str(f.get("created") or "-")[:10]
+        by = str(f.get("created_by") or "-")[:25]
+        name = f["name"]
+        click.echo(f"  {created:<12} {by:<25} {name}")
     click.echo()
 
 

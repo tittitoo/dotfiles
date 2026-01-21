@@ -104,6 +104,68 @@ Create a `.md` or `.txt` file in the directory:
 
 ---
 
+### `audit`
+
+Track file contributions in a folder.
+
+```bash
+bid audit [directory] [options]
+```
+
+| Option              | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `-f, --fetch`       | Fetch from SharePoint URL (recommended)        |
+| `-l, --library`     | SharePoint library title (default: Documents)  |
+| `--folder`          | Folder path within library (e.g., '@docs')     |
+| `-i, --import-file` | Import from SharePoint exported CSV/Excel      |
+| `-o, --output`      | Export report to CSV file                      |
+| `--debug`           | Show browser window (for troubleshooting)      |
+
+**Default:** Audits local `@docs` folder (no author info).
+
+#### Modes
+
+1. **Local filesystem** (default) - basic stats without author info
+2. **SharePoint fetch** (`-f`) - fetch via browser automation (recommended)
+3. **SharePoint import** (`-i`) - import from exported CSV/Excel
+
+#### Examples
+
+```bash
+# Local folder audit (no author info)
+bid audit
+bid audit /path/to/folder
+
+# Fetch from SharePoint (recommended - includes author info)
+bid audit -f https://company.sharepoint.com/sites/Site --folder "@docs"
+bid audit -f https://company.sharepoint.com/sites/Site --folder "@docs" --debug
+
+# Fetch from a different library
+bid audit -f https://company.sharepoint.com/sites/Site -l "Documents" --folder "subfolder"
+
+# Import from exported file
+bid audit -i sharepoint.csv
+bid audit -i export.xlsx -o report.csv
+```
+
+#### Setup for SharePoint Fetch
+
+Requires Playwright (one-time setup):
+
+```bash
+# Install Playwright
+pip install playwright
+
+# Install browser (one-time)
+playwright install chromium
+```
+
+**First run:** Browser window opens for Microsoft login. Session is saved for future runs.
+
+**Subsequent runs:** Runs headless (no browser window) using saved session.
+
+---
+
 ### `beautify`
 
 Apply formatting to Excel files.
