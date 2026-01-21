@@ -9,6 +9,8 @@
 # "pypdf",
 # "docx2pdf",
 # "reportlab",
+# "openpyxl",
+# "playwright",
 # ]
 # ///
 
@@ -552,6 +554,88 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     )
 
 
+@click.command()
+@click.argument("directory", default="", type=click.Path())
+@click.option(
+    "-i",
+    "--import-file",
+    "import_file",
+    type=click.Path(exists=True),
+    help="Import from SharePoint exported CSV/Excel file",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.Path(),
+    help="Export report to CSV file",
+)
+@click.option(
+    "--api",
+    is_flag=True,
+    help="Use m365 CLI API (requires setup and admin consent)",
+)
+@click.option(
+    "-f",
+    "--fetch",
+    "fetch_url",
+    type=str,
+    help="Fetch from SharePoint URL using browser automation",
+)
+@click.option(
+    "-l",
+    "--library",
+    default="Documents",
+    help="SharePoint library title for --fetch (default: Documents)",
+)
+@click.option(
+    "--folder",
+    default="",
+    help="Folder path within library for --fetch (e.g., '@docs')",
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    help="Debug mode: show browser window for --fetch",
+)
+def audit(
+    directory: str,
+    import_file: str | None,
+    output_file: str | None,
+    api: bool,
+    fetch_url: str | None,
+    library: str,
+    folder: str,
+    debug: bool,
+):
+    """
+    Audit folder to track file contributions.
+
+    \b
+    Default audits @docs folder. For full author info, use --fetch or --import-file.
+
+    \b
+    Examples:
+      bid audit                              # Local @docs folder
+      bid audit -f https://company.sharepoint.com/sites/Site --folder "@docs"
+      bid audit -i export.csv                # Import from CSV
+    """
+    from util.audit import audit as _audit
+
+    ctx = click.Context(_audit)
+    ctx.invoke(
+        _audit,
+        directory=directory,
+        import_file=import_file,
+        output_file=output_file,
+        api=api,
+        fetch_url=fetch_url,
+        library=library,
+        folder=folder,
+        debug=debug,
+    )
+
+
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
@@ -568,6 +652,7 @@ bid_group.add_command(clean)
 bid_group.add_command(beautify)
 bid_group.add_command(combine_pdf)
 bid_group.add_command(word2pdf)
+bid_group.add_command(audit)
 
 if __name__ == "__main__":
     bid()
