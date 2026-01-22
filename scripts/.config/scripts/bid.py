@@ -598,6 +598,26 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     is_flag=True,
     help="Debug mode: show browser window for --fetch",
 )
+@click.option(
+    "--month",
+    "filter_month",
+    type=str,
+    default=None,
+    help="Filter by month: YYYY-MM or range YYYY-MM:YYYY-MM. Default: current month",
+)
+@click.option(
+    "--all-time",
+    "all_time",
+    is_flag=True,
+    help="Show all data without time filtering",
+)
+@click.option(
+    "--person",
+    "filter_person",
+    type=str,
+    default=None,
+    help="Filter to specific person. Use 'all' for everyone",
+)
 def audit(
     directory: str,
     import_file: str | None,
@@ -607,6 +627,9 @@ def audit(
     library: str,
     folder: str,
     debug: bool,
+    filter_month: str | None,
+    all_time: bool,
+    filter_person: str | None,
 ):
     """
     Audit folder to track file contributions.
@@ -616,9 +639,10 @@ def audit(
 
     \b
     Examples:
-      bid audit                              # Local @docs folder
-      bid audit -f https://company.sharepoint.com/sites/Site --folder "@docs"
-      bid audit -i export.csv                # Import from CSV
+      bid audit -f URL --folder "@docs"                    # Current month, interactive person
+      bid audit -f URL --folder "@docs" --person all       # Current month, all people
+      bid audit -f URL --folder "@docs" --all-time         # All time, interactive person
+      bid audit -f URL --folder "@docs" --month 2025-12    # Specific month
     """
     from util.audit import audit as _audit
 
@@ -633,6 +657,9 @@ def audit(
         library=library,
         folder=folder,
         debug=debug,
+        filter_month=filter_month,
+        all_time=all_time,
+        filter_person=filter_person,
     )
 
 

@@ -19,6 +19,118 @@ from pathlib import Path
 import click
 
 
+def get_current_month() -> str:
+    """Get current month in YYYY-MM format."""
+    return datetime.now().strftime("%Y-%m")
+
+
+def parse_file_date(date_str: str | None) -> str | None:
+    """Parse date string to YYYY-MM format."""
+    if not date_str:
+        return None
+    for fmt in ["%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y"]:
+        try:
+            dt = datetime.strptime(str(date_str)[:19], fmt[:19])
+            return dt.strftime("%Y-%m")
+        except ValueError:
+            continue
+    return None
+
+
+def parse_month_filter(month_str: str) -> tuple[str, str]:
+    """
+    Parse month filter string to (start_month, end_month) tuple.
+
+    Supports:
+      - Single month: "2025-01" -> ("2025-01", "2025-01")
+      - Range: "2025-01:2025-06" -> ("2025-01", "2025-06")
+    """
+    if ":" in month_str:
+        parts = month_str.split(":")
+        if len(parts) == 2:
+            return (parts[0].strip(), parts[1].strip())
+    return (month_str, month_str)
+
+
+def is_month_in_range(file_month: str | None, start_month: str, end_month: str) -> bool:
+    """Check if a file's month falls within the specified range (inclusive)."""
+    if not file_month:
+        return False
+    return start_month <= file_month <= end_month
+
+
+def collect_contributors(files: list[dict]) -> dict[str, int]:
+    """Collect unique contributors and their file counts."""
+    contributors: dict[str, int] = defaultdict(int)
+    for f in files:
+        created_by = f.get("Created By") or f.get("created_by")
+        if created_by:
+            contributors[created_by] += 1
+    return dict(sorted(contributors.items(), key=lambda x: x[1], reverse=True))
+
+
+def select_contributor(contributors: dict[str, int]) -> str | None:
+    """Show interactive contributor selection. Returns None for 'all'."""
+    click.echo()
+    click.echo(click.style("Select contributor:", fg="cyan", bold=True))
+    click.echo(f"  {0:>3}. All ({sum(contributors.values())} files)")
+
+    contributor_list = list(contributors.keys())
+    for i, (name, count) in enumerate(contributors.items(), 1):
+        click.echo(f"  {i:>3}. {name} ({count} files)")
+
+    click.echo()
+    choice = click.prompt("Enter number", default="0", show_default=True)
+
+    try:
+        idx = int(choice)
+        if idx == 0:
+            return None  # All contributors
+        elif 1 <= idx <= len(contributor_list):
+            return contributor_list[idx - 1]
+        else:
+            click.echo("Invalid choice, using 'All'")
+            return None
+    except ValueError:
+        click.echo("Invalid input, using 'All'")
+        return None
+
+
+def filter_files(
+    files: list[dict],
+    person: str | None,
+    month: str | None,
+) -> list[dict]:
+    """
+    Filter files by person and/or month.
+
+    Args:
+        files: List of file dicts
+        person: Person name to filter by (None for all)
+        month: Month filter - single "YYYY-MM" or range "YYYY-MM:YYYY-MM" (None for all)
+    """
+    filtered = files
+
+    if person:
+        filtered = [
+            f for f in filtered
+            if (f.get("Created By") or f.get("created_by")) == person
+        ]
+
+    if month:
+        start_month, end_month = parse_month_filter(month)
+        filtered = [
+            f for f in filtered
+            if is_month_in_range(
+                parse_file_date(f.get("Created") or f.get("created")),
+                start_month,
+                end_month
+            )
+        ]
+
+    return filtered
+
+
 def is_sharepoint_folder(path: Path) -> bool:
     """Check if path is within a SharePoint/OneDrive sync folder."""
     path_str = str(path.resolve())
@@ -299,9 +411,19 @@ def print_sharepoint_report(stats: dict) -> None:
     click.echo(click.style("=" * 60, fg="cyan"))
     click.echo()
 
+    # Show filter criteria if present
+    filter_person = stats.get("filter_person")
+    filter_month = stats.get("filter_month")
+    if filter_person or filter_month:
+        click.echo(click.style("Filters Applied", fg="yellow", bold=True))
+        if filter_month:
+            click.echo(f"  Month: {filter_month}")
+        if filter_person:
+            click.echo(f"  Person: {filter_person}")
+        click.echo()
+
     # Summary
     click.echo(click.style("Summary", fg="green", bold=True))
-    click.echo(f"  Source: {stats['source_file']}")
     click.echo(f"  Total Files: {stats['total_files']}")
     click.echo(f"  Contributors: {len(stats['by_contributor'])}")
     click.echo()
@@ -336,13 +458,14 @@ def print_sharepoint_report(stats: dict) -> None:
 
     # Recent activity
     click.echo(click.style("Recent Activity", fg="green", bold=True))
-    click.echo(f"  {'Created':<12} {'Created By':<25} {'File'}")
-    click.echo(f"  {'-' * 12} {'-' * 25} {'-' * 40}")
+    click.echo(f"  {'Created':<12} {'Created By':<20} {'Modified By':<20} {'File'}")
+    click.echo(f"  {'-' * 12} {'-' * 20} {'-' * 20} {'-' * 30}")
     for f in stats["recent_activity"][:15]:
         created = str(f.get("created") or "-")[:10]
-        by = str(f.get("created_by") or "-")[:25]
+        created_by = str(f.get("created_by") or "-")[:20]
+        modified_by = str(f.get("modified_by") or "-")[:20]
         name = f["name"]
-        click.echo(f"  {created:<12} {by:<25} {name}")
+        click.echo(f"  {created:<12} {created_by:<20} {modified_by:<20} {name}")
     click.echo()
 
 
@@ -443,6 +566,26 @@ def export_to_csv(stats: dict, output_path: Path) -> None:
     is_flag=True,
     help="Debug mode: show browser window for --fetch",
 )
+@click.option(
+    "--month",
+    "filter_month",
+    type=str,
+    default=None,
+    help="Filter by month: YYYY-MM or range YYYY-MM:YYYY-MM. Default: current month",
+)
+@click.option(
+    "--all-time",
+    "all_time",
+    is_flag=True,
+    help="Show all data without time filtering",
+)
+@click.option(
+    "--person",
+    "filter_person",
+    type=str,
+    default=None,
+    help="Filter to specific person. Use 'all' for everyone",
+)
 def audit(
     directory: str,
     import_file: str | None,
@@ -452,6 +595,9 @@ def audit(
     library: str,
     folder: str,
     debug: bool,
+    filter_month: str | None,
+    all_time: bool,
+    filter_person: str | None,
 ):
     """
     Audit folder to track file contributions.
@@ -491,6 +637,37 @@ def audit(
             click.echo("No files found")
             return
 
+        # Determine month filter
+        if all_time:
+            month_filter = None
+        elif filter_month:
+            month_filter = filter_month
+        else:
+            month_filter = get_current_month()
+
+        # Determine person filter
+        if filter_person and filter_person.lower() == "all":
+            person_filter = None
+        elif filter_person:
+            person_filter = filter_person
+        else:
+            # Interactive selection
+            contributors = collect_contributors(files)
+            if contributors:
+                person_filter = select_contributor(contributors)
+            else:
+                person_filter = None
+
+        # Apply filters
+        filtered_files = filter_files(files, person_filter, month_filter)
+
+        click.echo()
+        click.echo(f"Filtered: {len(filtered_files)} of {len(files)} files")
+
+        if not filtered_files:
+            click.echo("No files match the filter criteria")
+            return
+
         # Save to temp CSV and process
         import tempfile
 
@@ -499,10 +676,15 @@ def audit(
         ) as tmp:
             tmp_path = Path(tmp.name)
 
-        save_to_csv(files, tmp_path)
+        save_to_csv(filtered_files, tmp_path)
 
         # Now process as import
         stats = audit_sharepoint_csv(tmp_path)
+
+        # Add filter info to stats for display
+        stats["filter_person"] = person_filter
+        stats["filter_month"] = month_filter
+
         print_sharepoint_report(stats)
 
         if output_file:

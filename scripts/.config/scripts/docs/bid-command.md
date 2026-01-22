@@ -112,16 +112,19 @@ Track file contributions in a folder.
 bid audit [directory] [options]
 ```
 
-| Option              | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `-f, --fetch`       | Fetch from SharePoint URL (recommended)        |
-| `-l, --library`     | SharePoint library title (default: Documents)  |
-| `--folder`          | Folder path within library (e.g., '@docs')     |
-| `-i, --import-file` | Import from SharePoint exported CSV/Excel      |
-| `-o, --output`      | Export report to CSV file                      |
-| `--debug`           | Show browser window (for troubleshooting)      |
+| Option              | Description                                         |
+| ------------------- | --------------------------------------------------- |
+| `-f, --fetch`       | Fetch from SharePoint URL (recommended)             |
+| `-l, --library`     | SharePoint library title (default: Documents)       |
+| `--folder`          | Folder path within library (e.g., '@docs')          |
+| `--month`           | Filter by month: `YYYY-MM` or range `YYYY-MM:YYYY-MM` |
+| `--all-time`        | Show all data without time filtering                |
+| `--person NAME`     | Filter to specific person (or 'all' for everyone)   |
+| `-i, --import-file` | Import from SharePoint exported CSV/Excel           |
+| `-o, --output`      | Export report to CSV file                           |
+| `--debug`           | Show browser window (for troubleshooting)           |
 
-**Default:** Audits local `@docs` folder (no author info).
+**Default:** Audits local `@docs` folder (no author info). When fetching from SharePoint, defaults to current month and shows interactive contributor selection.
 
 #### Modes
 
@@ -137,11 +140,23 @@ bid audit
 bid audit /path/to/folder
 
 # Fetch from SharePoint (recommended - includes author info)
+# Default: current month, interactive person selection
 bid audit -f https://company.sharepoint.com/sites/Site --folder "@docs"
-bid audit -f https://company.sharepoint.com/sites/Site --folder "@docs" --debug
 
-# Fetch from a different library
-bid audit -f https://company.sharepoint.com/sites/Site -l "Documents" --folder "subfolder"
+# All contributors, current month
+bid audit -f URL --folder "@docs" --person all
+
+# Specific month
+bid audit -f URL --folder "@docs" --month 2025-12
+
+# Month range (January to June 2025)
+bid audit -f URL --folder "@docs" --month 2025-01:2025-06
+
+# All time (no month filter)
+bid audit -f URL --folder "@docs" --all-time
+
+# Specific person, all time
+bid audit -f URL --folder "@docs" --person "John Doe" --all-time
 
 # Import from exported file
 bid audit -i sharepoint.csv
