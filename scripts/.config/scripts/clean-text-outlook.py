@@ -7,6 +7,20 @@
 # J12662 COM GOE SAKARYA PHASE-2A FPU
 # --bind "ctrl-r:execute(echo {} | clean-text-outlook | pbcopy)"
 
+# Sample data
+# 2026/J12795 HOS - P91 FPSO - ENT/
+# 2026/J12792 HOS - P91 FPSO - POB/
+# 2026/J12806 HOS - P91 FPSO - COM/
+# 2026/J12791 HOS - P91 FPSO - AERO/
+# 2026/J12794 HOS - P91 FPSO - CCTV/
+# 2026/J12793 HOS - P91 FPSO - PAGA/
+# 2025/J12766 HOS - SEAP II FPSO - COM/
+# 2026/J12801 HOS - P91 FPSO - DC POWER/
+
+# Requirement to transform
+# J12801 DC POWER HOS P91 FPSO
+# J12794 CCTV HOS P91 FPSO
+
 import sys
 import re
 
@@ -17,10 +31,10 @@ def extract_filename(text):
     if text.endswith("/"):
         text = text[:-1]
     text = text.split("/")[-1]  # Get folder name
-    pattern = r"(\s+-)|(-+\s+)"
+    pattern = r"(\s+[-–—])|([-–—]+\s+)"
     text = re.split(pattern, text)
     text = [word for word in text if word is not None]
-    text = [word for word in text if word.strip() != "-"]
+    text = [word for word in text if word.strip() not in ("-", "–", "—")]
     text = [word.strip() for word in text]
     if len(text) < 2:
         return " ".join(text[:])
