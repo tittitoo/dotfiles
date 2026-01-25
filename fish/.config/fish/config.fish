@@ -70,8 +70,8 @@ set -x FZF_DEFAULT_OPTS '
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
   --bind "ctrl-o:execute(open {})" 
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
-  --bind "ctrl-u:execute(echo {} | clean-text | pbcopy)"
-  --bind "ctrl-r:execute(echo {} | clean-text-outlook | pbcopy)"
+  --bind "ctrl-u:execute-silent(echo '{}' | clean-text | pbcopy)"
+  --bind "ctrl-r:execute-silent(echo '{}' | clean-text-outlook | pbcopy)"
   --bind "ctrl-/:change-preview-window(down|hidden)"'
 
 set -x FZF_CTRL_T_OPTS '--walker-skip .git,node_modules,target,.obsidian'
