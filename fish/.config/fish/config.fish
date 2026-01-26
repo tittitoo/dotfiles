@@ -66,11 +66,12 @@ function set_fzf_theme
   --preview-window=down:3:wrap:hidden
   --border=rounded
   --multi
-  --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / CTRL-U / CTRL-R / CTRL-S / CTRL-/"
+  --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / ALT-Y / CTRL-U / CTRL-R / CTRL-S / CTRL-/"
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d --color=never)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f --color=never)"
   --bind "ctrl-o:execute-silent(open {})"
-  --bind "ctrl-y:execute-silent(cp -r {} ~/Downloads/)"
+  --bind "ctrl-y:execute-silent(echo {} | pbcopy)"
+  --bind "alt-y:execute-silent(cp -r {} ~/Downloads/)"
   --bind "ctrl-u:execute-silent(echo {} | clean-text | pbcopy)"
   --bind "ctrl-r:execute-silent(echo {} | clean-text-outlook | pbcopy)"
   --bind "ctrl-s:execute-silent(get_sharepoint_link.py {})"
