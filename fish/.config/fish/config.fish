@@ -52,22 +52,23 @@ set awk_cmd 'gsub(/^[0-9]*\/|\//, ""); print'
 # --bind "ctrl-n:execute(echo {} | awk '{gsub(/^[0-9]*\/|\//, \"\"); print}' | pbcopy)"
 # --bind "ctrl-n:execute(echo {} | awk \'{gsub(\/^[0-9]+\/, \"\"); print}\' | pbcopy)"
 # --bind "ctrl-u:execute(echo {} | pbcopy)"
-set -x FZF_DEFAULT_COMMAND 'fd --follow --exclude .git'
+set -x FZF_DEFAULT_COMMAND 'fd -t d --follow --exclude .git --color=never'
 set -x FZF_DEFAULT_OPTS '
-  --height=60%
+  --height=80%
   --layout=reverse
   --info=inline
+  --prompt="Directories> "
   --preview="echo {}"
-  --preview-window=down:3:wrap
-  # --color=hl:#658594 
-  # --color=fg:#DCD7BA,fg+:#C5C9C5,bg:-1,bg+:-1
-  # --color=info:#727169,prompt:#7E9CD8,pointer:#957FB8,marker:#98BB6C,spinner:-1 
-  # --color=header:#727169,border:-1,preview-fg:-1,preview-bg:-1 
+  --preview-window=down:3:wrap:hidden
+  --color=fg:#2d2d2d,fg+:#000000,bg:-1,bg+:#e0e0e0
+  --color=hl:#d33682,hl+:#c41063
+  --color=info:#0550ae,prompt:#859900,pointer:#d33682,marker:#859900,spinner:#6c71c4
+  --color=header:#cb4b16,border:#6c71c4
   --border=rounded
   --multi
   --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / CTRL-U / CTRL-R / CTRL-/"
-  --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
-  --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
+  --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d --color=never)"
+  --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f --color=never)"
   --bind "ctrl-o:execute(open {})" 
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
   --bind "ctrl-u:execute-silent(echo '{}' | clean-text | pbcopy)"
@@ -86,6 +87,8 @@ set -x FZF_ALT_C_OPTS '
 
 # Configure keybidings for fzf
 # \e means ALT, \c means CTRL
+set fzf_fd_opts --color=never
+set fzf_directory_opts --prompt="Directories> "
 fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ca --git_status=\cg --git_log= --processes=\cp #--gi_log=\cl
 
 # Add ssh key
@@ -144,8 +147,8 @@ set -gx VOLTA_HOME "$HOME/.volta"
 set -gx PATH "$VOLTA_HOME/bin" $PATH
 
 # pnpm
-set -gx PNPM_HOME "/Users/infowizard/Library/pnpm"
+set -gx PNPM_HOME /Users/infowizard/Library/pnpm
 if not string match -q -- $PNPM_HOME $PATH
-  set -gx PATH "$PNPM_HOME" $PATH
+    set -gx PATH "$PNPM_HOME" $PATH
 end
 # pnpm end
