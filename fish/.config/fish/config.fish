@@ -69,10 +69,10 @@ function set_fzf_theme
   --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / CTRL-U / CTRL-R / CTRL-S / CTRL-/"
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d --color=never)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f --color=never)"
-  --bind "ctrl-o:execute(open {})"
-  --bind "ctrl-y:execute(cp {} ~/Downloads/)"
-  --bind "ctrl-u:execute-silent(echo '"'"'{}'"'"' | clean-text | pbcopy)"
-  --bind "ctrl-r:execute-silent(echo '"'"'{}'"'"' | clean-text-outlook | pbcopy)"
+  --bind "ctrl-o:execute-silent(open {})"
+  --bind "ctrl-y:execute-silent(cp -r {} ~/Downloads/)"
+  --bind "ctrl-u:execute-silent(echo {} | clean-text | pbcopy)"
+  --bind "ctrl-r:execute-silent(echo {} | clean-text-outlook | pbcopy)"
   --bind "ctrl-s:execute-silent(get_sharepoint_link.py {})"
   --bind "ctrl-/:change-preview-window(down|hidden)"'
 
@@ -109,7 +109,7 @@ set -x FZF_ALT_C_OPTS '
   --preview "tree -C {}"
   --preview-window=bottom:50%:wrap
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
-  --bind "ctrl-o:execute(open {})"'
+  --bind "ctrl-o:execute-silent(open {})"'
 
 #   --bind "ctrl-n:preview-page-up,ctrl-p:preview-page-down"
 
