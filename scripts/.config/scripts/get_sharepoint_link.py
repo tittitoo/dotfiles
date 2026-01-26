@@ -25,9 +25,8 @@ ONEDRIVE_ROOT = (
     Path.home()
     / "Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents"
 )
-SHAREPOINT_BASE = (
-    "https://jasonmarine.sharepoint.com/sites/BidProposal2/Shared Documents"
-)
+SHAREPOINT_HOST = "https://jasonmarine.sharepoint.com"
+SHAREPOINT_SITE_PATH = "/sites/BidProposal2/Shared%20Documents"
 
 
 def get_sharepoint_url(local_path: str) -> str | None:
@@ -46,10 +45,14 @@ def get_sharepoint_url(local_path: str) -> str | None:
     except ValueError:
         return None
 
-    # URL-encode the path, preserving forward slashes
-    encoded_path = quote(str(relative_path), safe="/")
+    # Determine if path is a file or folder for SharePoint routing
+    # :f: = folder, :b: = file
+    type_prefix = ":b:" if path.is_file() else ":f:"
 
-    return f"{SHAREPOINT_BASE}/{encoded_path}"
+    # URL-encode the path, preserving / and @ (matching Finder's behavior)
+    encoded_path = quote(str(relative_path), safe="/@")
+
+    return f"{SHAREPOINT_HOST}/{type_prefix}/r{SHAREPOINT_SITE_PATH}/{encoded_path}?csf=1&web=1"
 
 
 def copy_to_clipboard(text: str) -> bool:
