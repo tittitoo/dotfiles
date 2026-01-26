@@ -1,0 +1,27 @@
+#!/bin/bash
+# Copy file/folder to clipboard so it can be pasted in Finder
+# Uses AppleScript with AppKit framework (no Finder activation)
+
+if [ -z "$1" ]; then
+    echo "Usage: copy-file-to-clipboard <path>" >&2
+    exit 1
+fi
+
+# Get absolute path
+abs_path="$(cd "$(dirname "$1")" 2>/dev/null && pwd)/$(basename "$1")"
+
+if [ ! -e "$abs_path" ]; then
+    echo "Error: Path does not exist: $abs_path" >&2
+    exit 1
+fi
+
+osascript <<EOF
+use framework "AppKit"
+use scripting additions
+
+set thePath to "$abs_path"
+set theURL to current application's NSURL's fileURLWithPath:thePath
+set thePasteboard to current application's NSPasteboard's generalPasteboard()
+thePasteboard's clearContents()
+thePasteboard's writeObjects:{theURL}
+EOF

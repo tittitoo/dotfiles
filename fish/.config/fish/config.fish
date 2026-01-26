@@ -70,7 +70,7 @@ function set_fzf_theme
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d --color=never)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f --color=never)"
   --bind "ctrl-o:execute-silent(open {})"
-  --bind "ctrl-y:execute-silent(echo {} | pbcopy)"
+  --bind "ctrl-y:execute-silent(copy-file-to-clipboard {})"
   --bind "alt-y:execute-silent(cp -r {} ~/Downloads/)"
   --bind "ctrl-u:execute-silent(echo {} | clean-text | pbcopy)"
   --bind "ctrl-r:execute-silent(echo {} | clean-text-outlook | pbcopy)"
