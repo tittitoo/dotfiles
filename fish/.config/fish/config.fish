@@ -53,27 +53,55 @@ set awk_cmd 'gsub(/^[0-9]*\/|\//, ""); print'
 # --bind "ctrl-n:execute(echo {} | awk \'{gsub(\/^[0-9]+\/, \"\"); print}\' | pbcopy)"
 # --bind "ctrl-u:execute(echo {} | pbcopy)"
 set -x FZF_DEFAULT_COMMAND 'fd -t d --follow --exclude .git --color=never'
-set -x FZF_DEFAULT_OPTS '
+
+# Function to set FZF colors based on macOS appearance
+function set_fzf_theme
+    # Base options (non-color)
+    set -l fzf_base_opts '
   --height=80%
   --layout=reverse
   --info=inline
   --prompt="Directories> "
   --preview="echo {}"
   --preview-window=down:3:wrap:hidden
-  --color=fg:#2d2d2d,fg+:#000000,bg:-1,bg+:#e0e0e0
-  --color=hl:#d33682,hl+:#c41063
-  --color=info:#0550ae,prompt:#859900,pointer:#d33682,marker:#859900,spinner:#6c71c4
-  --color=header:#cb4b16,border:#6c71c4
   --border=rounded
   --multi
-  --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / CTRL-U / CTRL-R / CTRL-/"
+  --header "CTRL-D / CTRL-F / CTRL-O / CTRL-Y / CTRL-U / CTRL-R / CTRL-S / CTRL-/"
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d --color=never)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f --color=never)"
-  --bind "ctrl-o:execute(open {})" 
+  --bind "ctrl-o:execute(open {})"
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
-  --bind "ctrl-u:execute-silent(echo '{}' | clean-text | pbcopy)"
-  --bind "ctrl-r:execute-silent(echo '{}' | clean-text-outlook | pbcopy)"
+  --bind "ctrl-u:execute-silent(echo '"'"'{}'"'"' | clean-text | pbcopy)"
+  --bind "ctrl-r:execute-silent(echo '"'"'{}'"'"' | clean-text-outlook | pbcopy)"
+  --bind "ctrl-s:execute-silent(get_sharepoint_link.py {})"
   --bind "ctrl-/:change-preview-window(down|hidden)"'
+
+    # Catppuccin Latte (light)
+    set -l fzf_latte_colors '
+  --color=bg+:#CCD0DA,bg:-1,spinner:#DC8A78,hl:#D20F39
+  --color=fg:#4C4F69,header:#D20F39,info:#8839EF,pointer:#DC8A78
+  --color=marker:#7287FD,fg+:#4C4F69,prompt:#8839EF,hl+:#D20F39
+  --color=selected-bg:#BCC0CC
+  --color=border:#9CA0B0,label:#4C4F69'
+
+    # Catppuccin Mocha (dark)
+    set -l fzf_mocha_colors '
+  --color=bg+:#313244,bg:-1,spinner:#F5E0DC,hl:#F38BA8
+  --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC
+  --color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8
+  --color=selected-bg:#45475A
+  --color=border:#6C7086,label:#CDD6F4'
+
+    # Detect macOS appearance (AppleInterfaceStyle is only set when dark mode is enabled)
+    if defaults read -g AppleInterfaceStyle &>/dev/null
+        set -gx FZF_DEFAULT_OPTS "$fzf_base_opts $fzf_mocha_colors"
+    else
+        set -gx FZF_DEFAULT_OPTS "$fzf_base_opts $fzf_latte_colors"
+    end
+end
+
+# Set FZF theme on shell startup
+set_fzf_theme
 
 set -x FZF_CTRL_T_OPTS '--walker-skip .git,node_modules,target,.obsidian'
 set -x FZF_ALT_C_OPTS '
