@@ -20,6 +20,14 @@ fish_style_pwd_dir_length = 1
 truncation_length = 3
 
 [directory.substitutions]
+"/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@docs" = "@docs"
+"/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@rfqs" = "@rfqs"
+"/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@handover" = "@handover"
+"/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bid Proposal - Documents/@costing" = "@costing"
+"Library/Mobile Documents/iCloud~md~obsidian/Documents/dragon" = "dragon"
+"Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts" = "drafts"
+"Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox" = "inbox"
+"Library/Mobile Documents/iCloud~md~obsidian/Documents/team" = "team"
 "Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd" = "~SP"
 "~/OneDrive - Jason Electronics Pte Ltd" = "~OD"
 "Bid Proposal - Documents" = "BP"
