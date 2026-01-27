@@ -9,6 +9,6 @@ on = "<C-p>"
 run = 'shell -- qlmanage -p "$@"'
 
 [[mgr.prepend_keymap]]
-on = "<D-c>"
+on = "<C-y>"
 run = 'shell -- copy-file-to-clipboard "$@"'
 desc = "Copy file to clipboard"
