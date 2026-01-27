@@ -9,7 +9,13 @@ keybind = ctrl+h=goto_split:left
 keybind = ctrl+j=goto_split:bottom
 keybind = ctrl+k=goto_split:top
 keybind = ctrl+l=goto_split:right
-keybind = ctrl+super+u=equalize_splits
+keybind = ctrl+super+i=equalize_splits
+
+# keymaps for resizing splits
+keybind = ctrl+super+h=resize_split:left,250
+keybind = ctrl+super+j=resize_split:down,50
+keybind = ctrl+super+k=resize_split:up,50
+keybind = ctrl+super+l=resize_split:right,250
 
 # Disable dimming for unfocused splits
 unfocused-split-opacity = 1
