@@ -16,6 +16,13 @@ command_timeout = 5000
 
 [directory]
 style = "blue"
+fish_style_pwd_dir_length = 1
+truncation_length = 3
+
+[directory.substitutions]
+"Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd" = "~SP"
+"~/OneDrive - Jason Electronics Pte Ltd" = "~OD"
+"Bid Proposal - Documents" = "BP"
 
 [character]
 success_symbol = "[❯](purple)"
