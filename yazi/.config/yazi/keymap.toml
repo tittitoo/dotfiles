@@ -12,3 +12,18 @@ run = 'shell -- qlmanage -p "$@"'
 on = "<C-y>"
 run = 'shell -- copy-file-to-clipboard "$@"'
 desc = "Copy file to clipboard"
+
+[[mgr.prepend_keymap]]
+on = "<C-s>"
+run = 'shell -- get_sharepoint_link.py "$@"'
+desc = "Get SharePoint link"
+
+[[mgr.prepend_keymap]]
+on = "<A-y>"
+run = 'shell -- open -a Yoink "$@"'
+desc = "Send to Yoink"
+
+[[mgr.prepend_keymap]]
+on = "<A-r>"
+run = 'shell "uv run $@" --block'
+desc = "Run Python script with uv"
