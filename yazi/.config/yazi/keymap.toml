@@ -7,3 +7,8 @@ desc = "Open $SHELL here"
 [[mgr.prepend_keymap]]
 on = "<C-p>"
 run = 'shell -- qlmanage -p "$@"'
+
+[[mgr.prepend_keymap]]
+on = "<D-c>"
+run = 'shell -- copy-file-to-clipboard "$@"'
+desc = "Copy file to clipboard"
