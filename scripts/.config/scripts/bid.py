@@ -345,7 +345,7 @@ def init(folder_name: str) -> None:
             po.mkdir(parents=True, exist_ok=True)
             vo = new_path / "07-VO"
             vo.mkdir(parents=True, exist_ok=True)
-            toolkit = new_path / "08-Toolkit/00-Arc"
+            toolkit = new_path / "08-Toolkit"
             toolkit.mkdir(parents=True, exist_ok=True)
             click.echo(f"Created fodler {new_path}")
             # Create new commercial Proposal
