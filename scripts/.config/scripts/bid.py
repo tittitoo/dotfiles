@@ -83,6 +83,84 @@ def word2pdf(yes: bool):
     docx2pdf.convert(directory)
 
 
+def normalize_job_code(search_term: str) -> str:
+    """Normalize job code input.
+
+    If only 3 digits are given, prepend 'J12' to make a full job code.
+    E.g., '786' becomes 'J12786'
+    """
+    search_term = search_term.strip()
+    if search_term.isdigit() and len(search_term) == 3:
+        return f"J12{search_term}"
+    return search_term
+
+
+def find_project_folder(search_term: str) -> list[tuple[Path, int]]:
+    """Search for project folders matching the search term.
+
+    Searches in @rfqs/<year>/ for years from current year down to 2023.
+    Returns list of (folder_path, year) tuples for folders starting with search_term.
+    """
+    search_term = normalize_job_code(search_term)
+    rfqs_path = Path(RFQ).expanduser()
+
+    if not rfqs_path.exists():
+        return []
+
+    matches = []
+    current_year = datetime.now().year
+
+    for year in range(current_year, 2022, -1):  # Down to 2023
+        year_path = rfqs_path / str(year)
+        if not year_path.exists():
+            continue
+
+        for folder in year_path.iterdir():
+            if folder.is_dir() and folder.name.upper().startswith(search_term.upper()):
+                matches.append((folder, year))
+
+    return matches
+
+
+def get_next_vo_number(vo_folder: Path) -> int:
+    """Get the next available VO number.
+
+    Scans existing NN-VO folders and returns the next available number.
+    """
+    if not vo_folder.exists():
+        return 1
+
+    existing_numbers = []
+    for folder in vo_folder.iterdir():
+        if folder.is_dir():
+            # Match pattern like "01-VO", "02-VO", etc.
+            match = re.match(r"^(\d{2})-VO\b", folder.name)
+            if match:
+                existing_numbers.append(int(match.group(1)))
+
+    if not existing_numbers:
+        return 1
+
+    return max(existing_numbers) + 1
+
+
+def create_vo_structure(vo_path: Path) -> None:
+    """Create the VO subfolder structure."""
+    iso_date = datetime.now().strftime("%Y-%m-%d")
+
+    folders = [
+        vo_path / "00-ITB" / iso_date,
+        vo_path / "01-Commercial" / "00-Arc",
+        vo_path / "02-Technical" / "00-Arc",
+        vo_path / "03-Supplier" / "00-Arc",
+        vo_path / "04-Datasheet" / "00-Arc",
+        vo_path / "05-PO" / "00-Arc",
+    ]
+
+    for folder in folders:
+        folder.mkdir(parents=True, exist_ok=True)
+
+
 def open_with_default_app(file_path: Path):
     "Open file_path with default application"
     if platform.system() == "Windows":
@@ -485,13 +563,6 @@ def setup():
 
 
 @click.command()
-# TODO: Plan for audit features
-def audit():
-    "Plan for audit features"
-    pass
-
-
-@click.command()
 def test():
     test = Path("~/Downloads")
     open_with_default_app(test)
@@ -663,6 +734,79 @@ def audit(
     )
 
 
+@click.command()
+@click.argument("folder_name", default="")
+def vo(folder_name: str) -> None:
+    """
+    Create VO (Variation Order) folder structure under an existing project.
+
+    Searches for the project folder in @rfqs and creates a new VO subfolder
+    with the standard folder structure.
+    """
+    # Handle case where @rfqs does not exist
+    if not Path(RFQ).expanduser().exists():
+        click.echo("The folder @rfqs does not exist. Check if you have access.")
+        return
+
+    # Get project folder name/job code
+    if folder_name == "":
+        folder_name = click.prompt("Please enter project folder name or job code")
+
+    # Search for matching folders
+    matches = find_project_folder(folder_name)
+
+    if not matches:
+        click.echo(f"No project folder found matching '{folder_name}'")
+        return
+
+    # Handle multiple matches
+    if len(matches) == 1:
+        project_path, year = matches[0]
+    else:
+        click.echo("Multiple folders found:")
+        for i, (path, year) in enumerate(matches, 1):
+            click.echo(f"  {i}. {path.name} ({year})")
+
+        choice = click.prompt(
+            "Select folder number",
+            type=click.IntRange(1, len(matches)),
+        )
+        project_path, year = matches[choice - 1]
+
+    # Confirm with user
+    click.echo(f"Found: {project_path.name} ({year})")
+    if not click.confirm("Use this folder?", default=True):
+        click.echo("Aborted.")
+        return
+
+    # Get VO name
+    vo_name = click.prompt("Please enter VO name")
+    vo_name = vo_name.strip().upper()
+
+    # Find or create 07-VO folder
+    vo_parent = project_path / "07-VO"
+    vo_parent.mkdir(exist_ok=True)
+
+    # Get next VO number and create folder
+    vo_number = get_next_vo_number(vo_parent)
+    vo_folder_name = f"{vo_number:02d}-VO {vo_name}"
+    vo_path = vo_parent / vo_folder_name
+
+    if vo_path.exists():
+        click.echo(f"Folder '{vo_folder_name}' already exists.")
+        return
+
+    # Create the VO folder and structure
+    click.echo(f"Creating: 07-VO/{vo_folder_name}")
+    vo_path.mkdir()
+    create_vo_structure(vo_path)
+    click.echo("Created folder structure successfully.")
+
+    # Ask to open folder
+    if click.confirm("Do you want to open the VO folder?", default=True):
+        open_with_default_app(vo_path)
+
+
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
@@ -680,6 +824,7 @@ bid_group.add_command(beautify)
 bid_group.add_command(combine_pdf)
 bid_group.add_command(word2pdf)
 bid_group.add_command(audit)
+bid_group.add_command(vo)
 
 if __name__ == "__main__":
     bid()
