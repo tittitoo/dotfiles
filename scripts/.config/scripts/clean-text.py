@@ -16,6 +16,11 @@ def extract_filename(text):
     return text.split("/")[-1]
 
 
+def standardize_dashes(text):
+    "Replace en-dash and em-dash with hyphen"
+    return text.replace("–", "-").replace("—", "-")
+
+
 def main():
     if len(sys.argv) > 1:
         # Input from command line
@@ -23,6 +28,7 @@ def main():
     else:
         input_string = sys.stdin.read().strip()
     filename = extract_filename(input_string)
+    filename = standardize_dashes(filename)
     print(filename, end="")
 
 
