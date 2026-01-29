@@ -37,6 +37,7 @@ username = getpass.getuser()
 match username:
     case "oliver":
         RFQ = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@rfqs/"
+        HO = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@handover/"
         DOCS = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@docs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/bid.py').expanduser().resolve()}'\""
 
@@ -47,6 +48,7 @@ match username:
 
     case _:
         RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
+        HO = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@handover/"
         DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/bid.py').expanduser().resolve()}'\""
 
@@ -159,6 +161,116 @@ def create_vo_structure(vo_path: Path) -> None:
 
     for folder in folders:
         folder.mkdir(parents=True, exist_ok=True)
+
+
+def get_handover_candidates(project_path: Path) -> list[tuple[str, Path]]:
+    """Get list of handover candidates for a project.
+
+    Returns list of (display_name, source_path) tuples:
+    - Main project folder as "00-MAIN"
+    - Any NN-VO folders from 07-VO/
+    """
+    candidates = [("00-MAIN", project_path)]
+
+    vo_parent = project_path / "07-VO"
+    if vo_parent.exists():
+        vo_folders = sorted(
+            [
+                f
+                for f in vo_parent.iterdir()
+                if f.is_dir() and re.match(r"^\d{2}-VO\b", f.name)
+            ],
+            key=lambda x: x.name,
+        )
+        for vo_folder in vo_folders:
+            candidates.append((vo_folder.name, vo_folder))
+
+    return candidates
+
+
+def is_folder_not_empty(path: Path) -> bool:
+    """Check if folder exists and is not empty."""
+    if not path.exists():
+        return False
+    return any(path.iterdir())
+
+
+def sync_folder(source: Path, dest: Path) -> bool:
+    """One-way mirror sync from source to dest.
+
+    Returns True if sync was performed, False if source was empty/missing.
+    Mirrors source to dest: adds new files, updates changed files, deletes
+    files in dest that don't exist in source. Empty folders are skipped.
+    """
+    if not is_folder_not_empty(source):
+        return False
+
+    dest.mkdir(parents=True, exist_ok=True)
+
+    # Get only files (not directories) - empty folders like 00-Arc are skipped
+    source_files = {p.relative_to(source) for p in source.rglob("*") if p.is_file()}
+    dest_files = {p.relative_to(dest) for p in dest.rglob("*") if p.is_file()}
+
+    # Delete files in dest that don't exist in source (purge)
+    for rel_path in dest_files - source_files:
+        dest_path = dest / rel_path
+        if dest_path.exists():
+            dest_path.unlink()
+
+    # Clean up empty directories in dest
+    for dir_path in sorted(dest.rglob("*"), reverse=True):
+        if dir_path.is_dir() and not any(dir_path.iterdir()):
+            dir_path.rmdir()
+
+    # Copy/update files from source to dest
+    for rel_path in source_files:
+        source_path = source / rel_path
+        dest_path = dest / rel_path
+
+        # Copy if dest doesn't exist or source is newer
+        if not dest_path.exists() or source_path.stat().st_mtime > dest_path.stat().st_mtime:
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_path, dest_path)
+
+    return True
+
+
+def perform_handover_sync(source_root: Path, dest_root: Path, is_vo: bool) -> None:
+    """Perform the handover sync operations.
+
+    Args:
+        source_root: Source folder (project root or VO folder)
+        dest_root: Destination folder in @handover
+        is_vo: True if this is a VO handover (affects PO folder mapping)
+    """
+    dest_root.mkdir(parents=True, exist_ok=True)
+
+    # Define sync mappings: (source_name, dest_name)
+    # PO folder differs: main project has 06-PO, VO has 05-PO
+    po_source = "05-PO" if is_vo else "06-PO"
+
+    sync_mappings = [
+        ("00-ITB", "00-ITB"),
+        (po_source, "01-PO"),
+        ("02-Technical", "02-Technical"),
+        ("03-Supplier", "03-Supplier"),
+        ("04-Datasheet", "04-Datasheet"),
+        ("05-Drawing", "06-Drawing"),
+    ]
+
+    for source_name, dest_name in sync_mappings:
+        source_path = source_root / source_name
+        dest_path = dest_root / dest_name
+
+        if sync_folder(source_path, dest_path):
+            click.echo(f"  Synced: {source_name} -> {dest_name}")
+        else:
+            click.echo(f"  Skipped: {source_name} (empty or missing)")
+
+    # Always create 05-Cost folder
+    cost_folder = dest_root / "05-Cost"
+    cost_folder.mkdir(parents=True, exist_ok=True)
+    click.echo("  Created: 05-Cost")
 
 
 def open_with_default_app(file_path: Path):
@@ -791,7 +903,11 @@ def vo(folder_name: str) -> None:
 
     # List existing VO folders
     existing_vos = sorted(
-        [f.name for f in vo_parent.iterdir() if f.is_dir() and re.match(r"^\d{2}-VO\b", f.name)]
+        [
+            f.name
+            for f in vo_parent.iterdir()
+            if f.is_dir() and re.match(r"^\d{2}-VO\b", f.name)
+        ]
     )
     if existing_vos:
         click.echo("Existing VO folders:")
@@ -826,6 +942,94 @@ def vo(folder_name: str) -> None:
         open_with_default_app(vo_path)
 
 
+@click.command()
+@click.argument("folder_name", default="")
+def ho(folder_name: str) -> None:
+    """
+    Handover project folders from @rfqs to @handover.
+
+    Syncs project or VO folders for handover after successful bidding.
+    """
+    # Handle case where @rfqs or @handover does not exist
+    if not Path(RFQ).expanduser().exists():
+        click.echo("The folder @rfqs does not exist. Check if you have access.")
+        return
+
+    if not Path(HO).expanduser().exists():
+        click.echo("The folder @handover does not exist. Check if you have access.")
+        return
+
+    # Get project folder name/job code
+    if folder_name == "":
+        folder_name = click.prompt("Please enter project folder name or job code")
+
+    # Search for matching folders
+    matches = find_project_folder(folder_name)
+
+    if not matches:
+        click.echo(f"No project folder found matching '{folder_name}'")
+        return
+
+    # Handle multiple matches
+    if len(matches) == 1:
+        project_path, year = matches[0]
+    else:
+        click.echo("Multiple folders found:")
+        for i, (path, year) in enumerate(matches, 1):
+            click.echo(f"  {i}. {path.name} ({year})")
+
+        choice = click.prompt(
+            "Select folder number",
+            type=click.IntRange(1, len(matches)),
+        )
+        project_path, year = matches[choice - 1]
+
+    # Confirm with user
+    click.echo(f"Found: {project_path.name} ({year})")
+    if not click.confirm("Use this folder?", default=True):
+        click.echo("Aborted.")
+        return
+
+    # Get handover candidates
+    candidates = get_handover_candidates(project_path)
+
+    if len(candidates) == 1:
+        # Only main folder available
+        selected_name, source_path = candidates[0]
+        click.echo("Handover candidate: 00-MAIN (main project)")
+    else:
+        click.echo("Handover candidates:")
+        for i, (name, _) in enumerate(candidates, 1):
+            label = "(main project)" if name == "00-MAIN" else ""
+            click.echo(f"  {i}. {name} {label}")
+
+        choice = click.prompt(
+            "Select folder to handover",
+            type=click.IntRange(1, len(candidates)),
+        )
+        selected_name, source_path = candidates[choice - 1]
+
+    # Determine if this is a VO handover
+    is_vo = selected_name != "00-MAIN"
+
+    # Prepare destination in @handover
+    handover_root = Path(HO).expanduser()
+    project_dest = handover_root / project_path.name
+    dest_path = project_dest / selected_name
+
+    click.echo(f"\nSyncing to: {dest_path}")
+
+    # Perform the sync
+    perform_handover_sync(source_path, dest_path, is_vo)
+
+    click.echo("\nHandover sync complete.")
+    click.echo("NOTE: Please update 05-Cost folder manually.")
+
+    # Ask to open folder
+    if click.confirm("Do you want to open the handover folder?", default=True):
+        open_with_default_app(dest_path)
+
+
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
@@ -844,6 +1048,7 @@ bid_group.add_command(combine_pdf)
 bid_group.add_command(word2pdf)
 bid_group.add_command(audit)
 bid_group.add_command(vo)
+bid_group.add_command(ho)
 
 if __name__ == "__main__":
     bid()
