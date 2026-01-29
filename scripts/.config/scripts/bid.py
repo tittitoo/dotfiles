@@ -779,16 +779,35 @@ def vo(folder_name: str) -> None:
         click.echo("Aborted.")
         return
 
-    # Get VO name
-    vo_name = click.prompt("Please enter VO name")
-    vo_name = vo_name.strip().upper()
-
     # Find or create 07-VO folder
     vo_parent = project_path / "07-VO"
     vo_parent.mkdir(exist_ok=True)
 
-    # Get next VO number and create folder
+    # Clean up legacy empty 00-Arc folder if exists
+    legacy_arc = vo_parent / "00-Arc"
+    if legacy_arc.exists() and legacy_arc.is_dir() and not any(legacy_arc.iterdir()):
+        legacy_arc.rmdir()
+        click.echo("Removed empty legacy folder: 07-VO/00-Arc")
+
+    # List existing VO folders
+    existing_vos = sorted(
+        [f.name for f in vo_parent.iterdir() if f.is_dir() and re.match(r"^\d{2}-VO\b", f.name)]
+    )
+    if existing_vos:
+        click.echo("Existing VO folders:")
+        for vo_name_existing in existing_vos:
+            click.echo(f"  {vo_name_existing}")
+    else:
+        click.echo("No existing VO folders.")
+
+    # Get next VO number
     vo_number = get_next_vo_number(vo_parent)
+
+    # Get VO name with explanation
+    click.echo(f"New folder will be named: {vo_number:02d}-VO <your input>")
+    vo_name = click.prompt("Please enter VO name")
+    vo_name = vo_name.strip().upper()
+
     vo_folder_name = f"{vo_number:02d}-VO {vo_name}"
     vo_path = vo_parent / vo_folder_name
 
