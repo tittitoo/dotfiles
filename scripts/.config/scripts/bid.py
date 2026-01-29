@@ -195,6 +195,22 @@ def is_folder_not_empty(path: Path) -> bool:
     return any(path.iterdir())
 
 
+def is_conforming_handover_folder(folder: Path) -> bool:
+    """Check if folder was created by bid ho (has expected structure).
+
+    Returns True if folder doesn't exist (new folder will conform) or
+    if it has at least 3 of the expected subfolders.
+    """
+    if not folder.exists():
+        return True  # New folder, will conform
+
+    expected = {"00-ITB", "01-PO", "02-Technical", "03-Supplier", "04-Datasheet", "05-Cost"}
+    existing = {f.name for f in folder.iterdir() if f.is_dir()}
+
+    # Check if it has at least 3 expected folders
+    return len(expected & existing) >= 3
+
+
 def sync_folder(source: Path, dest: Path) -> bool:
     """One-way mirror sync from source to dest.
 
@@ -1016,6 +1032,15 @@ def ho(folder_name: str) -> None:
     handover_root = Path(HO).expanduser()
     project_dest = handover_root / project_path.name
     dest_path = project_dest / selected_name
+
+    # Check for legacy folder structure
+    if dest_path.exists() and not is_conforming_handover_folder(dest_path):
+        click.echo(f"\nWarning: Destination folder exists with legacy structure:")
+        click.echo(f"  {dest_path}")
+        click.echo("Syncing may override existing content.")
+        if not click.confirm("Do you want to continue?", default=False):
+            click.echo("Aborted.")
+            return
 
     click.echo(f"\nSyncing to: {dest_path}")
 
