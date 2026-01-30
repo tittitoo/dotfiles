@@ -744,7 +744,8 @@ def beautify(xl_file: str, font: bool) -> None:
 )
 def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
     """
-    Combine pdf and output result pdf in the current folder.
+    Combine PDFs in current folder (Alias: cpdf).
+
     If the combined file already exists, it will remove it first and re-combine.
 
     With --manifest flag, also searches for PDFs in the @docs SharePoint folder.
@@ -1205,6 +1206,15 @@ bid_group.add_command(setup)
 bid_group.add_command(clean)
 bid_group.add_command(beautify)
 bid_group.add_command(combine_pdf)
+# Hidden alias for combine-pdf
+cpdf_alias = click.Command(
+    name="cpdf",
+    callback=combine_pdf.callback,
+    params=combine_pdf.params,
+    hidden=True,
+    help=combine_pdf.help,
+)
+bid_group.add_command(cpdf_alias)
 bid_group.add_command(word2pdf)
 bid_group.add_command(audit)
 bid_group.add_command(vo)
