@@ -1056,6 +1056,9 @@ def ho(folder_name: str) -> None:
         # Only main folder available
         selected_name, source_path = candidates[0]
         click.echo("Handover candidate: 00-MAIN (Main Project)")
+        if not click.confirm("Proceed with this folder?", default=True):
+            click.echo("Aborted.")
+            return
     else:
         click.echo("Handover candidates:")
         for i, (name, _) in enumerate(candidates, 1):
@@ -1153,6 +1156,9 @@ def co(folder_name: str) -> None:
         # Only main folder available
         selected_name, _ = candidates[0]
         click.echo("Costing candidate: 00-MAIN (Main Project)")
+        if not click.confirm("Proceed with this folder?", default=True):
+            click.echo("Aborted.")
+            return
     else:
         click.echo("Costing candidates:")
         for i, (name, _) in enumerate(candidates, 1):
