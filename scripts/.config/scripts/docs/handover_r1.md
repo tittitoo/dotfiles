@@ -4,6 +4,8 @@ In @handover folder, there are already existing folders. The folder
 sturcture may not conform to the expected sturcture.
 
 eza -T -L 3 output of the existing @handover
+
+```bash
 .
 ├── 'J11898 RISB & SEB - BOKOR PHASE 3 - COM'
 │ ├── '0. ITB Docs'
@@ -2024,6 +2026,7 @@ eza -T -L 3 output of the existing @handover
 │ ├── 03-Supplier
 │ ├── 04-Datasheet
 │ └── 05-Cost
+```
 
 For the legacy folders that does not conform to the current subfolder
 structure, we should not sync to them to prevent accidental override. We
@@ -2033,6 +2036,7 @@ on them.
 
 eza -la output in @handover
 
+```bash
 .rw-r--r--@ 53k infowizard 29 Jan 14:09 .DS_Store
 .rw-r--r--@ 10 infowizard 30 Sep 2024 .gitignore
 drwx------ - infowizard 7 Feb 2022 'J11898 RISB & SEB - BOKOR PHASE 3 - COM'
@@ -2155,6 +2159,8 @@ drwx------ - infowizard 31 Oct 2025 'J12768 BWE - MAROMBA FPSO - PABX'
 drwx------ - infowizard 3 Nov 2025 'J12769 BWE - MAROMBA FPSO - ENT'
 drwx------ - infowizard 3 Nov 2025 'J12771 BWE - MAROMBA FPSO - VSAT'
 drwx------ - infowizard 12 Sep 2025 'J12772 MARLINK - HAMMERHEAD FPSO - VSAT'
+
+```
 
 Since we have limit the year to 2023, projects older than this are not our concern.
 

@@ -953,6 +953,37 @@ def vo(folder_name: str) -> None:
     create_vo_structure(vo_path)
     click.echo("Created folder structure successfully.")
 
+    # Create new commercial Proposal
+    if click.confirm("Do you want to create a new Commercial Proposal?"):
+        from util import excelx
+
+        version = click.prompt("Version No, default:", default="R0", show_default=True)
+        version = str(version).upper()
+
+        # VO number prefix (e.g., "V1" for 01-VO)
+        vo_prefix = f"V{vo_number}"
+
+        template_folder = (
+            Path(RFQ).expanduser().parent.absolute().resolve() / "@tools/resources"
+        )
+        template = "Template.xlsx"
+        commercial_folder = vo_path / "01-Commercial"
+
+        # Filename: "<project_name> <vo_name> V1-R0.xlsx"
+        commercial_file = f"{project_path.name} {vo_name} {vo_prefix}-{version}.xlsx"
+
+        # Jobcode: "J12789 V1"
+        jobcode = f"{project_path.name.split()[0]} {vo_prefix}"
+
+        excelx.create_excel_from_template(
+            template_folder,
+            template,
+            commercial_folder,
+            commercial_file,
+            jobcode,
+            version,
+        )
+
     # Ask to open folder
     if click.confirm("Do you want to open the VO folder?", default=True):
         open_with_default_app(vo_path)
