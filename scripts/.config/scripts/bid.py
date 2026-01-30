@@ -38,6 +38,7 @@ match username:
     case "oliver":
         RFQ = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@rfqs/"
         HO = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@handover/"
+        CO = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@costing/"
         DOCS = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@docs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/bid.py').expanduser().resolve()}'\""
 
@@ -49,6 +50,7 @@ match username:
     case _:
         RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
         HO = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@handover/"
+        CO = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@costing/"
         DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/bid.py').expanduser().resolve()}'\""
 
@@ -204,7 +206,14 @@ def is_conforming_handover_folder(folder: Path) -> bool:
     if not folder.exists():
         return True  # New folder, will conform
 
-    expected = {"00-ITB", "01-PO", "02-Technical", "03-Supplier", "04-Datasheet", "05-Cost"}
+    expected = {
+        "00-ITB",
+        "01-PO",
+        "02-Technical",
+        "03-Supplier",
+        "04-Datasheet",
+        "05-Cost",
+    }
     existing = {f.name for f in folder.iterdir() if f.is_dir()}
 
     # Check if it has at least 3 expected folders
@@ -244,7 +253,10 @@ def sync_folder(source: Path, dest: Path) -> bool:
         dest_path = dest / rel_path
 
         # Copy if dest doesn't exist or source is newer
-        if not dest_path.exists() or source_path.stat().st_mtime > dest_path.stat().st_mtime:
+        if (
+            not dest_path.exists()
+            or source_path.stat().st_mtime > dest_path.stat().st_mtime
+        ):
             dest_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_path, dest_path)
 
@@ -1043,11 +1055,11 @@ def ho(folder_name: str) -> None:
     if len(candidates) == 1:
         # Only main folder available
         selected_name, source_path = candidates[0]
-        click.echo("Handover candidate: 00-MAIN (main project)")
+        click.echo("Handover candidate: 00-MAIN (Main Project)")
     else:
         click.echo("Handover candidates:")
         for i, (name, _) in enumerate(candidates, 1):
-            label = "(main project)" if name == "00-MAIN" else ""
+            label = "(Main Project)" if name == "00-MAIN" else ""
             click.echo(f"  {i}. {name} {label}")
 
         choice = click.prompt(
@@ -1066,7 +1078,7 @@ def ho(folder_name: str) -> None:
 
     # Check for legacy folder structure
     if dest_path.exists() and not is_conforming_handover_folder(dest_path):
-        click.echo(f"\nWarning: Destination folder exists with legacy structure:")
+        click.echo("\nWarning: Destination folder exists with legacy structure:")
         click.echo(f"  {dest_path}")
         click.echo("Syncing may override existing content.")
         if not click.confirm("Do you want to continue?", default=False):
@@ -1083,6 +1095,92 @@ def ho(folder_name: str) -> None:
 
     # Ask to open folder
     if click.confirm("Do you want to open the handover folder?", default=True):
+        open_with_default_app(dest_path)
+
+
+@click.command()
+@click.argument("folder_name", default="")
+def co(folder_name: str) -> None:
+    """
+    Create costing folder structure in @costing for a project.
+
+    Creates folder for manual placement of costing files after successful bidding.
+    """
+    # Handle case where @rfqs or @costing does not exist
+    if not Path(RFQ).expanduser().exists():
+        click.echo("The folder @rfqs does not exist. Check if you have access.")
+        return
+
+    if not Path(CO).expanduser().exists():
+        click.echo("The folder @costing does not exist. Check if you have access.")
+        return
+
+    # Get project folder name/job code
+    if folder_name == "":
+        folder_name = click.prompt("Please enter project folder name or job code")
+
+    # Search for matching folders
+    matches = find_project_folder(folder_name)
+
+    if not matches:
+        click.echo(f"No project folder found matching '{folder_name}'")
+        return
+
+    # Handle multiple matches
+    if len(matches) == 1:
+        project_path, year = matches[0]
+    else:
+        click.echo("Multiple folders found:")
+        for i, (path, year) in enumerate(matches, 1):
+            click.echo(f"  {i}. {path.name} ({year})")
+
+        choice = click.prompt(
+            "Select folder number",
+            type=click.IntRange(1, len(matches)),
+        )
+        project_path, year = matches[choice - 1]
+
+    # Confirm with user
+    click.echo(f"Found: {project_path.name} ({year})")
+    if not click.confirm("Use this folder?", default=True):
+        click.echo("Aborted.")
+        return
+
+    # Get costing candidates (same as handover candidates)
+    candidates = get_handover_candidates(project_path)
+
+    if len(candidates) == 1:
+        # Only main folder available
+        selected_name, _ = candidates[0]
+        click.echo("Costing candidate: 00-MAIN (Main Project)")
+    else:
+        click.echo("Costing candidates:")
+        for i, (name, _) in enumerate(candidates, 1):
+            label = "(Main Project)" if name == "00-MAIN" else ""
+            click.echo(f"  {i}. {name} {label}")
+
+        choice = click.prompt(
+            "Select folder for costing",
+            type=click.IntRange(1, len(candidates)),
+        )
+        selected_name, _ = candidates[choice - 1]
+
+    # Prepare destination in @costing
+    costing_root = Path(CO).expanduser()
+    project_dest = costing_root / project_path.name
+    dest_path = project_dest / selected_name
+
+    # Create the folder
+    if dest_path.exists():
+        click.echo(f"Folder already exists: {dest_path}")
+    else:
+        dest_path.mkdir(parents=True, exist_ok=True)
+        click.echo(f"\nCreated: {dest_path}")
+
+    click.echo("Please copy costing files manually to this folder.")
+
+    # Ask to open folder
+    if click.confirm("Do you want to open the costing folder?", default=True):
         open_with_default_app(dest_path)
 
 
@@ -1105,6 +1203,7 @@ bid_group.add_command(word2pdf)
 bid_group.add_command(audit)
 bid_group.add_command(vo)
 bid_group.add_command(ho)
+bid_group.add_command(co)
 
 if __name__ == "__main__":
     bid()
