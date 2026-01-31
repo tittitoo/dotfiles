@@ -5,6 +5,8 @@ windows:
   - ai_minimalist:
       root:
       panes:
+        - source .venv/bin/activate.fish; clear
   - playground:
       root:
       panes:
+        - source .venv/bin/activate.fish; clear
