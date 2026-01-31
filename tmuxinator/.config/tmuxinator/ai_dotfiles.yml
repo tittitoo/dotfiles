@@ -1,0 +1,10 @@
+name: ai_dotfiles
+root: "~/Repos/github.com/tittitoo/dotfiles/"
+
+windows:
+  - ai_dotfiles:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:

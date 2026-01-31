@@ -1,0 +1,10 @@
+name: ai_minimalist
+root: "~/Repos/github.com/tittitoo/minimalist/"
+
+windows:
+  - ai_minimalist:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:

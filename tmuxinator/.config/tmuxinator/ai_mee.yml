@@ -1,0 +1,10 @@
+name: ai_mee
+root: "~/Repos/github.com/tittitoo/mee/"
+
+windows:
+  - ai_mee:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:
