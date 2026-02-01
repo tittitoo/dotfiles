@@ -5,6 +5,7 @@ set -gx PATH /usr/local/opt/coreutils/libexec/gnubin $PATH
 set -gx PATH $HOME/.local/bin $PATH
 set -gx PATH $HOME/.cargo/bin $PATH
 set -gx PATH $HOME/.config/scripts $PATH
+set -gx PATH $HOME/Repos/github.com/tittitoo/mee $PATH
 
 # Homebrew PATH setting
 
