@@ -442,7 +442,7 @@ def init(folder_name: str) -> None:
     if new_path.exists():
         click.echo("The folder already exists.")
         # Create new commercial Proposal
-        if click.confirm("Do you want to create a new Commercial Proposal?"):
+        if click.confirm("Do you want to create a new Commercial Proposal?", default=True):
             version = click.prompt(
                 "Version No, default:", default="B0", show_default=True
             )
@@ -466,7 +466,7 @@ def init(folder_name: str) -> None:
             open_with_default_app(new_path)
             return
     else:
-        if click.confirm(f"'{new_path}' will be created. Continue?", abort=True):
+        if click.confirm(f"'{new_path}' will be created. Continue?", default=True, abort=True):
             new_path.mkdir()
             iso_date = datetime.now().strftime("%Y-%m-%d")
             itb_specs = new_path / "00-ITB" / iso_date
@@ -489,7 +489,7 @@ def init(folder_name: str) -> None:
             toolkit.mkdir(parents=True, exist_ok=True)
             click.echo(f"Created fodler {new_path}")
             # Create new commercial Proposal
-            if click.confirm("Do you want to create a new Commercial Proposal?"):
+            if click.confirm("Do you want to create a new Commercial Proposal?", default=True):
                 version = click.prompt(
                     "Version No, default:", default="B0", show_default=True
                 )
