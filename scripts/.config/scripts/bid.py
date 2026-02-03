@@ -426,6 +426,8 @@ def init(folder_name: str) -> None:
 
     if folder_name == "":
         folder_name = click.prompt("Please enter folder name to create")
+    # Normalize dashes: convert en-dash (–) and em-dash (—) to hyphen-minus (-)
+    folder_name = folder_name.replace("–", "-").replace("—", "-")
     current_year = datetime.now().year
     path = Path(RFQ).expanduser()
     folders = []
