@@ -1,0 +1,10 @@
+name: ai_general
+root: "~/Downloads/"
+
+windows:
+  - ai_general:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:
