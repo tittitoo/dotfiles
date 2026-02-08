@@ -44,6 +44,15 @@ vim.api.nvim_create_autocmd("FileType", {
   command = "set formatoptions-=cro", -- Disable auto-comment
 })
 
+-- Disable diagnostics by default for markdown files
+-- Use <leader>ud to toggle them on (including markdownlint)
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown" },
+  callback = function()
+    vim.diagnostic.enable(false)
+  end,
+})
+
 -- For html file recognition
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = {
