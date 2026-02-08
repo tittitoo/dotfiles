@@ -88,6 +88,15 @@ return {
       return opts
     end,
   },
+  -- Disable markdownlint diagnostics by default
+  {
+    "mfussenegger/nvim-lint",
+    opts = {
+      linters_by_ft = {
+        markdown = {},
+      },
+    },
+  },
   -- blink.compact. This is for compatibility with blink and codeium
   -- Othereise it will output "attempt to index field 'lsp' (a nil value)" error
   -- { "saghen/blink.compat", opts = { impersonate_nvim_cmp = true } },
