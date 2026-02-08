@@ -1,0 +1,13 @@
+name: docr
+root: "~/Repos/github.com/tittitoo/docr/"
+
+windows:
+  - docr:
+      panes:
+        - source .venv/bin/activate.fish; clear
+  - docr2:
+      panes:
+        - source .venv/bin/activate.fish; clear
+  - playground:
+      panes:
+        - source .venv/bin/activate.fish; clear
