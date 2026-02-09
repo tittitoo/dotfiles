@@ -7,6 +7,7 @@ set -gx PATH $HOME/.cargo/bin $PATH
 set -gx PATH $HOME/.config/scripts $PATH
 set -gx PATH $HOME/Repos/github.com/tittitoo/mee $PATH
 set -gx PATH $HOME/Repos/github.com/tittitoo/minimalist $PATH
+set -gx PATH $HOME/Repos/github.com/tittitoo/docr $PATH
 
 # Homebrew PATH setting
 
@@ -20,6 +21,12 @@ else
     set -gx HOMEBREW_PREFIX /home/linuxbrew/.linuxbrew
 end
 
+# WeasyPrint / image.nvim library paths (macOS only)
+# Intel: /usr/local/lib (already in default search path, but explicit doesn't hurt)
+# Apple Silicon: /opt/homebrew/lib (not in default search path, so required)
+if test (uname -s) = Darwin
+    set -gx DYLD_LIBRARY_PATH $HOMEBREW_PREFIX/lib $DYLD_LIBRARY_PATH
+end
 set -gx PATH $HOMEBREW_PREFIX/bin $PATH
 
 # ruby PATH
@@ -28,7 +35,7 @@ set -gx PATH $HOMEBREW_PREFIX/opt/ruby/bin $PATH
 # python PATH
 set -gx PATH $HOMEBREW_PREFIX/bin/python3.13 $PATH
 
-# image.nvim
+# image.nvim (covered by DYLD_LIBRARY_PATH above)
 set -gx DYLD_FALLBACK_LIBRARY_PATH $HOMEBREW_PREFIX/lib
 
 # remove duplicate path entries
@@ -124,7 +131,7 @@ fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ca --git_sta
 
 # Add ssh key
 if test (uname -s) = Darwin
-    if not test -S $SSH_AUTH_SOCK
+    if not test -z $SSH_AUTH_SOCK
         eval (ssh-agent -c) >/dev/null # make the output silent
         # eval (ssh-agent -c)
     end
