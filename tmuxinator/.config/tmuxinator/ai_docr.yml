@@ -1,0 +1,12 @@
+name: ai_docr
+root: "~/Repos/github.com/tittitoo/docr/"
+
+windows:
+  - ai_docr:
+      root:
+      panes:
+        - source .venv/bin/activate.fish; clear
+  - playground:
+      root:
+      panes:
+        - source .venv/bin/activate.fish; clear
