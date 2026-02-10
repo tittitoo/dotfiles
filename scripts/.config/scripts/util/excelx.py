@@ -43,7 +43,9 @@ def create_excel_from_template(
         click.echo("Error creating excel file.")
 
 
-def set_format(wb: xw.Book, font_name: str = "Arial", font_size: int = 12) -> None:
+def set_format(
+    wb: xw.Book, font_name: str = "Aptos Narrow", font_size: int = 11
+) -> None:
     "Set font attributes in workbook"
     for sheet in wb.sheets:
         try:

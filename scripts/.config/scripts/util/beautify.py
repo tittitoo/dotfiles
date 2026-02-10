@@ -6,6 +6,12 @@ import xlwings as xw
 from . import excelx
 
 TEMPLATES = [
+    "Aptos, Size 12",
+    "Aptos, Size 11",
+    "Aptos, Size 10",
+    "Aptos Narrow, Size 12",
+    "Aptos Narrow, Size 11",
+    "Aptos Narrow, Size 10",
     "Arial, Size 12",
     "Arial, Size 11",
     "Arial, Size 10",
@@ -25,7 +31,7 @@ TEMPLATES = [
     "-f",
     "--font",
     is_flag=True,
-    help="Apply font formatting only (shows template menu, default: Arial Size 12)",
+    help="Apply font formatting only (shows template menu, default: Aptos Narrow Size 11)",
 )
 def beautify(xl_file: str, font: bool) -> None:
     """
@@ -65,7 +71,7 @@ def beautify(xl_file: str, font: bool) -> None:
             click.echo(f"  {idx}: {tmpl}")
         while True:
             choice = click.prompt(
-                "Select template number (Enter for default)", default="1"
+                "Select template number (Enter for default)", default="2"
             )
             try:
                 template_idx = int(choice)
