@@ -40,11 +40,13 @@ match username:
         HO = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@handover/"
         CO = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@costing/"
         DOCS = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@docs/"
+        TOOLS = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/bid.py').expanduser().resolve()}'\""
 
     case "carol_lim":
         RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
         DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
+        TOOLS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - @tools/bid.py').expanduser().resolve()}'\""
 
     case _:
@@ -52,6 +54,7 @@ match username:
         HO = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@handover/"
         CO = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@costing/"
         DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
+        TOOLS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/bid.py').expanduser().resolve()}'\""
 
 
@@ -684,20 +687,105 @@ def setup():
     if platform.system() == "Linux":
         pass
     elif platform.system() == "Windows":
-        """
-        Add alias for shell `uv run bid.py` -> `bid`
-        Check and confirm the location for `RFQ`
-        Add `@tools` folder to PATH
-        I may consider Git BASH as the default shell
-        """
-        # Wirte .bashrc file for git bash
+        # Step 1 — Install uv (if not already installed)
+        if shutil.which("uv"):
+            click.echo("uv is already installed, skipping.")
+        else:
+            click.echo("Installing uv...")
+            subprocess.run(
+                [
+                    "powershell",
+                    "-ExecutionPolicy",
+                    "ByPass",
+                    "-c",
+                    "irm https://astral.sh/uv/install.ps1 | iex",
+                ],
+                check=True,
+            )
+            click.echo("uv installed.")
+
+        # Step 2 — Create managed_python folder
+        managed_python = Path.home() / "managed_python"
+        managed_python.mkdir(exist_ok=True)
+        click.echo(f"Created {managed_python}")
+
+        # Step 3 — Copy pyproject.toml from @tools
+        tools_path = Path(TOOLS).expanduser()
+        shutil.copy2(tools_path / "pyproject.toml", managed_python / "pyproject.toml")
+        click.echo("Copied pyproject.toml to managed_python.")
+
+        # Step 4 — Run uv sync
+        click.echo("Running uv sync...")
+        subprocess.run(["uv", "sync"], cwd=str(managed_python), check=True)
+        click.echo("uv sync complete.")
+
+        # Step 5 — Add .venv/Scripts Python to user PATH (top priority)
+        python_path = str(managed_python / ".venv" / "Scripts")
+        result = subprocess.run(
+            [
+                "powershell",
+                "-c",
+                "[Environment]::GetEnvironmentVariable('Path', 'User')",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        current_path = result.stdout.strip()
+        if python_path.lower() not in current_path.lower():
+            new_path = python_path + ";" + current_path
+            subprocess.run(
+                [
+                    "powershell",
+                    "-c",
+                    f"[Environment]::SetEnvironmentVariable('Path', '{new_path}', 'User')",
+                ],
+                check=True,
+            )
+            click.echo(f"Added {python_path} to user PATH.")
+        else:
+            click.echo(f"{python_path} is already in user PATH, skipping.")
+
+        # Step 6 — Install xlwings add-in
+        try:
+            click.echo("Installing xlwings add-in...")
+            subprocess.run(
+                ["xlwings", "addin", "install"],
+                cwd=str(managed_python),
+                check=True,
+            )
+            click.echo("xlwings add-in installed.")
+        except Exception as e:
+            click.echo(f"Failed to install xlwings add-in: {e}")
+
+        # Step 7 — Copy PERSONAL.XLSB to XLSTART
+        personal_xlsb_src = tools_path / "PERSONAL.XLSB"
+        xlstart = (
+            Path.home() / "AppData" / "Roaming" / "Microsoft" / "Excel" / "XLSTART"
+        )
+        personal_xlsb_dst = xlstart / "PERSONAL.XLSB"
+
+        result = subprocess.run(
+            ["powershell", "-c", "Get-Process excel -ErrorAction SilentlyContinue"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            if click.confirm("Excel is running. Kill it to copy PERSONAL.XLSB?"):
+                subprocess.run(["powershell", "-c", "Stop-Process -Name excel -Force"])
+            else:
+                click.echo("Skipping PERSONAL.XLSB copy.")
+                return
+
+        xlstart.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(personal_xlsb_src, personal_xlsb_dst)
+        click.echo(f"Copied PERSONAL.XLSB to {xlstart}")
+
+        # Git Bash setup — write .bashrc alias and .minttyrc font config
         with open(Path.home() / ".bashrc", "w") as f:
             f.write(f"{BID_ALIAS} \n")
-        # click.echo(f"Added {BID_ALIAS} to .bashrc")
-        # Customize minttyrc
         with open(Path.home() / ".minttyrc", "w") as f:
             f.write("FontFamily=Victor Mono\nFontSize=15\n")
-        # click.echo("Added font and font size to .minttyrc")
+        click.echo("Git Bash .bashrc and .minttyrc configured.")
     elif platform.system() == "Darwin":
         # click.echo(RFQ)
         # click.echo(BID_ALIAS)
