@@ -1,6 +1,6 @@
 #!/bin/bash
 # lazy-update — headless LazyVim plugin sync
-# Exit codes: 0 success, 1 nvim running, 2 nvim not found
+# Exit codes: 0 success, 2 nvim not found
 
 set -euo pipefail
 
@@ -24,12 +24,6 @@ log() { printf '[%s] %s\n' "$(timestamp)" "$*" | tee -a "$LOG_FILE"; }
 if ! command -v nvim &>/dev/null; then
     log "ERROR: nvim not found in PATH"
     exit 2
-fi
-
-# Skip if nvim is already running (avoids lazy-lock.json conflicts)
-if pgrep -x nvim &>/dev/null; then
-    log "SKIP: nvim is already running"
-    exit 1
 fi
 
 log "Starting Lazy sync..."
