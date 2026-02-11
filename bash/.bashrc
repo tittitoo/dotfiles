@@ -7,6 +7,9 @@ eval "$(thefuck --alias)"
 eval "$(fzf --bash)"
 #~~~~~~~~~~~~~~~~~~~~~~~~~ Aliases~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# set up ssh
+eval "$(ssh-agent -s)"
+
 alias ls='ls --color=auto'
 alias ll='ls -la'
 
