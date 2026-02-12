@@ -746,6 +746,7 @@ def setup():
             click.echo(f"{python_path} is already in user PATH, skipping.")
 
         # Check if Excel is running before steps 6 & 7 (both require Excel closed)
+        excel_closed = True
         result = subprocess.run(
             ["powershell", "-c", "Get-Process excel -ErrorAction SilentlyContinue"],
             capture_output=True,
@@ -756,32 +757,63 @@ def setup():
                 subprocess.run(["powershell", "-c", "Stop-Process -Name excel -Force"])
             else:
                 click.echo("Skipping xlwings add-in install and PERSONAL.XLSB copy.")
-                # Jump to Git Bash setup below
-                with open(Path.home() / ".bashrc", "w") as f:
-                    f.write(f"{BID_ALIAS} \n")
-                with open(Path.home() / ".minttyrc", "w") as f:
-                    f.write("FontFamily=Victor Mono\nFontSize=15\n")
-                click.echo("Git Bash .bashrc and .minttyrc configured.")
-                return
+                excel_closed = False
 
-        # Step 6 — Install xlwings add-in
-        click.echo("Installing xlwings add-in...")
+        if excel_closed:
+            # Step 6 — Install xlwings add-in
+            click.echo("Installing xlwings add-in...")
+            subprocess.run(
+                ["xlwings", "addin", "install"],
+                cwd=str(managed_python),
+                check=True,
+            )
+            click.echo("xlwings add-in installed.")
+
+            # Step 7 — Copy PERSONAL.XLSB to XLSTART
+            personal_xlsb_src = tools_path / "PERSONAL.XLSB"
+            xlstart = (
+                Path.home() / "AppData" / "Roaming" / "Microsoft" / "Excel" / "XLSTART"
+            )
+            personal_xlsb_dst = xlstart / "PERSONAL.XLSB"
+            xlstart.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(personal_xlsb_src, personal_xlsb_dst)
+            click.echo(f"Copied PERSONAL.XLSB to {xlstart}")
+
+        # Step 8 — Ensure PERSONAL.XLSB opens hidden when Excel starts
+        # This is controlled by VBA in PERSONAL.XLSB's ThisWorkbook module:
+        #   Private Sub Workbook_Open()
+        #       Windows(ThisWorkbook.Name).Visible = False
+        #   End Sub
+        # No action needed here — the file in @tools is pre-configured.
+
+        # Step 9 — Make .managed_python folder hidden in Windows
         subprocess.run(
-            ["xlwings", "addin", "install"],
-            cwd=str(managed_python),
+            ["attrib", "+H", str(managed_python)],
             check=True,
         )
-        click.echo("xlwings add-in installed.")
+        click.echo(f"Set {managed_python} as hidden.")
 
-        # Step 7 — Copy PERSONAL.XLSB to XLSTART
-        personal_xlsb_src = tools_path / "PERSONAL.XLSB"
-        xlstart = (
-            Path.home() / "AppData" / "Roaming" / "Microsoft" / "Excel" / "XLSTART"
+        # Step 10 — Set xlwings interpreter path to .managed_python/.venv python
+        xlwings_conf_dir = Path.home() / ".xlwings"
+        xlwings_conf_dir.mkdir(exist_ok=True)
+        xlwings_conf = xlwings_conf_dir / "xlwings.conf"
+        interpreter_path = str(managed_python / ".venv" / "Scripts" / "pythonw.exe")
+        pythonpath = str(tools_path)
+
+        # Step 11 — Set xlwings PYTHONPATH to @tools folder
+        conf_lines = {}
+        if xlwings_conf.exists():
+            for line in xlwings_conf.read_text().splitlines():
+                if "=" in line:
+                    key, _, value = line.partition("=")
+                    conf_lines[key.strip()] = value.strip()
+        conf_lines["INTERPRETER_WIN"] = interpreter_path
+        conf_lines["PYTHONPATH"] = pythonpath
+        xlwings_conf.write_text(
+            "\n".join(f"{k}={v}" for k, v in conf_lines.items()) + "\n"
         )
-        personal_xlsb_dst = xlstart / "PERSONAL.XLSB"
-        xlstart.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(personal_xlsb_src, personal_xlsb_dst)
-        click.echo(f"Copied PERSONAL.XLSB to {xlstart}")
+        click.echo(f"Set xlwings interpreter to {interpreter_path}")
+        click.echo(f"Set xlwings PYTHONPATH to {pythonpath}")
 
         # Git Bash setup — write .bashrc alias and .minttyrc font config
         with open(Path.home() / ".bashrc", "w") as f:

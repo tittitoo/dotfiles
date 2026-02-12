@@ -20,5 +20,10 @@ addin install`
    folder. If the file already exists, override this. If excel is already
    running, request user's permission to kill the excel so that the file can
    be copied over successfully.
+8. When excel starts 'PERSONAL.XLSB' needs to be opened in a hidden state.
+9. Make .manged_python folder hidden in Windows
+10. Set xlwings interpreter path to the one from no 5 above (in
+    .managed_python)
+11. Set xlwing PYTHONPATH to @tools folder
 
 Let us make a plan first to implement this feature.
