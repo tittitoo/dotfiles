@@ -798,7 +798,7 @@ def setup():
         xlwings_conf_dir.mkdir(exist_ok=True)
         xlwings_conf = xlwings_conf_dir / "xlwings.conf"
         interpreter_path = str(managed_python / ".venv" / "Scripts" / "python.exe")
-        pythonpath = str(tools_path)
+        pythonpath = str(tools_path).replace("@", "\\@")
 
         # Step 11 — Set xlwings PYTHONPATH to @tools folder and disable ADD_WORKBOOK_TO_PYTHONPATH
         # xlwings.conf uses CSV format: "KEY","VALUE"
@@ -814,7 +814,7 @@ def setup():
         conf_lines["PYTHONPATH"] = pythonpath
         conf_lines["ADD_WORKBOOK_TO_PYTHONPATH"] = "False"
         buf = io.StringIO()
-        writer = csv.writer(buf)
+        writer = csv.writer(buf, quoting=csv.QUOTE_ALL)
         for k, v in conf_lines.items():
             writer.writerow([k, v])
         xlwings_conf.write_text(buf.getvalue())
