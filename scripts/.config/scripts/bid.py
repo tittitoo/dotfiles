@@ -687,39 +687,22 @@ def setup():
     if platform.system() == "Linux":
         pass
     elif platform.system() == "Windows":
-        # Step 1 — Install uv (if not already installed)
-        if shutil.which("uv"):
-            click.echo("uv is already installed, skipping.")
-        else:
-            click.echo("Installing uv...")
-            subprocess.run(
-                [
-                    "powershell",
-                    "-ExecutionPolicy",
-                    "ByPass",
-                    "-c",
-                    "irm https://astral.sh/uv/install.ps1 | iex",
-                ],
-                check=True,
-            )
-            click.echo("uv installed.")
-
-        # Step 2 — Create .managed_python folder
+        # Step 1 — Create .managed_python folder
         managed_python = Path.home() / ".managed_python"
         managed_python.mkdir(exist_ok=True)
         click.echo(f"Created {managed_python}")
 
-        # Step 3 — Copy pyproject.toml from @tools
+        # Step 2 — Copy pyproject.toml from @tools
         tools_path = Path(TOOLS).expanduser()
         shutil.copy2(tools_path / "pyproject.toml", managed_python / "pyproject.toml")
         click.echo("Copied pyproject.toml to .managed_python.")
 
-        # Step 4 — Run uv sync
+        # Step 3 — Run uv sync
         click.echo("Running uv sync...")
         subprocess.run(["uv", "sync"], cwd=str(managed_python), check=True)
         click.echo("uv sync complete.")
 
-        # Step 5 — Add .venv/Scripts Python to user PATH (top priority)
+        # Step 4 — Add .venv/Scripts Python to user PATH (top priority)
         python_path = str(managed_python / ".venv" / "Scripts")
         result = subprocess.run(
             [
@@ -745,7 +728,7 @@ def setup():
         else:
             click.echo(f"{python_path} is already in user PATH, skipping.")
 
-        # Check if Excel is running before steps 6 & 7 (both require Excel closed)
+        # Check if Excel is running before steps 5 & 6 (both require Excel closed)
         excel_closed = True
         result = subprocess.run(
             ["powershell", "-c", "Get-Process excel -ErrorAction SilentlyContinue"],
@@ -760,7 +743,7 @@ def setup():
                 excel_closed = False
 
         if excel_closed:
-            # Step 6 — Install xlwings add-in
+            # Step 5 — Install xlwings add-in
             click.echo("Installing xlwings add-in...")
             subprocess.run(
                 ["xlwings", "addin", "install"],
@@ -769,7 +752,7 @@ def setup():
             )
             click.echo("xlwings add-in installed.")
 
-            # Step 7 — Copy PERSONAL.XLSB to XLSTART
+            # Step 6 — Copy PERSONAL.XLSB to XLSTART
             personal_xlsb_src = tools_path / "PERSONAL.XLSB"
             xlstart = (
                 Path.home() / "AppData" / "Roaming" / "Microsoft" / "Excel" / "XLSTART"
@@ -779,28 +762,28 @@ def setup():
             shutil.copy2(personal_xlsb_src, personal_xlsb_dst)
             click.echo(f"Copied PERSONAL.XLSB to {xlstart}")
 
-        # Step 8 — Ensure PERSONAL.XLSB opens hidden when Excel starts
+        # Step 7 — Ensure PERSONAL.XLSB opens hidden when Excel starts
         # This is controlled by VBA in PERSONAL.XLSB's ThisWorkbook module:
         #   Private Sub Workbook_Open()
         #       Windows(ThisWorkbook.Name).Visible = False
         #   End Sub
         # No action needed here — the file in @tools is pre-configured.
 
-        # Step 9 — Make .managed_python folder hidden in Windows
+        # Step 8 — Make .managed_python folder hidden in Windows
         subprocess.run(
             ["attrib", "+H", str(managed_python)],
             check=True,
         )
         click.echo(f"Set {managed_python} as hidden.")
 
-        # Step 10 — Set xlwings interpreter path to .managed_python/.venv python
+        # Step 9 — Set xlwings interpreter path to .managed_python/.venv python
         xlwings_conf_dir = Path.home() / ".xlwings"
         xlwings_conf_dir.mkdir(exist_ok=True)
         xlwings_conf = xlwings_conf_dir / "xlwings.conf"
         interpreter_path = str(managed_python / ".venv" / "Scripts" / "python.exe")
         pythonpath = str(tools_path).replace("@", "\\@")
 
-        # Step 11 — Set xlwings PYTHONPATH to @tools folder and disable ADD_WORKBOOK_TO_PYTHONPATH
+        # Step 10 — Set xlwings PYTHONPATH to @tools folder and disable ADD_WORKBOOK_TO_PYTHONPATH
         # xlwings.conf uses CSV format: "KEY","VALUE"
         import csv
         import io
