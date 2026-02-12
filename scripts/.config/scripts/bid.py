@@ -745,17 +745,33 @@ def setup():
         else:
             click.echo(f"{python_path} is already in user PATH, skipping.")
 
+        # Check if Excel is running before steps 6 & 7 (both require Excel closed)
+        result = subprocess.run(
+            ["powershell", "-c", "Get-Process excel -ErrorAction SilentlyContinue"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            if click.confirm("Excel is running. Close it to continue setup?"):
+                subprocess.run(["powershell", "-c", "Stop-Process -Name excel -Force"])
+            else:
+                click.echo("Skipping xlwings add-in install and PERSONAL.XLSB copy.")
+                # Jump to Git Bash setup below
+                with open(Path.home() / ".bashrc", "w") as f:
+                    f.write(f"{BID_ALIAS} \n")
+                with open(Path.home() / ".minttyrc", "w") as f:
+                    f.write("FontFamily=Victor Mono\nFontSize=15\n")
+                click.echo("Git Bash .bashrc and .minttyrc configured.")
+                return
+
         # Step 6 — Install xlwings add-in
-        try:
-            click.echo("Installing xlwings add-in...")
-            subprocess.run(
-                ["xlwings", "addin", "install"],
-                cwd=str(managed_python),
-                check=True,
-            )
-            click.echo("xlwings add-in installed.")
-        except Exception as e:
-            click.echo(f"Failed to install xlwings add-in: {e}")
+        click.echo("Installing xlwings add-in...")
+        subprocess.run(
+            ["xlwings", "addin", "install"],
+            cwd=str(managed_python),
+            check=True,
+        )
+        click.echo("xlwings add-in installed.")
 
         # Step 7 — Copy PERSONAL.XLSB to XLSTART
         personal_xlsb_src = tools_path / "PERSONAL.XLSB"
@@ -763,19 +779,6 @@ def setup():
             Path.home() / "AppData" / "Roaming" / "Microsoft" / "Excel" / "XLSTART"
         )
         personal_xlsb_dst = xlstart / "PERSONAL.XLSB"
-
-        result = subprocess.run(
-            ["powershell", "-c", "Get-Process excel -ErrorAction SilentlyContinue"],
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode == 0:
-            if click.confirm("Excel is running. Kill it to copy PERSONAL.XLSB?"):
-                subprocess.run(["powershell", "-c", "Stop-Process -Name excel -Force"])
-            else:
-                click.echo("Skipping PERSONAL.XLSB copy.")
-                return
-
         xlstart.mkdir(parents=True, exist_ok=True)
         shutil.copy2(personal_xlsb_src, personal_xlsb_dst)
         click.echo(f"Copied PERSONAL.XLSB to {xlstart}")
