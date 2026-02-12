@@ -797,23 +797,30 @@ def setup():
         xlwings_conf_dir = Path.home() / ".xlwings"
         xlwings_conf_dir.mkdir(exist_ok=True)
         xlwings_conf = xlwings_conf_dir / "xlwings.conf"
-        interpreter_path = str(managed_python / ".venv" / "Scripts" / "pythonw.exe")
+        interpreter_path = str(managed_python / ".venv" / "Scripts" / "python.exe")
         pythonpath = str(tools_path)
 
-        # Step 11 — Set xlwings PYTHONPATH to @tools folder
+        # Step 11 — Set xlwings PYTHONPATH to @tools folder and disable ADD_WORKBOOK_TO_PYTHONPATH
+        # xlwings.conf uses CSV format: "KEY","VALUE"
+        import csv
+        import io
         conf_lines = {}
         if xlwings_conf.exists():
-            for line in xlwings_conf.read_text().splitlines():
-                if "=" in line:
-                    key, _, value = line.partition("=")
-                    conf_lines[key.strip()] = value.strip()
+            with open(xlwings_conf, newline="") as f:
+                for row in csv.reader(f):
+                    if len(row) >= 2:
+                        conf_lines[row[0]] = row[1]
         conf_lines["INTERPRETER_WIN"] = interpreter_path
         conf_lines["PYTHONPATH"] = pythonpath
-        xlwings_conf.write_text(
-            "\n".join(f"{k}={v}" for k, v in conf_lines.items()) + "\n"
-        )
+        conf_lines["ADD_WORKBOOK_TO_PYTHONPATH"] = "False"
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        for k, v in conf_lines.items():
+            writer.writerow([k, v])
+        xlwings_conf.write_text(buf.getvalue())
         click.echo(f"Set xlwings interpreter to {interpreter_path}")
         click.echo(f"Set xlwings PYTHONPATH to {pythonpath}")
+        click.echo("Disabled ADD_WORKBOOK_TO_PYTHONPATH.")
 
         # Git Bash setup — write .bashrc alias and .minttyrc font config
         with open(Path.home() / ".bashrc", "w") as f:
