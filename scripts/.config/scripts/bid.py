@@ -805,6 +805,17 @@ def setup():
         click.echo(f"Set xlwings PYTHONPATH to {pythonpath}")
         click.echo("Disabled ADD_WORKBOOK_TO_PYTHONPATH.")
 
+        # Step 11 — Copy Excel.officeUI ribbon customization
+        # Strip absolute paths from onAction attributes so macros resolve to
+        # the already-loaded PERSONAL.XLSB (avoids "two workbooks with same name" error)
+        office_ui_src = tools_path / "resources" / "Excel.officeUI"
+        office_ui_dst = Path.home() / "AppData" / "Local" / "Microsoft" / "Office" / "Excel.officeUI"
+        office_ui_dst.parent.mkdir(parents=True, exist_ok=True)
+        content = office_ui_src.read_text(encoding="utf-8")
+        content = re.sub(r'onAction="[^"]*\\PERSONAL\.XLSB!', 'onAction="PERSONAL.XLSB!', content)
+        office_ui_dst.write_text(content, encoding="utf-8")
+        click.echo(f"Copied Excel.officeUI to {office_ui_dst.parent}")
+
         # Git Bash setup — write .bashrc alias and .minttyrc font config
         with open(Path.home() / ".bashrc", "w") as f:
             f.write(f"{BID_ALIAS} \n")
