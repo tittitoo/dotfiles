@@ -704,15 +704,15 @@ def setup():
             )
             click.echo("uv installed.")
 
-        # Step 2 — Create managed_python folder
-        managed_python = Path.home() / "managed_python"
+        # Step 2 — Create .managed_python folder
+        managed_python = Path.home() / ".managed_python"
         managed_python.mkdir(exist_ok=True)
         click.echo(f"Created {managed_python}")
 
         # Step 3 — Copy pyproject.toml from @tools
         tools_path = Path(TOOLS).expanduser()
         shutil.copy2(tools_path / "pyproject.toml", managed_python / "pyproject.toml")
-        click.echo("Copied pyproject.toml to managed_python.")
+        click.echo("Copied pyproject.toml to .managed_python.")
 
         # Step 4 — Run uv sync
         click.echo("Running uv sync...")

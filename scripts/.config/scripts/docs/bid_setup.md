@@ -7,7 +7,7 @@
 1. Install `uv` if it is not already installed in user's computer. The
    power shell command for installation is:
    `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
-2. Create a folder called 'managed_python' in user's home folder.
+2. Create a folder called '.managed_python' in user's home folder.
 3. Copy over 'pyproject.toml' file from @tools folder pointed to by TOOLS into this folder.
 4. Run `uv sync` in this folder to set up .venv environment.
 5. Add python from this .venv environment to user's PATH. Note that user
