@@ -785,8 +785,10 @@ def setup():
 
         # Step 10 — Set xlwings PYTHONPATH to @tools folder and disable ADD_WORKBOOK_TO_PYTHONPATH
         # xlwings.conf uses CSV format: "KEY","VALUE"
+        # Must use newline="" on both read and write to prevent \r\n → \r\r\n
+        # double conversion, which causes VBA "Input past end of file" error 62
         import csv
-        import io
+
         conf_lines = {}
         if xlwings_conf.exists():
             with open(xlwings_conf, newline="") as f:
@@ -796,23 +798,37 @@ def setup():
         conf_lines["INTERPRETER_WIN"] = interpreter_path
         conf_lines["PYTHONPATH"] = pythonpath
         conf_lines["ADD_WORKBOOK_TO_PYTHONPATH"] = "False"
-        buf = io.StringIO()
-        writer = csv.writer(buf, quoting=csv.QUOTE_ALL)
-        for k, v in conf_lines.items():
-            writer.writerow([k, v])
-        xlwings_conf.write_text(buf.getvalue())
+        with open(xlwings_conf, "w", newline="") as f:
+            writer = csv.writer(f, quoting=csv.QUOTE_ALL)
+            for k, v in conf_lines.items():
+                writer.writerow([k, v])
         click.echo(f"Set xlwings interpreter to {interpreter_path}")
         click.echo(f"Set xlwings PYTHONPATH to {pythonpath}")
         click.echo("Disabled ADD_WORKBOOK_TO_PYTHONPATH.")
 
         # Step 11 — Copy Excel.officeUI ribbon customization
-        # Strip absolute paths from onAction attributes so macros resolve to
-        # the already-loaded PERSONAL.XLSB (avoids "two workbooks with same name" error)
+        # Replace hardcoded XLSTART path in onAction attributes with current user's
+        # path (onAction needs the full path for application-level ribbon callbacks)
         office_ui_src = tools_path / "resources" / "Excel.officeUI"
-        office_ui_dst = Path.home() / "AppData" / "Local" / "Microsoft" / "Office" / "Excel.officeUI"
+        office_ui_dst = (
+            Path.home()
+            / "AppData"
+            / "Local"
+            / "Microsoft"
+            / "Office"
+            / "Excel.officeUI"
+        )
         office_ui_dst.parent.mkdir(parents=True, exist_ok=True)
         content = office_ui_src.read_text(encoding="utf-8")
-        content = re.sub(r'onAction="[^"]*\\PERSONAL\.XLSB!', 'onAction="PERSONAL.XLSB!', content)
+        user_xlstart = str(
+            Path.home() / "AppData" / "Roaming" / "Microsoft" / "Excel" / "XLSTART"
+        )
+        xlstart_personal = f'{user_xlstart}\\PERSONAL.XLSB'
+        content = re.sub(
+            r'onAction="[^"]*\\PERSONAL\.XLSB!',
+            lambda _: f'onAction="{xlstart_personal}!',
+            content,
+        )
         office_ui_dst.write_text(content, encoding="utf-8")
         click.echo(f"Copied Excel.officeUI to {office_ui_dst.parent}")
 
