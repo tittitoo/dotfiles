@@ -12,4 +12,9 @@ if %errorlevel% neq 0 (
 )
 echo Running bid setup...
 uv run --quiet --script "%~dp0bid.py" setup
+if %errorlevel% neq 0 (
+    echo Retrying after clearing uv cache...
+    uv cache clean
+    uv run --quiet --script "%~dp0bid.py" setup
+)
 pause
