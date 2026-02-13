@@ -13,8 +13,13 @@ if %errorlevel% neq 0 (
 echo Running bid setup...
 uv run --quiet --script "%~dp0bid.py" setup
 if %errorlevel% neq 0 (
-    echo Retrying after clearing uv cache...
+    echo Retrying without cache (antivirus may be blocking cache writes)...
     uv cache clean
-    uv run --quiet --script "%~dp0bid.py" setup
+    uv run --no-cache --quiet --script "%~dp0bid.py" setup
+)
+if %errorlevel% equ 0 (
+    echo Setup complete.
+) else (
+    echo Setup failed. Please check the errors above.
 )
 pause
