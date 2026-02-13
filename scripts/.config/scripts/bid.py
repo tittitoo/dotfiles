@@ -769,12 +769,14 @@ def setup():
         #   End Sub
         # No action needed here — the file in @tools is pre-configured.
 
-        # Step 8 — Make .managed_python folder hidden in Windows
-        subprocess.run(
-            ["attrib", "+H", str(managed_python)],
-            check=True,
-        )
-        click.echo(f"Set {managed_python} as hidden.")
+        # Step 8 — Make dotfolders in home directory hidden (Unix convention)
+        for item in Path.home().iterdir():
+            if item.is_dir() and item.name.startswith("."):
+                subprocess.run(
+                    ["attrib", "+H", str(item)],
+                    capture_output=True,
+                )
+        click.echo("Set dotfolders in home directory as hidden.")
 
         # Step 9 — Set xlwings interpreter path to .managed_python/.venv python
         xlwings_conf_dir = Path.home() / ".xlwings"
