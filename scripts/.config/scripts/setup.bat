@@ -1,4 +1,6 @@
 @echo off
+REM Use Windows system certificate store (needed for corporate proxy/SSL inspection)
+set UV_NATIVE_TLS=true
 where uv >nul 2>&1
 if %errorlevel% neq 0 (
     echo Installing uv...

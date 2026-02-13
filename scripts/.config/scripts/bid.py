@@ -823,7 +823,7 @@ def setup():
         user_xlstart = str(
             Path.home() / "AppData" / "Roaming" / "Microsoft" / "Excel" / "XLSTART"
         )
-        xlstart_personal = f'{user_xlstart}\\PERSONAL.XLSB'
+        xlstart_personal = f"{user_xlstart}\\PERSONAL.XLSB"
         content = re.sub(
             r'onAction="[^"]*\\PERSONAL\.XLSB!',
             lambda _: f'onAction="{xlstart_personal}!',
