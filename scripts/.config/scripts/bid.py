@@ -769,14 +769,14 @@ def setup():
         #   End Sub
         # No action needed here — the file in @tools is pre-configured.
 
-        # Step 8 — Make dotfolders in home directory hidden (Unix convention)
+        # Step 8 — Make dotfiles and dotfolders in home directory hidden (Unix convention)
         for item in Path.home().iterdir():
-            if item.is_dir() and item.name.startswith("."):
+            if item.name.startswith("."):
                 subprocess.run(
                     ["attrib", "+H", str(item)],
                     capture_output=True,
                 )
-        click.echo("Set dotfolders in home directory as hidden.")
+        click.echo("Set dotfiles and dotfolders in home directory as hidden.")
 
         # Step 9 — Set xlwings interpreter path to .managed_python/.venv python
         xlwings_conf_dir = Path.home() / ".xlwings"
