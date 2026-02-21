@@ -190,3 +190,12 @@ if not string match -q -- $PNPM_HOME $PATH
     set -gx PATH "$PNPM_HOME" $PATH
 end
 # pnpm end
+
+# Auto-attach to or start ai_general tmuxinator session
+if status is-interactive; and not set -q TMUX
+    if tmux has-session -t ai_general 2>/dev/null
+        exec tmux attach-session -t ai_general
+    else
+        exec tmuxinator start ai_general
+    end
+end
