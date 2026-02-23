@@ -72,18 +72,33 @@ Merge PDFs in current directory.
 bid combine-pdf [options]
 ```
 
-| Option           | Description                        |
-| ---------------- | ---------------------------------- |
-| `-o, --outline`  | Add bookmarks from filenames       |
-| `-t, --toc`      | Add table of contents page         |
-| `-m, --manifest` | Use manifest file for custom order |
-| `-y, --yes`      | Skip confirmation prompts          |
+| Option                      | Description                                     |
+| --------------------------- | ----------------------------------------------- |
+| `-o, --outline`             | Add bookmarks from filenames                    |
+| `-t, --toc`                 | Add table of contents page                      |
+| `-m, --manifest`            | Use manifest file for custom order              |
+| `-c, --create-manifest`     | Create `manifest.md` from all PDFs (recursive)  |
+| `-y, --yes`                 | Skip confirmation prompts                       |
 
 **Default output:** `00-Combined.pdf`
 
-#### Using Manifest Mode
+#### Creating a Manifest
 
-Create a `.md` or `.txt` file in the directory:
+Use `-c` to auto-generate a `manifest.md` draft from all PDFs in the current
+directory (recursive). Edit it, then run with `-m` to combine.
+
+```bash
+bid cpdf -c      # generates manifest.md
+# edit manifest.md as needed
+bid cpdf -m      # combine using the manifest
+```
+
+`00-Combined.pdf` is excluded automatically. Files are listed as relative paths,
+sorted alphabetically.
+
+#### Manifest File Format
+
+Create or edit a `.md` or `.txt` file in the directory:
 
 ```markdown
 # Output Filename
