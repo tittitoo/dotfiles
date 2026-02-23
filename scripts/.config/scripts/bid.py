@@ -890,7 +890,14 @@ def beautify(xl_file: str, font: bool) -> None:
     is_flag=True,
     help="Use manifest file (md/txt) specifying output name and files to combine",
 )
-def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
+@click.option(
+    "-c",
+    "--create-manifest",
+    "create_manifest",
+    is_flag=True,
+    help="Create manifest.md listing all PDFs recursively (for use with --manifest)",
+)
+def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool, create_manifest: bool):
     """
     Combine PDFs in current folder (Alias: cpdf).
 
@@ -898,7 +905,11 @@ def combine_pdf(outline: bool, toc: bool, yes: bool, use_manifest: bool):
 
     With --manifest flag, also searches for PDFs in the @docs SharePoint folder.
     """
-    from util.pdfx import combine_pdf as _combine_pdf
+    from util.pdfx import combine_pdf as _combine_pdf, create_manifest_file
+
+    if create_manifest:
+        create_manifest_file(Path.cwd())
+        return
 
     # Use DOCS as fallback directory when in manifest mode
     docs_path = DOCS if use_manifest else None

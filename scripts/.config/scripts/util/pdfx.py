@@ -1401,5 +1401,44 @@ def add_toc_to_pdf(
         click.echo(f"Error adding TOC: {e}")
 
 
+def create_manifest_file(directory: Path) -> None:
+    """
+    Recursively find all PDFs in directory and create a manifest markdown file.
+
+    Output file: <dirname>-manifest.md
+    Format:
+        # <dirname>
+
+        - relative/path/to/file.pdf
+        - another.pdf
+        ...
+
+    The output is ready to use as input for `bid cpdf --manifest`.
+    """
+    dirname = directory.name
+    output_path = directory / "manifest.md"
+
+    # Find all PDFs recursively, sorted by relative path
+    all_pdfs = sorted(
+        (p for p in directory.rglob("*") if p.is_file() and p.suffix.lower() == ".pdf"),
+        key=lambda p: p.relative_to(directory).as_posix().lower(),
+    )
+
+    # Exclude 00-Combined.pdf (typical combined output)
+    all_pdfs = [p for p in all_pdfs if p.name != "00-Combined.pdf"]
+
+    if not all_pdfs:
+        click.echo("No PDF files found in current directory.")
+        return
+
+    lines = [f"# {dirname}", ""]
+    for pdf in all_pdfs:
+        lines.append(f"- {pdf.relative_to(directory).as_posix()}")
+    lines.append("")
+
+    output_path.write_text("\n".join(lines), encoding="utf-8")
+    click.echo(f"Created: {output_path.name} ({len(all_pdfs)} file(s))")
+
+
 if __name__ == "__main__":
     pass
