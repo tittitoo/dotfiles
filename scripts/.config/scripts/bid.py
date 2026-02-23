@@ -769,14 +769,21 @@ def setup():
         #   End Sub
         # No action needed here — the file in @tools is pre-configured.
 
-        # Step 8 — Set xlwings interpreter path to .managed_python/.venv python
+        # Step 8 — Make .managed_python folder hidden in Windows
+        subprocess.run(
+            ["attrib", "+H", str(managed_python)],
+            check=True,
+        )
+        click.echo(f"Set {managed_python} as hidden.")
+
+        # Step 9 — Set xlwings interpreter path to .managed_python/.venv python
         xlwings_conf_dir = Path.home() / ".xlwings"
         xlwings_conf_dir.mkdir(exist_ok=True)
         xlwings_conf = xlwings_conf_dir / "xlwings.conf"
         interpreter_path = str(managed_python / ".venv" / "Scripts" / "python.exe")
         pythonpath = str(tools_path).replace("@", "\\@")
 
-        # Step 9 — Set xlwings PYTHONPATH to @tools folder and disable ADD_WORKBOOK_TO_PYTHONPATH
+        # Step 10 — Set xlwings PYTHONPATH to @tools folder and disable ADD_WORKBOOK_TO_PYTHONPATH
         # xlwings.conf uses CSV format: "KEY","VALUE"
         # Must use newline="" on both read and write to prevent \r\n → \r\r\n
         # double conversion, which causes VBA "Input past end of file" error 62
@@ -799,7 +806,7 @@ def setup():
         click.echo(f"Set xlwings PYTHONPATH to {pythonpath}")
         click.echo("Disabled ADD_WORKBOOK_TO_PYTHONPATH.")
 
-        # Step 10 — Copy Excel.officeUI ribbon customization
+        # Step 11 — Copy Excel.officeUI ribbon customization
         # Replace hardcoded XLSTART path in onAction attributes with current user's
         # path (onAction needs the full path for application-level ribbon callbacks)
         office_ui_src = tools_path / "resources" / "Excel.officeUI"
@@ -816,7 +823,7 @@ def setup():
         user_xlstart = str(
             Path.home() / "AppData" / "Roaming" / "Microsoft" / "Excel" / "XLSTART"
         )
-        xlstart_personal = f"{user_xlstart}\\PERSONAL.XLSB"
+        xlstart_personal = f'{user_xlstart}\\PERSONAL.XLSB'
         content = re.sub(
             r'onAction="[^"]*\\PERSONAL\.XLSB!',
             lambda _: f'onAction="{xlstart_personal}!',
@@ -825,27 +832,12 @@ def setup():
         office_ui_dst.write_text(content, encoding="utf-8")
         click.echo(f"Copied Excel.officeUI to {office_ui_dst.parent}")
 
-        # Step 11 — Git Bash setup — write .bashrc alias and .minttyrc font config
-        # Remove hidden attribute first (set by step 12 on previous runs)
-        for name in [".bashrc", ".minttyrc"]:
-            p = Path.home() / name
-            if p.exists():
-                subprocess.run(["attrib", "-H", str(p)], capture_output=True)
+        # Git Bash setup — write .bashrc alias and .minttyrc font config
         with open(Path.home() / ".bashrc", "w") as f:
             f.write(f"{BID_ALIAS} \n")
         with open(Path.home() / ".minttyrc", "w") as f:
             f.write("FontFamily=Victor Mono\nFontSize=15\n")
         click.echo("Git Bash .bashrc and .minttyrc configured.")
-
-        # Step 12 — Make dotfiles and dotfolders in home directory hidden (Unix convention)
-        # Must be the last step so all dotfiles written above are included
-        for item in Path.home().iterdir():
-            if item.name.startswith("."):
-                subprocess.run(
-                    ["attrib", "+H", str(item)],
-                    capture_output=True,
-                )
-        click.echo("Set dotfiles and dotfolders in home directory as hidden.")
     elif platform.system() == "Darwin":
         # click.echo(RFQ)
         # click.echo(BID_ALIAS)
