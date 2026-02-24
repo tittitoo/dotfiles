@@ -1415,7 +1415,6 @@ def create_manifest_file(directory: Path) -> None:
 
     The output is ready to use as input for `bid cpdf --manifest`.
     """
-    dirname = directory.name
     output_path = directory / "manifest.md"
 
     # Find all PDFs recursively, sorted by relative path
@@ -1431,7 +1430,7 @@ def create_manifest_file(directory: Path) -> None:
         click.echo("No PDF files found in current directory.")
         return
 
-    lines = [f"# {dirname}", ""]
+    lines = ["# 00-Combined", ""]
     for pdf in all_pdfs:
         lines.append(f"- {pdf.relative_to(directory).as_posix()}")
     lines.append("")
