@@ -1,6 +1,8 @@
 @echo off
 REM Use Windows system certificate store (needed for corporate proxy/SSL inspection)
 set UV_NATIVE_TLS=true
+REM Increase HTTP timeout for slow corporate networks with SSL inspection (default is 30s)
+set UV_HTTP_TIMEOUT=120
 where uv >nul 2>&1
 if %errorlevel% neq 0 (
     echo Installing uv...

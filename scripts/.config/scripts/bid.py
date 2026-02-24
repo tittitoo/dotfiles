@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run --quiet --no-upgrade --script
 # /// script
-# requires-python = ">=3.12"
+# requires-python = "~=3.12"
 # dependencies = [
 # "click",
 # "xlwings",
