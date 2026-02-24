@@ -131,9 +131,8 @@ fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ca --git_sta
 
 # Add ssh key
 if test (uname -s) = Darwin
-    if not test -z $SSH_AUTH_SOCK
-        eval (ssh-agent -c) >/dev/null # make the output silent
-        # eval (ssh-agent -c)
+    if test -z $SSH_AUTH_SOCK
+        eval (ssh-agent -c)
     end
     if test $hostname = infowizardAir
         ssh-add --apple-use-keychain -q ~/.ssh/id_ed25519
