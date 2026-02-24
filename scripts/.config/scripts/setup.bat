@@ -14,7 +14,6 @@ echo Running bid setup...
 uv run --quiet --script "%~dp0bid.py" setup
 if %errorlevel% neq 0 (
     echo Retrying without cache (antivirus may be blocking cache writes)...
-    uv cache clean
     uv run --no-cache --quiet --script "%~dp0bid.py" setup
 )
 if %errorlevel% equ 0 (
