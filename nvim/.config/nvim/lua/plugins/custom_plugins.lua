@@ -88,7 +88,10 @@ return {
       return opts
     end,
   },
-  -- blink.compact. This is for compatibility with blink and codeium
-  -- Othereise it will output "attempt to index field 'lsp' (a nil value)" error
-  -- { "saghen/blink.compat", opts = { impersonate_nvim_cmp = true } },
+  {
+    "supermaven-inc/supermaven-nvim",
+    opts = {
+      disable_inline_completion = true, -- route through blink.cmp; toggled by <leader>uk
+    },
+  },
 }
