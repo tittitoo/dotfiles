@@ -692,6 +692,20 @@ def setup():
         managed_python.mkdir(exist_ok=True)
         click.echo(f"Created {managed_python}")
 
+        # Step 1b — Set UV_CACHE_DIR in .bashrc to avoid AV-locked AppData cache
+        if username == "carol_lim":
+            uv_cache = Path.home() / "uv-cache"
+            uv_cache.mkdir(exist_ok=True)
+            bashrc = Path.home() / ".bashrc"
+            export_line = 'export UV_CACHE_DIR="$HOME/uv-cache"'
+            existing = bashrc.read_text() if bashrc.exists() else ""
+            if "UV_CACHE_DIR" not in existing:
+                with open(bashrc, "a") as f:
+                    f.write(f"\n{export_line}\n")
+                click.echo(f"Added UV_CACHE_DIR to {bashrc}")
+            else:
+                click.echo("UV_CACHE_DIR already set in .bashrc, skipping.")
+
         # Step 2 — Copy pyproject.toml from @tools (use script's own directory)
         tools_path = Path(__file__).parent
         shutil.copy2(tools_path / "pyproject.toml", managed_python / "pyproject.toml")
