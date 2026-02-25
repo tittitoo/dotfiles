@@ -46,7 +46,7 @@ match username:
     case "carol_lim":
         RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
         DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
-        TOOLS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/"
+        TOOLS = "~/Jason Electronics Pte Ltd/Bid Proposal - @tools/"
         BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - @tools/bid.py').expanduser().resolve()}'\""
 
     case _:
@@ -692,15 +692,19 @@ def setup():
         managed_python.mkdir(exist_ok=True)
         click.echo(f"Created {managed_python}")
 
-        # Step 2 — Copy pyproject.toml from @tools
-        tools_path = Path(TOOLS).expanduser()
+        # Step 2 — Copy pyproject.toml from @tools (use script's own directory)
+        tools_path = Path(__file__).parent
         shutil.copy2(tools_path / "pyproject.toml", managed_python / "pyproject.toml")
         click.echo("Copied pyproject.toml to .managed_python.")
 
-        # Step 3 — Run uv sync
-        click.echo("Running uv sync...")
-        subprocess.run(["uv", "sync"], cwd=str(managed_python), check=True)
-        click.echo("uv sync complete.")
+        # Step 3 — Run uv sync (skip if venv already exists)
+        venv_python = managed_python / ".venv" / "Scripts" / "python.exe"
+        if venv_python.exists():
+            click.echo("Virtual environment already exists, skipping uv sync.")
+        else:
+            click.echo("Running uv sync...")
+            subprocess.run(["uv", "sync"], cwd=str(managed_python), check=True)
+            click.echo("uv sync complete.")
 
         # Step 4 — Add .venv/Scripts Python to user PATH (top priority)
         python_path = str(managed_python / ".venv" / "Scripts")
