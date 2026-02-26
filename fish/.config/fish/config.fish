@@ -49,10 +49,6 @@ fish_vi_key_bindings
 # set -g fish_key_bindings fish_vi_key_binding
 # fish_key_bindings fish_mode_vi
 
-# Load ssh id key
-# eval (ssh-agent -c)
-# ssh-add ~/.ssh/id_ed25519
-
 # fzf
 # fzf source
 fzf --fish | source
@@ -134,11 +130,7 @@ if test (uname -s) = Darwin
     if test -z $SSH_AUTH_SOCK
         eval (ssh-agent -c)
     end
-    if test $hostname = infowizardAir
-        ssh-add --apple-use-keychain -q ~/.ssh/id_ed25519
-    else if test $hostname = infowizardMac
-        ssh-add --apple-use-keychain -q ~/.ssh/id_ecdsa
-    end
+    ssh-add --apple-use-keychain -q ~/.ssh/id_ed25519
 end
 
 # fiz.fish
