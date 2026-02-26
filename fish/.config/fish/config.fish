@@ -125,14 +125,6 @@ set fzf_fd_opts --color=never
 set fzf_directory_opts --prompt="Directories> "
 fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ca --git_status=\cg --git_log= --processes=\cp #--gi_log=\cl
 
-# Add ssh key
-if test (uname -s) = Darwin
-    if test -z $SSH_AUTH_SOCK
-        eval (ssh-agent -c)
-    end
-    ssh-add --apple-use-keychain -q ~/.ssh/id_ed25519
-end
-
 # fiz.fish
 # set fzf_preview_dir_cmd eza --all --color=always
 
