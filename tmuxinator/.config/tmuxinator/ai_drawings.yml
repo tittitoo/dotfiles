@@ -1,0 +1,10 @@
+name: ai_drawings
+root: "~/Repos/github.com/tittitoo/drawings/"
+
+windows:
+  - ai_drawings:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:
