@@ -2,7 +2,7 @@
 font-family = "VictorMono Nerd Font Mono"
 
 # keymaps
-keybind = global:cmd+`=toggle_quick_terminal
+keybind = global:cmd+alt+`=toggle_quick_terminal
 
 # keymaps for navigation
 keybind = ctrl+h=goto_split:left
