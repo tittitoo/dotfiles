@@ -1,0 +1,10 @@
+name: ai_applications
+root: "~/Repos/github.com/tittitoo/applications"
+
+windows:
+  - ai_applications:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:
