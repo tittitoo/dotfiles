@@ -4,16 +4,6 @@ font-family = "VictorMono Nerd Font Mono"
 # keymaps
 keybind = global:ctrl+alt+`=toggle_quick_terminal
 
-# keymaps for tab switching (override native macOS handler to prevent double-jump)
-keybind = super+1=goto_tab:1
-keybind = super+2=goto_tab:2
-keybind = super+3=goto_tab:3
-keybind = super+4=goto_tab:4
-keybind = super+5=goto_tab:5
-keybind = super+6=goto_tab:6
-keybind = super+7=goto_tab:7
-keybind = super+8=goto_tab:8
-keybind = super+9=goto_tab:9
 
 # keymaps for navigation
 keybind = alt+h=goto_split:left
