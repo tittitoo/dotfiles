@@ -174,6 +174,10 @@ if not string match -q -- $PNPM_HOME $PATH
 end
 # pnpm end
 
+# Ensure scripts dir has highest PATH priority so wrappers shadow system tools
+# (the sort-based dedup above changes PATH order, so we re-add this last)
+set -gx PATH $HOME/.config/scripts $PATH
+
 # Auto-attach to or start ai_general tmuxinator session
 # Skip when Atuin Desktop opens a terminal (ATUIN_TMUX_POPUP is set in that context)
 if status is-interactive; and not set -q TMUX; and not set -q ATUIN_TMUX_POPUP

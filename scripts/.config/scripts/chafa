@@ -1,0 +1,4 @@
+#!/bin/sh
+# Wrapper to disable terminal probing, which causes stale escape sequences
+# to leak into Yazi's input on subsequent sessions (triggering spurious keypresses)
+exec /opt/homebrew/bin/chafa --probe=off "$@"
