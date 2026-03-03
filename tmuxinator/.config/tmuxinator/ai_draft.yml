@@ -1,0 +1,10 @@
+name: ai_drafts
+root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
+
+windows:
+  - ai_drafts:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:
