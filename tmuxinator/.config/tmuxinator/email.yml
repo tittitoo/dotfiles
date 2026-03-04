@@ -8,7 +8,7 @@ windows:
       root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox"
       panes:
   - drafts:
-      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/drafts"
+      root: "~/Repos/github.com/tittitoo/drafts/"
       panes:
   - downloads:
       root: "~/Downloads"
