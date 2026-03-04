@@ -180,10 +180,13 @@ set -gx PATH $HOME/.config/scripts $PATH
 
 # Auto-attach to or start ai_general tmuxinator session
 # Skip when Atuin Desktop opens a terminal (ATUIN_TMUX_POPUP is set in that context)
-if status is-interactive; and not set -q TMUX; and not set -q ATUIN_TMUX_POPUP
-    if tmux has-session -t ai_general 2>/dev/null
-        exec tmux attach-session -t ai_general
-    else
-        exec tmuxinator start ai_general
+# Also re-attach if TMUX is set but the server is dead (e.g. after tmux kill-server)
+if status is-interactive; and not set -q ATUIN_TMUX_POPUP
+    if not set -q TMUX; or not tmux info &>/dev/null
+        if tmux has-session -t ai_general 2>/dev/null
+            exec tmux attach-session -t ai_general
+        else
+            exec tmuxinator start ai_general
+        end
     end
 end
