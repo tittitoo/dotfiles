@@ -4,11 +4,11 @@ root: "~/Library/CloudStorage/OneDrive-SharedLibraries-JasonElectronicsPteLtd/Bi
 windows:
   - rfqs:
       panes:
-  - inbox:
-      root: "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/inbox"
-      panes:
   - drafts:
       root: "~/Repos/github.com/tittitoo/drafts/"
+      panes:
+  - briefcase:
+      root: "~/Repos/github.com/tittitoo/briefcase/"
       panes:
   - downloads:
       root: "~/Downloads"
