@@ -11,6 +11,7 @@ import os
 import re
 import logging
 import tempfile
+import traceback
 from pathlib import Path
 from pypdf.errors import FileNotDecryptedError
 
@@ -1161,7 +1162,7 @@ def estimate_hierarchical_toc_pages(
     bottom_margin = 60
     title_space = 35
 
-    usable_height = top_margin - bottom_margin - title_space
+    usable_height = int(top_margin - bottom_margin - title_space)
 
     # Calculate total height needed based on level-specific line heights
     level_line_heights = {1: 24, 2: 20, 3: 18, 4: 16}
@@ -1399,6 +1400,7 @@ def add_toc_to_pdf(
 
     except Exception as e:
         click.echo(f"Error adding TOC: {e}")
+        click.echo(traceback.format_exc())
 
 
 def create_manifest_file(directory: Path) -> None:
