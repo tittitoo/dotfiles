@@ -1,0 +1,10 @@
+name: ai_hote
+root: "~/Repos/github.com/tittitoo/hote/"
+
+windows:
+  - ai_hote:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:
