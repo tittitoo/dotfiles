@@ -6,5 +6,7 @@ windows:
       panes:
   - hote2:
       panes:
+  - hote-server:
+      panes:
   - playground:
       panes:
