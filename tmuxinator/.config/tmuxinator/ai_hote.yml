@@ -5,6 +5,18 @@ windows:
   - ai_hote:
       root:
       panes:
+  - ai_general:
+      root:
+      panes:
+  - hote:
+      root:
+      panes:
+  - hote:
+      root:
+      panes:
+  - hote-server:
+      root:
+      panes:
   - playground:
       root:
       panes:
