@@ -223,6 +223,31 @@ def is_conforming_handover_folder(folder: Path) -> bool:
     return len(expected & existing) >= 3
 
 
+def _copy_with_retry(source: Path, dest: Path, max_retries: int = 3) -> None:
+    """Copy a file with retry on timeout.
+
+    OneDrive Files On-Demand (cold files) need to be hydrated from SharePoint
+    on first access, which can cause TimeoutError on slow or cold connections.
+    Retries with exponential backoff to give OneDrive time to connect.
+    """
+    import time
+
+    for attempt in range(max_retries):
+        try:
+            shutil.copy2(source, dest)
+            return
+        except (TimeoutError, OSError) as e:
+            if attempt < max_retries - 1:
+                wait = 15 * (attempt + 1)
+                click.echo(
+                    f"  Timeout copying {source.name}, retrying in {wait}s "
+                    f"(attempt {attempt + 2}/{max_retries})..."
+                )
+                time.sleep(wait)
+            else:
+                raise
+
+
 def sync_folder(source: Path, dest: Path) -> bool:
     """One-way mirror sync from source to dest.
 
@@ -261,7 +286,7 @@ def sync_folder(source: Path, dest: Path) -> bool:
             or source_path.stat().st_mtime > dest_path.stat().st_mtime
         ):
             dest_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_path, dest_path)
+            _copy_with_retry(source_path, dest_path)
 
     return True
 
