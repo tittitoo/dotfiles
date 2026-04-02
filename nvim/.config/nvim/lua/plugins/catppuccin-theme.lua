@@ -41,15 +41,15 @@ return {
       -- end)
       -- Overriding the background for UI elements to be transparent
       vim.cmd([[
-  hi Normal       guibg=NONE ctermbg=NONE
-  hi NormalFloat  guibg=NONE ctermbg=NONE
-  hi StatusLine   guibg=NONE ctermbg=NONE
-  hi StatusLineNC guibg=NONE ctermbg=NONE
-  hi WinBar       guibg=NONE ctermbg=NONE
-  hi WinBarNC     guibg=NONE ctermbg=NONE
-  hi TabLine      guibg=NONE ctermbg=NONE
-  hi TabLineFill  guibg=NONE ctermbg=NONE
-  hi Folded       guibg=NONE ctermbg=NONE
+  hi Normal               guibg=NONE ctermbg=NONE
+  hi NormalFloat          guibg=NONE ctermbg=NONE
+  hi StatusLine           guibg=NONE ctermbg=NONE
+  hi StatusLineNC         guibg=NONE ctermbg=NONE
+  hi WinBar               guibg=NONE ctermbg=NONE
+  hi WinBarNC             guibg=NONE ctermbg=NONE
+  hi TabLine              guibg=NONE ctermbg=NONE
+  hi TabLineFill          guibg=NONE ctermbg=NONE
+  hi Folded               guibg=NONE ctermbg=NONE
      ]])
       -- Load bufferline *after* Catppuccin has been set up.
       -- This avoids the "attempt to call field 'get'" error.

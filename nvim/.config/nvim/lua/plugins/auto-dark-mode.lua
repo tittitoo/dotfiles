@@ -1,8 +1,12 @@
 return {
   "f-person/auto-dark-mode.nvim",
   opts = {
-    -- your configuration comes here
-    -- or leave it empty to use the default settings
-    -- refer to the configuration section below
+    update_interval = 3000,
+    set_dark_mode = function()
+      vim.cmd("colorscheme catppuccin-mocha")
+    end,
+    set_light_mode = function()
+      vim.cmd("colorscheme catppuccin-latte")
+    end,
   },
 }

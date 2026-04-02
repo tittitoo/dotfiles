@@ -53,6 +53,26 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- Re-apply transparent backgrounds after every colorscheme change
+-- (catppuccin sets colors_name to "catppuccin-latte"/"catppuccin-mocha" each time,
+-- so these overrides must be re-applied on every reload)
+vim.api.nvim_create_autocmd("ColorScheme", {
+  pattern = "*",
+  callback = function()
+    vim.cmd([[
+      hi Normal               guibg=NONE ctermbg=NONE
+      hi NormalFloat          guibg=NONE ctermbg=NONE
+      hi StatusLine           guibg=NONE ctermbg=NONE
+      hi StatusLineNC         guibg=NONE ctermbg=NONE
+      hi WinBar               guibg=NONE ctermbg=NONE
+      hi WinBarNC             guibg=NONE ctermbg=NONE
+      hi TabLine              guibg=NONE ctermbg=NONE
+      hi TabLineFill          guibg=NONE ctermbg=NONE
+      hi Folded               guibg=NONE ctermbg=NONE
+    ]])
+  end,
+})
+
 -- For html file recognition
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = {
