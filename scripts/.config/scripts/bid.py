@@ -1129,8 +1129,11 @@ def vo(folder_name: str) -> None:
     # Clean up legacy empty 00-Arc folder if exists
     legacy_arc = vo_parent / "00-Arc"
     if legacy_arc.exists() and legacy_arc.is_dir() and not any(legacy_arc.iterdir()):
-        legacy_arc.rmdir()
-        click.echo("Removed empty legacy folder: 07-VO/00-Arc")
+        try:
+            legacy_arc.rmdir()
+            click.echo("Removed empty legacy folder: 07-VO/00-Arc")
+        except OSError as e:
+            click.echo(f"Warning: could not remove legacy folder 07-VO/00-Arc: {e}")
 
     # List existing VO folders
     existing_vos = sorted(
