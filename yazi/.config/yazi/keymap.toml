@@ -27,3 +27,8 @@ desc = "Send to Yoink"
 on = "<A-r>"
 run = 'shell "uv run $@" --block'
 desc = "Run Python script with uv"
+
+[[mgr.prepend_keymap]]
+on = "?"
+run = "help"
+desc = "Open help"
