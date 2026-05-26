@@ -249,10 +249,11 @@ def parse_manifest_file(
             resolved_whole = resolve_pdf_file(directory, heading_text, fallback_dirs)
             if resolved_whole:
                 heading_file = resolved_whole
-                # Use the text without .pdf as title
+                # Use the text without .pdf as title, cleaned of PRD prefix etc.
                 heading_title = os.path.splitext(heading_text)[0]
                 if heading_title.lower().endswith(".pdf"):
                     heading_title = heading_title[:-4]
+                heading_title = _clean_title_text(heading_title)
                 return level, heading_title, heading_file
 
             # Try splitting: "Title filename" where filename is the last word
@@ -567,23 +568,39 @@ def combine_pdf(
     writer.close()
 
 
+def _clean_title_text(title: str) -> str:
+    """
+    Apply title cleaning rules to a plain text title string.
+
+    - Strips PRD-XXXXXX prefix (e.g. from downloaded datasheet filenames)
+    - Removes leading numbers (e.g. 01, 002)
+    - Removes leading acronyms (DS, IOM, etc.)
+    - Removes consecutive duplicate words (e.g. "HMP155 HMP155" → "HMP155"),
+      which occurs when the model number is repeated in the product name field.
+    """
+    # Strip PRD-XXXXXX prefix (e.g. "PRD-000008 DS Vaisala HMP155 ...")
+    title = re.sub(r"^PRD-\d+\s*", "", title, flags=re.IGNORECASE)
+    # Remove leading number such as 2, 02, 002 etc
+    title = re.sub(r"^\b0*[1-9]\d*\b|\b0+\b|\b0\b", "", title)
+    # Remove leading acronym (DS, IOM, etc.)
+    pattern = r"^\s*(" + "|".join(re.escape(word) for word in ACRONYMS) + r")\b\s*"
+    title = re.sub(pattern, "", title, 1)
+    # Remove consecutive duplicate word sequences (e.g. "HMP155 HMP155" → "HMP155",
+    # "SITRANS F M SITRANS F M" → "SITRANS F M"). Try longest match first (4→1 words).
+    for n in range(4, 0, -1):
+        words = r"\S+(?:\s+\S+)" + "{" + str(n - 1) + "}"
+        title = re.sub(rf"\b({words})\s+\1\b", r"\1", title)
+    return title.strip()
+
+
 def clean_outline_title(filename: str) -> str:
     """
     Clean a filename to create a nice outline title.
     Handles full paths by extracting basename first.
-    Removes leading numbers and common acronyms.
     """
-    # Extract just the filename if it's a full path
     title = os.path.basename(filename)
-    # Remove .pdf extension
     title = os.path.splitext(title)[0]
-    # Remove leading number such as 2, 02, 002 etc
-    title = re.sub(r"^\b0*[1-9]\d*\b|\b0+\b|\b0\b", "", title)
-    # Remove word from acronyms at the start of sentence
-    pattern = r"^\s*(" + "|".join(re.escape(word) for word in ACRONYMS) + r")\b\s*"
-    title = re.sub(pattern, "", title, 1)
-    # Remove any leading or trailing spaces
-    return title.strip()
+    return _clean_title_text(title)
 
 
 def truncate_title_to_fit(
