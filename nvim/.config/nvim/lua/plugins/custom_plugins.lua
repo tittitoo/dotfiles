@@ -1,6 +1,12 @@
 -- Custom plugins
 
 return {
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    opts = {
+      latex = { enabled = false },
+    },
+  },
   -- {
   --   "joshuadanpeterson/typewriter",
   --   dependencies = {
