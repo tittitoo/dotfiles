@@ -1459,11 +1459,13 @@ def _print_rate_rows(rows: list[tuple[str, object, str | None]], indent: int = 4
 
 def _print_std_section(mode: str, rates: dict, cur: str, designation: str) -> None:
     label = "ONSHORE" if mode == "onshore" else "OFFSHORE"
-    desc = "Mon-Sat, 10 hrs/day" if mode == "onshore" else "Mon-Sun, 12 hrs/day"
+    hours = 10 if mode == "onshore" else 12
+    desc = f"Mon-Sat, {hours} hrs/day" if mode == "onshore" else f"Mon-Sun, {hours} hrs/day"
+    hourly = f"{round(rates['day'] / hours, 1):g}/hr"
     click.echo(f"{label}  ·  {designation}  ·  {cur}  ({desc})")
     click.echo()
     _print_rate_rows([
-        ("Day Rate",  rates["day"],     None),
+        ("Day Rate",  rates["day"],     hourly),
         ("OT/hr",     rates["ot"],      "×4/3"),
         ("Sun/PH/hr", rates["sun_ph"],  None),
         ("Standby",   rates["standby"], None),
@@ -1473,12 +1475,14 @@ def _print_std_section(mode: str, rates: dict, cur: str, designation: str) -> No
 
 def _print_seatrium_section(mode: str, rates: dict, cur: str, designation: str) -> None:
     label = "ONSHORE" if mode == "onshore" else "OFFSHORE"
-    desc = "Mon-Sat, 10 hrs/day" if mode == "onshore" else "Mon-Sun, 12 hrs/day"
+    hours = 10 if mode == "onshore" else 12
+    desc = f"Mon-Sat, {hours} hrs/day" if mode == "onshore" else f"Mon-Sun, {hours} hrs/day"
+    hourly = f"{round(rates['day'] / hours, 1):g}/hr"
     click.echo(f"{label}  ·  {designation}  ·  {cur}  ({desc})")
     click.echo()
     if mode == "onshore":
         rows: list[tuple[str, object, str | None]] = [
-            ("Day Rate",        rates["day"],         None),
+            ("Day Rate",        rates["day"],         hourly),
             ("OT/hr",           rates["ot"],          "×3/2"),
             ("Sun/PH Day Rate", rates["sun_ph_day"],  None),
             ("Sun/PH OT/hr",    rates["sun_ph_ot"],   "×3/2"),
@@ -1486,7 +1490,7 @@ def _print_seatrium_section(mode: str, rates: dict, cur: str, designation: str) 
         ]
     else:
         rows = [
-            ("Day Rate",         rates["day"],          None),
+            ("Day Rate",         rates["day"],          hourly),
             ("OT/hr",            rates["ot"],           "×3/2"),
             ("Gov Hol Day Rate", rates["gov_hol_day"],  None),
             ("Gov Hol OT/hr",    rates["gov_hol_ot"],   "×3/2"),
