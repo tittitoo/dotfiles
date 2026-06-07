@@ -1474,7 +1474,7 @@ def _print_std_section(mode: str, rates: dict, cur: str, designation: str) -> No
 def _print_seatrium_section(mode: str, rates: dict, cur: str) -> None:
     label = "ONSHORE" if mode == "onshore" else "OFFSHORE"
     desc = "Mon-Sat, 10 hrs/day" if mode == "onshore" else "Mon-Sun, 12 hrs/day"
-    click.echo(f"{label}  ·  Seatrium  ·  {cur}  ({desc})")
+    click.echo(f"{label}  ·  {cur}  ({desc})")
     click.echo()
     if mode == "onshore":
         rows: list[tuple[str, object, str | None]] = [
