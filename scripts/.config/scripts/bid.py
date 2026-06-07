@@ -1480,22 +1480,22 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
     click.echo(f"{label}  ·  {designation}  ({desc})")
     click.echo()
     if mode == "onshore":
-        sun_ph_hourly = f"{round(rates['sun_ph_day'] / hours, 1):g}/hr"
+        ph_hourly = f"{round(rates['sun_ph_day'] / hours, 1):g}/hr"
         rows: list[tuple[str, object, str | None]] = [
-            ("Day Rate",        rates["day"],         hourly),
-            ("OT/hr",           rates["ot"],          "×3/2"),
-            ("Sun/PH Day Rate", rates["sun_ph_day"],  sun_ph_hourly),
-            ("Sun/PH OT/hr",    rates["sun_ph_ot"],   "×3/2"),
-            ("Standby",         rates["standby"],     None),
+            ("Day Rate",   rates["day"],         hourly),
+            ("OT/hr",      rates["ot"],          "×3/2"),
+            ("PH Day Rate", rates["sun_ph_day"], ph_hourly),
+            ("PH OT/hr",   rates["sun_ph_ot"],   "×3/2"),
+            ("Standby",    rates["standby"],     None),
         ]
     else:
-        gov_hol_hourly = f"{round(rates['gov_hol_day'] / hours, 1):g}/hr"
+        ph_hourly = f"{round(rates['gov_hol_day'] / hours, 1):g}/hr"
         rows = [
-            ("Day Rate",         rates["day"],          hourly),
-            ("OT/hr",            rates["ot"],           "×3/2"),
-            ("Gov Hol Day Rate", rates["gov_hol_day"],  gov_hol_hourly),
-            ("Gov Hol OT/hr",    rates["gov_hol_ot"],   "×3/2"),
-            ("Standby",          rates["standby"],      None),
+            ("Day Rate",    rates["day"],          hourly),
+            ("OT/hr",       rates["ot"],           "×3/2"),
+            ("PH Day Rate", rates["gov_hol_day"],  ph_hourly),
+            ("PH OT/hr",    rates["gov_hol_ot"],   "×3/2"),
+            ("Standby",     rates["standby"],      None),
         ]
     _print_rate_rows(rows)
     click.echo()
