@@ -1471,10 +1471,10 @@ def _print_std_section(mode: str, rates: dict, cur: str, designation: str) -> No
     click.echo()
 
 
-def _print_seatrium_section(mode: str, rates: dict, cur: str) -> None:
+def _print_seatrium_section(mode: str, rates: dict, cur: str, designation: str) -> None:
     label = "ONSHORE" if mode == "onshore" else "OFFSHORE"
     desc = "Mon-Sat, 10 hrs/day" if mode == "onshore" else "Mon-Sun, 12 hrs/day"
-    click.echo(f"{label}  ·  {cur}  ({desc})")
+    click.echo(f"{label}  ·  {designation}  ·  {cur}  ({desc})")
     click.echo()
     if mode == "onshore":
         rows: list[tuple[str, object, str | None]] = [
@@ -1558,7 +1558,7 @@ def rate_cmd(
         if special:
             _print_std_section(mode, _calc_standard(day, mode), cur, designation)
         else:
-            _print_seatrium_section(mode, _calc_seatrium(day, mode, cur), cur)
+            _print_seatrium_section(mode, _calc_seatrium(day, mode, cur), cur, designation)
 
 
 # ── End rate helpers ──────────────────────────────────────────────────────────
