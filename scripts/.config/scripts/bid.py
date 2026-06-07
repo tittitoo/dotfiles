@@ -1449,11 +1449,12 @@ def _calc_seatrium(day: float, mode: str, cur: str) -> dict:
         }
 
 
-def _print_rate_rows(rows: list[tuple[str, object]], indent: int = 4) -> None:
+def _print_rate_rows(rows: list[tuple[str, object, str | None]], indent: int = 4) -> None:
     pad = " " * indent
-    w = max(len(k) for k, _ in rows)
-    for key, val in rows:
-        click.echo(f"{pad}{key:<{w}}  {_fmt_rate(val):>8}")
+    w = max(len(k) for k, *_ in rows)
+    for key, val, note in rows:
+        note_str = f"  ({note})" if note else ""
+        click.echo(f"{pad}{key:<{w}}  {_fmt_rate(val):>8}{note_str}")
 
 
 def _print_std_section(mode: str, rates: dict, cur: str, designation: str) -> None:
@@ -1462,10 +1463,10 @@ def _print_std_section(mode: str, rates: dict, cur: str, designation: str) -> No
     click.echo(f"{label}  ·  {designation}  ·  {cur}  ({desc})")
     click.echo()
     _print_rate_rows([
-        ("Day Rate", rates["day"]),
-        ("OT/hr", rates["ot"]),
-        ("Sun/PH/hr", rates["sun_ph"]),
-        ("Standby", rates["standby"]),
+        ("Day Rate",  rates["day"],     None),
+        ("OT/hr",     rates["ot"],      "×4/3"),
+        ("Sun/PH/hr", rates["sun_ph"],  None),
+        ("Standby",   rates["standby"], None),
     ])
     click.echo()
 
@@ -1476,20 +1477,20 @@ def _print_seatrium_section(mode: str, rates: dict, cur: str) -> None:
     click.echo(f"{label}  ·  Seatrium  ·  {cur}  ({desc})")
     click.echo()
     if mode == "onshore":
-        rows: list[tuple[str, object]] = [
-            ("Day Rate", rates["day"]),
-            ("OT/hr", rates["ot"]),
-            ("Sun/PH Day Rate", rates["sun_ph_day"]),
-            ("Sun/PH OT/hr", rates["sun_ph_ot"]),
-            ("Standby", rates["standby"]),
+        rows: list[tuple[str, object, str | None]] = [
+            ("Day Rate",        rates["day"],         None),
+            ("OT/hr",           rates["ot"],          "×3/2"),
+            ("Sun/PH Day Rate", rates["sun_ph_day"],  None),
+            ("Sun/PH OT/hr",    rates["sun_ph_ot"],   "×3/2"),
+            ("Standby",         rates["standby"],     None),
         ]
     else:
         rows = [
-            ("Day Rate", rates["day"]),
-            ("OT/hr", rates["ot"]),
-            ("Gov Hol Day Rate", rates["gov_hol_day"]),
-            ("Gov Hol OT/hr", rates["gov_hol_ot"]),
-            ("Standby", rates["standby"]),
+            ("Day Rate",         rates["day"],          None),
+            ("OT/hr",            rates["ot"],           "×3/2"),
+            ("Gov Hol Day Rate", rates["gov_hol_day"],  None),
+            ("Gov Hol OT/hr",    rates["gov_hol_ot"],   "×3/2"),
+            ("Standby",          rates["standby"],      None),
         ]
     _print_rate_rows(rows)
     click.echo()
@@ -1508,39 +1509,37 @@ _SPECIALIST_RATES: dict[str, dict] = {
               help="Offshore day rate (Mon-Sun, 12 hrs/day)")
 @click.option("--specialist", is_flag=True,
               help="Specialist designation (default: JEN Engineer)")
-@click.option("--seatrium", is_flag=True,
-              help="Seatrium rate structure (default: MODEC/HOS)")
+@click.option("--special", is_flag=True,
+              help="MODEC/HOS rate structure, ×4/3 OT (default: ×3/2 standard)")
 @click.option("--currency", "-c", default=None, metavar="CUR",
-              help="Currency code. Default: SGD for Seatrium, USD otherwise.")
+              help="Currency code. Default: SGD for standard, USD for --special.")
 def rate_cmd(
     onshore_rate: float | None,
     offshore_rate: float | None,
     specialist: bool,
-    seatrium: bool,
+    special: bool,
     currency: str | None,
 ) -> None:
     """Calculate OT, Sun/PH, and Standby from a man-day rate.
 
     \b
-    Standard (MODEC/HOS, JEN Engineer):
-      bid rate --onshore 875
-      bid rate --offshore 1700
-      bid rate --onshore 875 --offshore 1700
+    Standard (×3/2 OT, default currency SGD):
+      bid rate --onshore 1100
+      bid rate --offshore 1650
+      bid rate --onshore 1100 --offshore 1650
+      bid rate --onshore 880 --currency USD
+
+    \b
+    MODEC/HOS special rates (×4/3 OT, default currency USD):
+      bid rate --onshore 875 --special
+      bid rate --offshore 1700 --special
 
     \b
     Specialist (show current hardcoded rates when no RATE given):
       bid rate --specialist
       bid rate --onshore 2500 --specialist
-
-    \b
-    Seatrium (default currency: SGD):
-      bid rate --onshore 1100 --seatrium
-      bid rate --onshore 880 --seatrium --currency USD
     """
-    if seatrium and specialist:
-        raise click.UsageError("--seatrium and --specialist cannot be combined.")
-
-    cur = currency or ("SGD" if seatrium else "USD")
+    cur = currency or ("USD" if special else "SGD")
     has_rates = onshore_rate is not None or offshore_rate is not None
 
     if specialist and not has_rates:
@@ -1556,10 +1555,10 @@ def rate_cmd(
     for mode, day in [("onshore", onshore_rate), ("offshore", offshore_rate)]:
         if day is None:
             continue
-        if seatrium:
-            _print_seatrium_section(mode, _calc_seatrium(day, mode, cur), cur)
-        else:
+        if special:
             _print_std_section(mode, _calc_standard(day, mode), cur, designation)
+        else:
+            _print_seatrium_section(mode, _calc_seatrium(day, mode, cur), cur)
 
 
 # ── End rate helpers ──────────────────────────────────────────────────────────
