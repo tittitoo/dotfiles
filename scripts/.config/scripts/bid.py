@@ -1480,7 +1480,7 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
     click.echo(f"{label}  ·  {designation}  ({desc})")
     click.echo()
     if mode == "onshore":
-        ph_hourly = f"{round(rates['sun_ph_day'] / hours, 1):g}/hr"
+        ph_hourly = f"{_ceil_to(rates['sun_ph_day'] / hours, 5)}/hr"
         rows: list[tuple[str, object, str | None]] = [
             ("Day Rate",   rates["day"],         hourly),
             ("OT/hr",      rates["ot"],          "×3/2"),
@@ -1489,7 +1489,7 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
             ("Standby",    rates["standby"],     None),
         ]
     else:
-        ph_hourly = f"{round(rates['gov_hol_day'] / hours, 1):g}/hr"
+        ph_hourly = f"{_ceil_to(rates['gov_hol_day'] / hours, 5)}/hr"
         rows = [
             ("Day Rate",    rates["day"],          hourly),
             ("OT/hr",       rates["ot"],           "×3/2"),
