@@ -1493,8 +1493,8 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
         rows = [
             ("Day Rate",    rates["day"],          hourly),
             ("OT/hr",       rates["ot"],           "×3/2"),
-            ("Sun/PH Day Rate", rates["gov_hol_day"],  ph_hourly),
-            ("Sun/PH OT/hr",   rates["gov_hol_ot"],   "×3/2"),
+            ("PH Day Rate", rates["gov_hol_day"],  ph_hourly),
+            ("PH OT/hr",   rates["gov_hol_ot"],   "×3/2"),
             ("Standby",     rates["standby"],      None),
         ]
     _print_rate_rows(rows)
