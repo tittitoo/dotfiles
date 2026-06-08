@@ -1438,7 +1438,7 @@ def _calc_seatrium(day: float, mode: str) -> dict:
             "standby": standby,
         }
     else:
-        gov_hol_day = _round_to(day * 4 / 3, 50)
+        gov_hol_day = _round_to(day * 1.5, 50)
         gov_hol_ot = _ceil_to(gov_hol_day * 0.15, 5)
         standby = _round_to(day * 0.82, 50)
         return {
