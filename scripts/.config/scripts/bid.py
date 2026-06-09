@@ -1623,8 +1623,9 @@ def mob_cmd(
         data = countries[code]
         label = data["name"]
         routing = data.get("routing", False)
-        extra = defaults["routing_extra_days"] if routing and days_override is None else 0
-        days = base_days + extra
+        routing_extra = defaults["routing_extra_days"] if routing and days_override is None else 0
+        country_extra = data.get("extra_days", 0) if days_override is None else 0
+        days = base_days + routing_extra + country_extra
         fare_raw = data["airfare_roundtrip"]
         total_fare = _ceil_to(fare_raw * (1 + buf_pct), 50)
         fare_key = "Airfare (RT)"
@@ -1642,8 +1643,14 @@ def mob_cmd(
     half = lumpsum // 2
 
     mode_label = "Offshore" if offshore else "Onshore"
-    routing_tag = f"  (routing +{defaults['routing_extra_days']}d)" if routing and days_override is None else ""
-    click.echo(f"{label.upper()}  ·  {mode_label}  ·  {days} days{routing_tag}  ·  SGD")
+    tags = []
+    if not batam and days_override is None:
+        if routing:
+            tags.append(f"routing +{defaults['routing_extra_days']}d")
+        if country_extra:
+            tags.append(f"transit +{country_extra}d")
+    tag_str = f"  ({', '.join(tags)})" if tags else ""
+    click.echo(f"{label.upper()}  ·  {mode_label}  ·  {days} days{tag_str}  ·  SGD")
     click.echo()
 
     fare_note = f"flexible return, +{defaults['airfare_buffer_pct']}% buffer"

@@ -5,7 +5,7 @@
 
 [defaults]
 mob_days            = 10   # standard working-day mob/demob period
-airfare_buffer_pct  = 15   # % buffer applied to airfare for price volatility
+airfare_buffer_pct  = 20   # % buffer applied to airfare for price volatility
 allowance_per_day   = 100  # daily engineer abroad allowance
 lumpsum_round       = 500  # round final lumpsum to nearest N
 routing_extra_days  = 2    # extra days added for routing-heavy destinations
@@ -26,7 +26,7 @@ hotel_per_night   = 0
 
 [countries.BR]
 name              = "Brazil"
-airfare_roundtrip = 4000
+airfare_roundtrip = 5000
 visa              = 200
 transport_one_way = 120
 hotel_per_night   = 200
@@ -54,13 +54,14 @@ routing           = true
 name              = "South Korea"
 airfare_roundtrip = 1000
 visa              = 80
-transport_one_way = 80
+transport_one_way = 150   # Incheon → KTX to Busan → bus to Geoje Island
 hotel_per_night   = 150
+extra_days        = 1     # transit day for Incheon → Geoje leg (~4-5 hrs)
 visa_note         = "Work visa required; verify duration with HR"
 
 [countries.NA]
 name              = "Namibia"
-airfare_roundtrip = 4000
+airfare_roundtrip = 3000
 visa              = 150
 transport_one_way = 120
 hotel_per_night   = 180
@@ -69,7 +70,7 @@ routing           = true
 
 [countries.SN]
 name              = "Senegal"
-airfare_roundtrip = 4500
+airfare_roundtrip = 3500
 visa              = 100
 transport_one_way = 100
 hotel_per_night   = 150
@@ -86,7 +87,7 @@ visa_note         = "EU work permit required; consult HR"
 
 [countries.DE]
 name              = "Germany"
-airfare_roundtrip = 2200
+airfare_roundtrip = 1600
 visa              = 150
 transport_one_way = 100
 hotel_per_night   = 200
@@ -109,7 +110,7 @@ hotel_per_night   = 150
 
 [countries.US]
 name              = "United States"
-airfare_roundtrip = 3000
+airfare_roundtrip = 2200
 visa              = 400
 transport_one_way = 150
 hotel_per_night   = 280
