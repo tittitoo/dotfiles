@@ -1,0 +1,116 @@
+# Mob/demob cost estimates — all values in SGD.
+# Airfare is a round-trip flexible-return ticket estimate.
+# It is buffered by airfare_buffer_pct to account for price volatility.
+# To add a new country: copy any [countries.XX] block and update the values.
+
+[defaults]
+mob_days            = 10   # standard working-day mob/demob period
+airfare_buffer_pct  = 15   # % buffer applied to airfare for price volatility
+allowance_per_day   = 100  # daily engineer abroad allowance
+lumpsum_round       = 500  # round final lumpsum to nearest N
+routing_extra_days  = 2    # extra days added for routing-heavy destinations
+
+[batam]
+name               = "Batam, Indonesia"
+ferry_roundtrip    = 70
+visa               = 0
+transport_one_way  = 20
+hotel_per_night    = 120
+
+[countries.SG]
+name              = "Singapore"
+airfare_roundtrip = 0
+visa              = 0
+transport_one_way = 0
+hotel_per_night   = 0
+
+[countries.BR]
+name              = "Brazil"
+airfare_roundtrip = 4000
+visa              = 200
+transport_one_way = 120
+hotel_per_night   = 200
+visa_note         = "Work visa required; allow 4–6 weeks"
+routing           = true
+
+[countries.CN]
+name              = "China"
+airfare_roundtrip = 1000
+visa              = 120
+transport_one_way = 80
+hotel_per_night   = 150
+visa_note         = "Work Z-visa required"
+
+[countries.GY]
+name              = "Guyana"
+airfare_roundtrip = 4500
+visa              = 150
+transport_one_way = 120
+hotel_per_night   = 200
+visa_note         = "Work visa required"
+routing           = true
+
+[countries.KR]
+name              = "South Korea"
+airfare_roundtrip = 1000
+visa              = 80
+transport_one_way = 80
+hotel_per_night   = 150
+visa_note         = "Work visa required; verify duration with HR"
+
+[countries.NA]
+name              = "Namibia"
+airfare_roundtrip = 4000
+visa              = 150
+transport_one_way = 120
+hotel_per_night   = 180
+visa_note         = "Work visa required"
+routing           = true
+
+[countries.SN]
+name              = "Senegal"
+airfare_roundtrip = 4500
+visa              = 100
+transport_one_way = 100
+hotel_per_night   = 150
+visa_note         = "Work visa required"
+routing           = true
+
+[countries.NL]
+name              = "Netherlands"
+airfare_roundtrip = 2200
+visa              = 150
+transport_one_way = 100
+hotel_per_night   = 250
+visa_note         = "EU work permit required; consult HR"
+
+[countries.DE]
+name              = "Germany"
+airfare_roundtrip = 2200
+visa              = 150
+transport_one_way = 100
+hotel_per_night   = 200
+visa_note         = "EU work permit required; consult HR"
+
+[countries.MX]
+name              = "Mexico"
+airfare_roundtrip = 3200
+visa              = 150
+transport_one_way = 120
+hotel_per_night   = 180
+visa_note         = "Work visa required"
+
+[countries.TW]
+name              = "Taiwan"
+airfare_roundtrip = 750
+visa              = 0
+transport_one_way = 70
+hotel_per_night   = 150
+
+[countries.US]
+name              = "United States"
+airfare_roundtrip = 3000
+visa              = 400
+transport_one_way = 150
+hotel_per_night   = 280
+visa_note         = "Work visa required (B1/H-1B); allow 8–12 weeks"

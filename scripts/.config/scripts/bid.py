@@ -19,6 +19,7 @@
 import logging
 import math
 import os
+import tomllib
 import platform
 import re
 import shutil
@@ -1438,14 +1439,8 @@ def _calc_seatrium(day: float, mode: str) -> dict:
             "standby": standby,
         }
     else:
-        gov_hol_day = _round_to(day * 1.5, 50)
-        gov_hol_ot = _ceil_to(gov_hol_day * 0.15, 5)
         standby = _round_to(day * 0.82, 50)
-        return {
-            "day": int(day), "ot": ot,
-            "gov_hol_day": gov_hol_day, "gov_hol_ot": gov_hol_ot,
-            "standby": standby,
-        }
+        return {"day": int(day), "ot": ot, "standby": standby}
 
 
 def _print_rate_rows(rows: list[tuple[str, object, str | None]], indent: int = 4) -> None:
@@ -1489,13 +1484,10 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
             ("Standby",    rates["standby"],     None),
         ]
     else:
-        ph_hourly = f"{_ceil_to(rates['gov_hol_day'] / hours, 5)}/hr"
         rows = [
-            ("Day Rate",    rates["day"],          hourly),
-            ("OT/hr",       rates["ot"],           "×3/2"),
-            ("PH Day Rate", rates["gov_hol_day"],  ph_hourly),
-            ("PH OT/hr",   rates["gov_hol_ot"],   "×3/2"),
-            ("Standby",     rates["standby"],      None),
+            ("Day Rate", rates["day"],     hourly),
+            ("OT/hr",    rates["ot"],      "×3/2"),
+            ("Standby",  rates["standby"], None),
         ]
     _print_rate_rows(rows)
     click.echo()
@@ -1564,6 +1556,130 @@ def rate_cmd(
 # ── End rate helpers ──────────────────────────────────────────────────────────
 
 
+# ── Mob/demob helpers ─────────────────────────────────────────────────────────
+
+def _load_mob_config() -> dict:
+    config_path = Path(__file__).parent / "util" / "mob_config.toml"
+    if not config_path.exists():
+        raise click.ClickException(f"Mob config not found: {config_path}")
+    with open(config_path, "rb") as f:
+        return tomllib.load(f)
+
+
+@click.command("mob")
+@click.argument("country", required=False, metavar="COUNTRY")
+@click.option("--batam", is_flag=True, help="Batam deployment (ferry, no visa)")
+@click.option("--offshore", is_flag=True, help="Offshore deployment (2 hotel nights only)")
+@click.option("--days", "days_override", default=None, type=int, metavar="DAYS",
+              help="Override mob period in working days")
+@click.option("--buffer", "buffers", nargs=2, multiple=True, metavar="AMOUNT LABEL",
+              help="Additional cost item, repeatable (e.g. --buffer 1000 'agent fee')")
+def mob_cmd(
+    country: str | None,
+    batam: bool,
+    offshore: bool,
+    days_override: int | None,
+    buffers: tuple,
+) -> None:
+    """Estimate mob/demob lumpsum (SGD) for engineer deployment from Singapore.
+
+    \b
+    Examples:
+      bid mob BR
+      bid mob BR --offshore
+      bid mob --batam
+      bid mob US --buffer 1000 "agent fee" --buffer 500 "medical"
+    """
+    if not batam and not country:
+        raise click.UsageError("Provide COUNTRY or --batam.")
+    if batam and country:
+        raise click.UsageError("Cannot use both COUNTRY and --batam.")
+
+    cfg = _load_mob_config()
+    defaults = cfg["defaults"]
+    buf_pct = defaults["airfare_buffer_pct"] / 100
+    allowance_per_day = defaults["allowance_per_day"]
+    lumpsum_round = defaults["lumpsum_round"]
+    base_days = days_override if days_override is not None else defaults["mob_days"]
+
+    if batam:
+        data = cfg["batam"]
+        label = data["name"]
+        routing = False
+        days = base_days
+        fare_raw = data["ferry_roundtrip"]
+        total_fare = _ceil_to(fare_raw * (1 + buf_pct), 5)
+        fare_key = "Ferry (RT)"
+        visa = data.get("visa", 0)
+        visa_note: str | None = None
+    else:
+        code = country.upper()  # type: ignore[union-attr]
+        countries = cfg.get("countries", {})
+        if code not in countries:
+            available = ", ".join(sorted(countries.keys()))
+            raise click.ClickException(
+                f"Country '{code}' not in config. Available: {available}"
+            )
+        data = countries[code]
+        label = data["name"]
+        routing = data.get("routing", False)
+        extra = defaults["routing_extra_days"] if routing and days_override is None else 0
+        days = base_days + extra
+        fare_raw = data["airfare_roundtrip"]
+        total_fare = _ceil_to(fare_raw * (1 + buf_pct), 50)
+        fare_key = "Airfare (RT)"
+        visa = data.get("visa", 0)
+        visa_note = data.get("visa_note")
+
+    transport = data.get("transport_one_way", 0) * 2
+    allowance = allowance_per_day * days
+    hotel_nights = 2 if offshore else days
+    hotel = data.get("hotel_per_night", 0) * hotel_nights
+
+    extra_total = sum(int(float(amt)) for amt, _ in buffers)
+    subtotal = total_fare + visa + transport + allowance + hotel + extra_total
+    lumpsum = _round_to(subtotal, lumpsum_round)
+    half = lumpsum // 2
+
+    mode_label = "Offshore" if offshore else "Onshore"
+    routing_tag = f"  (routing +{defaults['routing_extra_days']}d)" if routing and days_override is None else ""
+    click.echo(f"{label.upper()}  ·  {mode_label}  ·  {days} days{routing_tag}  ·  SGD")
+    click.echo()
+
+    fare_note = f"flexible return, +{defaults['airfare_buffer_pct']}% buffer"
+    hotel_key = "Hotel (arrival + departure)" if offshore else "Hotel"
+    hotel_note = f"{data.get('hotel_per_night', 0)}/night × {hotel_nights} nights"
+
+    rows: list[tuple[str, object, str | None]] = [
+        (fare_key,    total_fare,  fare_note),
+        ("Work Visa", visa,        f"⚠  {visa_note}" if visa_note else None),
+        ("Transport", transport,   "×2"),
+        ("Allowance", allowance,   f"100/day × {days} days"),
+        (hotel_key,   hotel,       hotel_note),
+    ]
+    for amt, lbl in buffers:
+        rows.append((lbl, int(float(amt)), "manual"))
+
+    display_rows = [(k, v, n) for k, v, n in rows if v or n]
+    w = max((len(k) for k, *_ in display_rows), default=14)
+    w = max(w, len("Lumpsum (SGD)"))
+
+    _print_rate_rows(display_rows, indent=2)
+    click.echo()
+
+    pad = "  "
+    sep = "─" * (w + 12)
+    click.echo(f"{pad}{sep}")
+    click.echo(f"{pad}{'Subtotal':<{w}}  {_fmt_rate(subtotal):>8}")
+    click.echo(f"{pad}{'Lumpsum (SGD)':<{w}}  {_fmt_rate(lumpsum):>8}")
+    click.echo()
+    click.echo(f"{pad}{'Mob':<{w}}  {_fmt_rate(half):>8}")
+    click.echo(f"{pad}{'Demob':<{w}}  {_fmt_rate(half):>8}")
+
+
+# ── End mob/demob helpers ─────────────────────────────────────────────────────
+
+
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
@@ -1594,6 +1710,7 @@ bid_group.add_command(vo)
 bid_group.add_command(ho)
 bid_group.add_command(co)
 bid_group.add_command(rate_cmd)
+bid_group.add_command(mob_cmd)
 
 if __name__ == "__main__":
     bid()
