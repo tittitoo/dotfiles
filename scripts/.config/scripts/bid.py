@@ -1493,25 +1493,22 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
     click.echo()
 
 
-_SPECIALIST_RATES: dict[str, dict] = {
-    "onshore": {"day": 2300, "ot": 300, "sun_ph": 300, "standby": 1950},
-    "offshore": {"day": 3000, "ot": 350, "sun_ph": "N/A", "standby": 2300},
-}
-
 
 @click.command("rate")
 @click.option("--onshore", "onshore_rate", type=float, default=None, metavar="RATE",
               help="Onshore day rate (Mon-Sat, 10 hrs/day)")
 @click.option("--offshore", "offshore_rate", type=float, default=None, metavar="RATE",
               help="Offshore day rate (Mon-Sun, 12 hrs/day)")
-@click.option("--specialist", is_flag=True,
-              help="Specialist designation (default: JEN Engineer)")
+@click.option("--specialist", "specialist_tier",
+              type=click.Choice(["standard", "premium", "super"], case_sensitive=False),
+              default=None, metavar="TIER",
+              help="Specialist tier rate card (standard/premium/super)")
 @click.option("--special", is_flag=True,
               help="MODEC/HOS rate structure, ×4/3 OT (default: ×3/2 standard)")
 def rate_cmd(
     onshore_rate: float | None,
     offshore_rate: float | None,
-    specialist: bool,
+    specialist_tier: str | None,
     special: bool,
 ) -> None:
     """Calculate OT, Sun/PH, and Standby from a man-day rate.
@@ -1528,29 +1525,43 @@ def rate_cmd(
       bid rate --offshore 1700 --special
 
     \b
-    Specialist (show current hardcoded rates when no RATE given):
-      bid rate --specialist
-      bid rate --onshore 2500 --specialist
+    Specialist tier rate card (day rates + OT + standby + mob/demob):
+      bid rate --specialist standard
+      bid rate --specialist premium
+      bid rate --specialist super
+      bid rate --onshore 3500 --specialist super
     """
-    has_rates = onshore_rate is not None or offshore_rate is not None
-
-    if specialist and not has_rates:
-        for mode in ("onshore", "offshore"):
-            _print_std_section(mode, _SPECIALIST_RATES[mode], "Specialist")
+    if specialist_tier:
+        cfg = _load_mob_config()
+        spec = cfg.get("specialist", {})
+        tier = spec["tiers"][specialist_tier]
+        label = f"Specialist  ·  {specialist_tier.title()}"
+        for mode, sell in [
+            ("onshore",  onshore_rate  if onshore_rate  is not None else tier["onshore_sell"]),
+            ("offshore", offshore_rate if offshore_rate is not None else tier["offshore_sell"]),
+        ]:
+            _print_seatrium_section(mode, _calc_seatrium(sell, mode), label)
+        short_haul = spec.get("short_haul_countries", [])
+        click.echo(f"MOB/DEMOB  ·  Specialist  ·  {specialist_tier.title()}  (USD)")
+        click.echo()
+        _print_rate_rows([
+            ("Short-haul / leg", tier["mob_short"], ", ".join(short_haul)),
+            ("Long-haul / leg",  tier["mob_long"],  "all other destinations"),
+        ], indent=4)
+        click.echo()
         return
 
+    has_rates = onshore_rate is not None or offshore_rate is not None
     if not has_rates:
-        raise click.UsageError("Provide --onshore RATE and/or --offshore RATE.")
-
-    designation = "Specialist" if specialist else "JEN Engineer"
+        raise click.UsageError("Provide --onshore RATE and/or --offshore RATE, or --specialist TIER.")
 
     for mode, day in [("onshore", onshore_rate), ("offshore", offshore_rate)]:
         if day is None:
             continue
         if special:
-            _print_std_section(mode, _calc_standard(day, mode), designation)
+            _print_std_section(mode, _calc_standard(day, mode), "JEN Engineer")
         else:
-            _print_seatrium_section(mode, _calc_seatrium(day, mode), designation)
+            _print_seatrium_section(mode, _calc_seatrium(day, mode), "JEN Engineer")
 
 
 # ── End rate helpers ──────────────────────────────────────────────────────────
@@ -1574,22 +1585,99 @@ def _load_mob_config() -> dict:
               help="Override mob period in working days")
 @click.option("--buffer", "buffers", nargs=2, multiple=True, metavar="AMOUNT LABEL",
               help="Additional cost item, repeatable (e.g. --buffer 1000 'agent fee')")
+@click.option("--specialist", "specialist_tier",
+              type=click.Choice(["standard", "premium", "super"], case_sensitive=False),
+              default=None, metavar="TIER",
+              help="Specialist mob by tier (standard/premium/super)")
+@click.option("--day-rate", "spec_day_rate", type=float, default=None, metavar="RATE",
+              help="Supplier day rate to auto-classify tier (use with --currency)")
+@click.option("--currency", "spec_currency",
+              type=click.Choice(["USD", "SGD", "EUR", "GBP", "NOK"], case_sensitive=False),
+              default="USD", show_default=True,
+              help="Currency of --day-rate")
 def mob_cmd(
     country: str | None,
     batam: bool,
     offshore: bool,
     days_override: int | None,
     buffers: tuple,
+    specialist_tier: str | None,
+    spec_day_rate: float | None,
+    spec_currency: str,
 ) -> None:
-    """Estimate mob/demob lumpsum (SGD) for engineer deployment from Singapore.
+    """Estimate mob/demob lumpsum for engineer or specialist deployment.
 
     \b
-    Examples:
+    JEN engineer (SGD, from Singapore):
       bid mob BR
       bid mob BR --offshore
       bid mob --batam
       bid mob US --buffer 1000 "agent fee" --buffer 500 "medical"
+
+    \b
+    Specialist (USD, tier-based selling price):
+      bid mob --specialist standard
+      bid mob --specialist super NA
+      bid mob --day-rate 5101 --currency SGD NA
     """
+    # ── Specialist path ───────────────────────────────────────────────────────
+    if specialist_tier or spec_day_rate is not None:
+        cfg = _load_mob_config()
+        spec = cfg.get("specialist", {})
+        tiers = spec.get("tiers", {})
+
+        if spec_day_rate is not None:
+            fx = spec.get("fx", {})
+            rate_usd = spec_day_rate / fx.get(spec_currency.upper(), 1.0)
+            auto_tier = next(
+                n for n in ("standard", "premium", "super")
+                if rate_usd <= tiers[n]["day_rate_usd_max"]
+            )
+            if specialist_tier and specialist_tier != auto_tier:
+                click.echo(
+                    f"  Note: {spec_currency.upper()} {_fmt_rate(spec_day_rate)}/day"
+                    f" → USD {round(rate_usd):,}/day classifies as {auto_tier};"
+                    f" using specified {specialist_tier} instead.", err=True
+                )
+            else:
+                specialist_tier = auto_tier
+                click.echo(
+                    f"  {spec_currency.upper()} {_fmt_rate(spec_day_rate)}/day"
+                    f"  →  USD {round(rate_usd):,}/day"
+                    f"  →  {specialist_tier.title()}"
+                )
+                click.echo()
+
+        tier = tiers[specialist_tier]
+        short_haul = spec.get("short_haul_countries", [])
+
+        if country:
+            code = country.upper()
+            is_long = code not in short_haul
+            haul = "Long-haul" if is_long else "Short-haul"
+            mob = tier["mob_long"] if is_long else tier["mob_short"]
+            dest = cfg.get("countries", {}).get(code, {}).get("name", code)
+            click.echo(f"SPECIALIST  ·  {specialist_tier.title()}  ·  {dest}  ({haul})  ·  USD")
+            click.echo()
+            _print_rate_rows([
+                ("Mob",       mob,     None),
+                ("Demob",     mob,     None),
+                ("Mob/Demob", mob * 2, None),
+            ], indent=4)
+        else:
+            click.echo(f"SPECIALIST  ·  {specialist_tier.title()}  ·  USD")
+            click.echo()
+            _print_rate_rows([
+                ("Short-haul / leg", tier["mob_short"], ", ".join(short_haul)),
+                ("Long-haul / leg",  tier["mob_long"],  "all other destinations"),
+            ], indent=4)
+
+        click.echo()
+        click.echo(f"  → Rate card: bid rate --specialist {specialist_tier}")
+        click.echo()
+        return
+    # ── End specialist path ───────────────────────────────────────────────────
+
     if not batam and not country:
         raise click.UsageError("Provide COUNTRY or --batam.")
     if batam and country:

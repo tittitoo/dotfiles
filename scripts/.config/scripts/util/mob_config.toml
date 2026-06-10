@@ -136,3 +136,45 @@ transport_one_way    = 150
 hotel_per_night      = 280
 travel_days_one_way  = 1
 visa_note            = "Work visa required (B1/H-1B); allow 8–12 weeks"
+
+# ── Specialist tiers ──────────────────────────────────────────────────────────
+# Tiers are classified by supplier day rate in USD.
+# short_haul_countries: 1 travel day each way from supplier base.
+# All other destinations are treated as long-haul (2+ travel days).
+# Data sources: TMS-DK (EUR 1,650/day), Rutter (USD 1,850/day),
+#               S3 ID (GBP 2,050–2,772/day), Kongsberg (SGD 4,639–5,101/day).
+
+[specialist]
+short_haul_countries = ["SG", "CN", "KR", "TW"]
+
+[specialist.fx]
+# Units of each currency per 1 USD — used to normalise --day-rate inputs
+USD = 1.000
+SGD = 1.35
+EUR = 0.917
+GBP = 0.787
+NOK = 10.50
+
+[specialist.tiers.standard]
+# TMS-DK, Rutter — flat rate regardless of onshore/offshore
+day_rate_usd_max = 2200
+onshore_sell     = 2300
+offshore_sell    = 3000
+mob_short        = 5000
+mob_long         = 7500
+
+[specialist.tiers.premium]
+# S3 ID — distinct onshore/offshore rates, flat mob fee
+day_rate_usd_max = 3400
+onshore_sell     = 3200
+offshore_sell    = 4400
+mob_short        = 5000
+mob_long         = 7500
+
+[specialist.tiers.super]
+# Kongsberg — hourly billing, accommodated-onboard daily rate, high travel cost
+day_rate_usd_max = 99999
+onshore_sell     = 3300
+offshore_sell    = 4700
+mob_short        = 6500
+mob_long         = 10000
