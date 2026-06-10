@@ -1617,7 +1617,7 @@ def mob_cmd(
         label = data["name"]
         routing = False
         country_extra = 0
-        days = std_days  # offshore batam also uses standard days
+        days = std_days if offshore else (days_override if days_override is not None else std_days)
         fare_raw = data["ferry_one_way"]
         total_fare = _ceil_to(fare_raw * 2 * (1 + buf_pct), 5)
         fare_key = "Ferry (2× one-way)"
@@ -1658,7 +1658,7 @@ def mob_cmd(
     hotel_rate = data.get("hotel_per_night", 0)
     hotel = hotel_rate * days
     subtotal = total_fare + applied_change_fee + visa + transport + travel_cost + allowance + hotel + extra_total
-    lumpsum = _round_to(subtotal, lumpsum_round)
+    lumpsum = _ceil_to(subtotal, lumpsum_round)
 
     tags = []
     if not offshore and not batam and days_override is None:
@@ -1674,8 +1674,17 @@ def mob_cmd(
         click.echo("  Mob/demob not applicable — cost absorbed in engineer day rates.")
         return
 
-    mode_label = "Offshore (anchorage / sea trial)" if offshore else "Onshore"
-    click.echo(f"{label.upper()}  ·  {mode_label}  ·  {days} days{tag_str}  ·  SGD")
+    if offshore:
+        mode_label = "Offshore (anchorage / sea trial)"
+    elif days_override is not None:
+        mode_label = "Onshore"
+    else:
+        mode_label = "Onshore / Offshore"
+    header_parts = [label.upper()]
+    if mode_label:
+        header_parts.append(mode_label)
+    header_parts += [f"{days} days{tag_str}", "SGD"]
+    click.echo("  ·  ".join(header_parts))
 
     fare_note = (f"mob + demob tickets, +{defaults['airfare_buffer_pct']}% buffer" if batam
                  else f"flexible return, +{defaults['airfare_buffer_pct']}% buffer")
@@ -1706,10 +1715,10 @@ def mob_cmd(
     click.echo(f"    {'Subtotal':<{w}}  {_fmt_rate(subtotal):>8}")
     click.echo(f"    {'Lumpsum (SGD)':<{w}}  {_fmt_rate(lumpsum):>8}")
 
-    buc     = _round_to(lumpsum / (1 - buc_gm), lumpsum_round)
-    sp_sgd  = _round_to(buc / (1 - selling_gm), lumpsum_round)
+    buc     = _ceil_to(lumpsum / (1 - buc_gm), lumpsum_round)
+    sp_sgd  = _ceil_to(buc / (1 - selling_gm), lumpsum_round)
     mob_sgd = _round_to(sp_sgd / 2, lumpsum_round)
-    mob_usd = _round_to(mob_sgd / usd_rate, usd_round)
+    mob_usd = _ceil_to(mob_sgd / usd_rate, usd_round)
 
     click.echo()
     click.echo(f"    COST")
