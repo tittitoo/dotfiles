@@ -1722,6 +1722,147 @@ def mob_cmd(
     click.echo(f"    {'Mob/Demob':<{w}}  {_fmt_rate(mob_sgd * 2):>8}   {_fmt_rate(mob_usd * 2):>8}")
 
 
+@click.command("mob-config")
+@click.argument("output", default="mob_config.xlsx", required=False, metavar="OUTPUT")
+def mob_config_cmd(output: str) -> None:
+    """Export mob/demob config to Excel for review and sharing.
+
+    \b
+    Examples:
+      bid mob-config
+      bid mob-config ~/Desktop/mob_config.xlsx
+    """
+    import openpyxl
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    cfg = _load_mob_config()
+    defaults = cfg["defaults"]
+    wb = openpyxl.Workbook()
+
+    HDR_FONT  = Font(bold=True, color="FFFFFF", size=11)
+    HDR_FILL  = PatternFill("solid", fgColor="1F4E79")
+    SUBHDR_FILL = PatternFill("solid", fgColor="BDD7EE")
+    SUBHDR_FONT = Font(bold=True, size=11)
+    CENTER    = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    WRAP      = Alignment(wrap_text=True, vertical="top")
+
+    def _style_header(ws, row=1):
+        for cell in ws[row]:
+            cell.font = HDR_FONT
+            cell.fill = HDR_FILL
+            cell.alignment = CENTER
+
+    def _autowidth(ws, extra=4, cap=45):
+        for col in ws.columns:
+            max_len = max((len(str(cell.value or "")) for cell in col), default=8)
+            ws.column_dimensions[get_column_letter(col[0].column)].width = min(max_len + extra, cap)
+
+    # ── Sheet 1: Countries ────────────────────────────────────────────────────
+    ws = wb.active
+    ws.title = "Countries"
+    ws.row_dimensions[1].height = 30
+
+    headers = [
+        "Code", "Name",
+        "Airfare RT\n(SGD)", "Visa\n(SGD)", "Visa Note",
+        "Transport\nOne-Way (SGD)", "Hotel/Night\n(SGD)", "Travel Days\n(One-Way)",
+        "Routing\n(+2 days)", "Extra Days\n(transit)",
+        "Comments",
+    ]
+    ws.append(headers)
+    _style_header(ws)
+
+    countries = cfg.get("countries", {})
+    for code, data in sorted(countries.items()):
+        row = [
+            code,
+            data.get("name", ""),
+            data.get("airfare_roundtrip", 0),
+            data.get("visa", 0),
+            data.get("visa_note", ""),
+            data.get("transport_one_way", 0),
+            data.get("hotel_per_night", 0),
+            data.get("travel_days_one_way", 0),
+            "Yes" if data.get("routing") else "",
+            data.get("extra_days", "") or "",
+            "",
+        ]
+        ws.append(row)
+        for cell in ws[ws.max_row]:
+            cell.alignment = WRAP
+
+    # Number format for SGD columns
+    for col_idx in [3, 4, 6, 7]:
+        for row in ws.iter_rows(min_row=2, min_col=col_idx, max_col=col_idx):
+            for cell in row:
+                cell.number_format = '#,##0'
+
+    _autowidth(ws)
+    ws.column_dimensions["E"].width = 35   # Visa Note
+    ws.column_dimensions["K"].width = 30   # Comments
+    ws.freeze_panes = "A2"
+
+    # ── Sheet 2: Batam ────────────────────────────────────────────────────────
+    ws2 = wb.create_sheet("Batam")
+    ws2.row_dimensions[1].height = 25
+    ws2.append(["Field", "Value (SGD)", "Notes", "Comments"])
+    _style_header(ws2)
+
+    batam = cfg.get("batam", {})
+    batam_notes = {
+        "name":              "Display name",
+        "ferry_one_way":     "One-way ferry ticket estimate (×2 for mob + demob, +20% buffer applied)",
+        "visa":              "Visa cost",
+        "transport_one_way": "Land transport one way (destination side)",
+        "hotel_per_night":   "Hotel per night",
+        "travel_days_one_way": "0 — 45-min ferry, not a full travel day",
+    }
+    for key, val in batam.items():
+        ws2.append([key, val, batam_notes.get(key, ""), ""])
+    _autowidth(ws2)
+    ws2.column_dimensions["C"].width = 50
+    ws2.column_dimensions["D"].width = 30
+
+    # ── Sheet 3: Defaults ─────────────────────────────────────────────────────
+    ws3 = wb.create_sheet("Defaults")
+    ws3.row_dimensions[1].height = 25
+    ws3.append(["Setting", "Value", "Description", "Comments"])
+    _style_header(ws3)
+
+    default_desc = {
+        "mob_days":               "Standard working-day mob/demob period",
+        "airfare_buffer_pct":     "% buffer applied to airfare for price volatility",
+        "airfare_change_fee":     "Return date change fee (SGD); assumed to occur once",
+        "allowance_per_day":      "Daily engineer abroad allowance (SGD)",
+        "engineer_travel_day_rate": "Engineer time cost per calendar travel day, capped at 8 hrs (SGD)",
+        "sg_transport_one_way":   "Taxi to/from Changi Airport (SGD), same for all destinations",
+        "lumpsum_round":          "Round final lumpsum to nearest N (SGD)",
+        "routing_extra_days":     "Extra days added for routing-heavy destinations (BR, GY, NA, SN)",
+        "buc_gm_pct":             "% GM applied to lumpsum to get Base Unit Cost",
+        "selling_gm_pct":         "% GM applied to BUC to get selling price",
+        "usd_exchange_rate":      "SGD per 1 USD exchange rate assumption",
+        "usd_round":              "USD rounding granularity (finer than SGD to stay near exchange rate)",
+    }
+    for key, val in defaults.items():
+        ws3.append([key, val, default_desc.get(key, ""), ""])
+    _autowidth(ws3)
+    ws3.column_dimensions["C"].width = 55
+    ws3.column_dimensions["D"].width = 30
+
+    # Shade alternate rows on all sheets for readability
+    ALT_FILL = PatternFill("solid", fgColor="F2F7FC")
+    for sheet in [ws, ws2, ws3]:
+        for i, row in enumerate(sheet.iter_rows(min_row=2), start=2):
+            if i % 2 == 0:
+                for cell in row:
+                    if not cell.fill or cell.fill.fgColor.rgb in ("00000000", "FFFFFFFF"):
+                        cell.fill = ALT_FILL
+
+    wb.save(output)
+    click.echo(f"Exported → {output}")
+
+
 # ── End mob/demob helpers ─────────────────────────────────────────────────────
 
 
@@ -1756,6 +1897,7 @@ bid_group.add_command(ho)
 bid_group.add_command(co)
 bid_group.add_command(rate_cmd)
 bid_group.add_command(mob_cmd)
+bid_group.add_command(mob_config_cmd)
 
 if __name__ == "__main__":
     bid()
