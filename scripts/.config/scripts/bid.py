@@ -1569,7 +1569,7 @@ def _load_mob_config() -> dict:
 @click.command("mob")
 @click.argument("country", required=False, metavar="COUNTRY")
 @click.option("--batam", is_flag=True, help="Batam deployment (ferry, no visa)")
-@click.option("--offshore", is_flag=True, help="Offshore deployment (2 hotel nights only)")
+@click.option("--offshore", is_flag=True, help="Offshore deployment (2 hotel nights only; default: onshore)")
 @click.option("--days", "days_override", default=None, type=int, metavar="DAYS",
               help="Override mob period in working days")
 @click.option("--buffer", "buffers", nargs=2, multiple=True, metavar="AMOUNT LABEL",
@@ -1598,18 +1598,29 @@ def mob_cmd(
     cfg = _load_mob_config()
     defaults = cfg["defaults"]
     buf_pct = defaults["airfare_buffer_pct"] / 100
+    change_fee = defaults["airfare_change_fee"]
+    travel_day_rate = defaults["engineer_travel_day_rate"]
+    sg_transport_ow = defaults["sg_transport_one_way"]
     allowance_per_day = defaults["allowance_per_day"]
+    buc_gm = defaults["buc_gm_pct"] / 100
+    selling_gm = defaults["selling_gm_pct"] / 100
+    usd_rate = defaults["usd_exchange_rate"]
+    usd_round = defaults["usd_round"]
     lumpsum_round = defaults["lumpsum_round"]
-    base_days = days_override if days_override is not None else defaults["mob_days"]
+    std_days = defaults["mob_days"]
+
+    if offshore and days_override is not None:
+        click.echo("Note: --days is ignored for offshore; standard rate applies.", err=True)
 
     if batam:
         data = cfg["batam"]
         label = data["name"]
         routing = False
-        days = base_days
-        fare_raw = data["ferry_roundtrip"]
-        total_fare = _ceil_to(fare_raw * (1 + buf_pct), 5)
-        fare_key = "Ferry (RT)"
+        country_extra = 0
+        days = std_days  # offshore batam also uses standard days
+        fare_raw = data["ferry_one_way"]
+        total_fare = _ceil_to(fare_raw * 2 * (1 + buf_pct), 5)
+        fare_key = "Ferry (2× one-way)"
         visa = data.get("visa", 0)
         visa_note: str | None = None
     else:
@@ -1623,65 +1634,92 @@ def mob_cmd(
         data = countries[code]
         label = data["name"]
         routing = data.get("routing", False)
-        routing_extra = defaults["routing_extra_days"] if routing and days_override is None else 0
-        country_extra = data.get("extra_days", 0) if days_override is None else 0
-        days = base_days + routing_extra + country_extra
+        if offshore:
+            days = std_days
+            routing_extra = 0
+            country_extra = 0
+        else:
+            base_days = days_override if days_override is not None else std_days
+            routing_extra = defaults["routing_extra_days"] if routing and days_override is None else 0
+            country_extra = data.get("extra_days", 0) if days_override is None else 0
+            days = base_days + routing_extra + country_extra
         fare_raw = data["airfare_roundtrip"]
         total_fare = _ceil_to(fare_raw * (1 + buf_pct), 50)
         fare_key = "Airfare (RT)"
         visa = data.get("visa", 0)
         visa_note = data.get("visa_note")
 
-    transport = data.get("transport_one_way", 0) * 2
+    transport = (data.get("transport_one_way", 0) + sg_transport_ow) * 2
     allowance = allowance_per_day * days
-    hotel_nights = 2 if offshore else days
-    hotel = data.get("hotel_per_night", 0) * hotel_nights
-
+    travel_days = data.get("travel_days_one_way", 1) * 2
+    travel_cost = travel_days * travel_day_rate
     extra_total = sum(int(float(amt)) for amt, _ in buffers)
-    subtotal = total_fare + visa + transport + allowance + hotel + extra_total
+    applied_change_fee = 0 if (batam or fare_raw == 0) else change_fee
+    hotel_rate = data.get("hotel_per_night", 0)
+    hotel = hotel_rate * days
+    subtotal = total_fare + applied_change_fee + visa + transport + travel_cost + allowance + hotel + extra_total
     lumpsum = _round_to(subtotal, lumpsum_round)
-    half = lumpsum // 2
 
-    mode_label = "Offshore" if offshore else "Onshore"
     tags = []
-    if not batam and days_override is None:
+    if not offshore and not batam and days_override is None:
         if routing:
             tags.append(f"routing +{defaults['routing_extra_days']}d")
         if country_extra:
             tags.append(f"transit +{country_extra}d")
     tag_str = f"  ({', '.join(tags)})" if tags else ""
-    click.echo(f"{label.upper()}  ·  {mode_label}  ·  {days} days{tag_str}  ·  SGD")
-    click.echo()
 
-    fare_note = f"flexible return, +{defaults['airfare_buffer_pct']}% buffer"
-    hotel_key = "Hotel (arrival + departure)" if offshore else "Hotel"
-    hotel_note = f"{data.get('hotel_per_night', 0)}/night × {hotel_nights} nights"
+    if not offshore and not batam and data.get("onshore_mob_absorbed"):
+        click.echo(f"{label.upper()}  ·  Onshore  ·  SGD")
+        click.echo()
+        click.echo("  Mob/demob not applicable — cost absorbed in engineer day rates.")
+        return
+
+    mode_label = "Offshore (anchorage / sea trial)" if offshore else "Onshore"
+    click.echo(f"{label.upper()}  ·  {mode_label}  ·  {days} days{tag_str}  ·  SGD")
+
+    fare_note = (f"mob + demob tickets, +{defaults['airfare_buffer_pct']}% buffer" if batam
+                 else f"flexible return, +{defaults['airfare_buffer_pct']}% buffer")
+    pad = "  "
 
     rows: list[tuple[str, object, str | None]] = [
-        (fare_key,    total_fare,  fare_note),
-        ("Work Visa", visa,        f"⚠  {visa_note}" if visa_note else None),
-        ("Transport", transport,   "×2"),
-        ("Allowance", allowance,   f"100/day × {days} days"),
-        (hotel_key,   hotel,       hotel_note),
+        (fare_key,          total_fare,          fare_note),
+        ("Date Change Fee", applied_change_fee,  "return date change" if applied_change_fee else None),
+        ("Work Visa",       visa,                f"⚠  {visa_note}" if visa_note else None),
+        ("Transport",       transport,           "SG + destination, arrival + departure"),
+        ("Travel Time",     travel_cost,         f"500/day × {travel_days} days" if travel_cost else None),
+        ("Allowance",       allowance,           f"100/day × {days} days"),
+        ("Hotel",           hotel,               f"{hotel_rate}/night × {days} nights"),
     ]
     for amt, lbl in buffers:
         rows.append((lbl, int(float(amt)), "manual"))
 
-    display_rows = [(k, v, n) for k, v, n in rows if v or n]
+    display_rows = [(k, v, n) for k, v, n in rows if v]
     w = max((len(k) for k, *_ in display_rows), default=14)
-    w = max(w, len("Lumpsum (SGD)"))
+    w = max(w, len("Lumpsum (SGD)"), len("Base Unit Cost"))
 
-    _print_rate_rows(display_rows, indent=2)
+    click.echo()
+    _print_rate_rows(display_rows, indent=4)
     click.echo()
 
-    pad = "  "
     sep = "─" * (w + 12)
-    click.echo(f"{pad}{sep}")
-    click.echo(f"{pad}{'Subtotal':<{w}}  {_fmt_rate(subtotal):>8}")
-    click.echo(f"{pad}{'Lumpsum (SGD)':<{w}}  {_fmt_rate(lumpsum):>8}")
+    click.echo(f"    {sep}")
+    click.echo(f"    {'Subtotal':<{w}}  {_fmt_rate(subtotal):>8}")
+    click.echo(f"    {'Lumpsum (SGD)':<{w}}  {_fmt_rate(lumpsum):>8}")
+
+    buc     = _round_to(lumpsum / (1 - buc_gm), lumpsum_round)
+    sp_sgd  = _round_to(buc / (1 - selling_gm), lumpsum_round)
+    mob_sgd = _round_to(sp_sgd / 2, lumpsum_round)
+    mob_usd = _round_to(mob_sgd / usd_rate, usd_round)
+
     click.echo()
-    click.echo(f"{pad}{'Mob':<{w}}  {_fmt_rate(half):>8}")
-    click.echo(f"{pad}{'Demob':<{w}}  {_fmt_rate(half):>8}")
+    click.echo(f"    COST")
+    click.echo(f"    {'Base Unit Cost':<{w}}  {_fmt_rate(buc):>8}  SGD  (+{int(buc_gm*100)}% GM)")
+    click.echo()
+    click.echo(f"    SELLING PRICE  (+{int(selling_gm*100)}% GM on BUC)")
+    click.echo(f"    {'':>{w}}  {'SGD':>8}   {'USD':>8}")
+    click.echo(f"    {'Mob':<{w}}  {_fmt_rate(mob_sgd):>8}   {_fmt_rate(mob_usd):>8}")
+    click.echo(f"    {'Demob':<{w}}  {_fmt_rate(mob_sgd):>8}   {_fmt_rate(mob_usd):>8}")
+    click.echo(f"    {'Mob/Demob':<{w}}  {_fmt_rate(mob_sgd * 2):>8}   {_fmt_rate(mob_usd * 2):>8}")
 
 
 # ── End mob/demob helpers ─────────────────────────────────────────────────────
