@@ -1617,7 +1617,8 @@ def mob_cmd(
         label = data["name"]
         routing = False
         country_extra = 0
-        days = std_days if offshore else (days_override if days_override is not None else std_days)
+        working_days = std_days if offshore else (days_override if days_override is not None else std_days)
+        days = working_days
         fare_raw = data["ferry_one_way"]
         total_fare = _ceil_to(fare_raw * 2 * (1 + buf_pct), 5)
         fare_key = "Ferry (2× one-way)"
@@ -1635,14 +1636,14 @@ def mob_cmd(
         label = data["name"]
         routing = data.get("routing", False)
         if offshore:
-            days = std_days
+            working_days = std_days
             routing_extra = 0
             country_extra = 0
         else:
-            base_days = days_override if days_override is not None else std_days
+            working_days = days_override if days_override is not None else std_days
             routing_extra = defaults["routing_extra_days"] if routing and days_override is None else 0
             country_extra = data.get("extra_days", 0) if days_override is None else 0
-            days = base_days + routing_extra + country_extra
+        days = working_days + routing_extra + country_extra
         fare_raw = data["airfare_roundtrip"]
         total_fare = _ceil_to(fare_raw * (1 + buf_pct), 50)
         fare_key = "Airfare (RT)"
@@ -1656,7 +1657,7 @@ def mob_cmd(
     extra_total = sum(int(float(amt)) for amt, _ in buffers)
     applied_change_fee = 0 if (batam or fare_raw == 0) else change_fee
     hotel_rate = data.get("hotel_per_night", 0)
-    hotel = hotel_rate * days
+    hotel = hotel_rate * working_days
     subtotal = total_fare + applied_change_fee + visa + transport + travel_cost + allowance + hotel + extra_total
     lumpsum = _ceil_to(subtotal, lumpsum_round)
 
@@ -1697,7 +1698,7 @@ def mob_cmd(
         ("Transport",       transport,           "SG + destination, arrival + departure"),
         ("Travel Time",     travel_cost,         f"500/day × {travel_days} days" if travel_cost else None),
         ("Allowance",       allowance,           f"100/day × {days} days"),
-        ("Hotel",           hotel,               f"{hotel_rate}/night × {days} nights"),
+        ("Hotel",           hotel,               f"{hotel_rate}/night × {working_days} nights"),
     ]
     for amt, lbl in buffers:
         rows.append((lbl, int(float(amt)), "manual"))
