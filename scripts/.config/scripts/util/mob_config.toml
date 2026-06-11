@@ -161,23 +161,23 @@ DKK = 5.10   # 1 SGD ≈ 5.10 DKK
 # day_rate_usd_max is the supplier onshore threshold in USD for tier classification only.
 
 [specialist.tiers.standard]
-# TMS-DK, Rutter — flat rate regardless of onshore/offshore
+# TMS-DK, Rutter — flat rate regardless of onshore/offshore (no supplier offshore premium)
 day_rate_usd_max = 2200
 onshore_sell     = 2500   # USD
-offshore_sell    = 3800   # USD  onshore × 1.5, ceil to 100
+offshore_sell    = 3300   # USD  onshore × 1.3, ceil to 100
 mob_short        = 7000
 mob_long         = 10500
 
 [specialist.tiers.premium]
-# S3 ID — distinct onshore/offshore rates, flat mob fee
+# S3 ID — offshore × 1.35 vs onshore (matches supplier's own ratio)
 day_rate_usd_max = 3400
 onshore_sell     = 3200   # USD
-offshore_sell    = 4800   # USD  onshore × 1.5, ceil to 100
+offshore_sell    = 4400   # USD  onshore × 1.35, ceil to 100
 mob_short        = 7000
 mob_long         = 10500
 
 [specialist.tiers.super]
-# Kongsberg — hourly billing, accommodated-onboard daily rate, high travel cost
+# Kongsberg — offshore × 1.86 vs onshore; our × 1.5 clears KM offshore cost by ~24%
 day_rate_usd_max = 99999
 onshore_sell     = 3300   # USD
 offshore_sell    = 5000   # USD  onshore × 1.5, ceil to 100
