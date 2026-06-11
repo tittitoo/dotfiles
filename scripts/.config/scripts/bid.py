@@ -1558,7 +1558,7 @@ def rate_cmd(
         tier_names = ("standard", "premium", "super")
         w_tier = 10
         w_col = 10
-        click.echo("SPECIALIST TIERS  ·  Supplier Onshore Day Rate Threshold")
+        click.echo("SPECIALIST TIERS  ·  Supplier Onshore Day Rate Threshold  (cost figures)")
         click.echo()
         header = f"  {'Tier':<{w_tier}}" + "".join(f"  {c:>{w_col}}" for c in currencies)
         click.echo(header)
