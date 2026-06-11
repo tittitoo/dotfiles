@@ -163,8 +163,8 @@ DKK = 5.10   # 1 SGD ≈ 5.10 DKK
 [specialist.tiers.standard]
 # TMS-DK, Rutter — flat rate regardless of onshore/offshore
 day_rate_usd_max = 2200
-onshore_sell     = 2300   # USD
-offshore_sell    = 3500   # USD  onshore × 1.5, ceil to 100
+onshore_sell     = 2500   # USD
+offshore_sell    = 3800   # USD  onshore × 1.5, ceil to 100
 mob_short        = 7000
 mob_long         = 10500
 
