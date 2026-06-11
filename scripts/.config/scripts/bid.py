@@ -1609,8 +1609,8 @@ def rate_cmd(
         tier = tiers[specialist_tier]
         label = f"Specialist  ·  {specialist_tier.title()}"
         usd_rate = cfg["defaults"]["usd_exchange_rate"]
-        onshore_sgd = onshore_rate if onshore_rate is not None else tier["onshore_sell"] * usd_rate
-        offshore_sgd = offshore_rate if offshore_rate is not None else tier["offshore_sell"] * usd_rate
+        onshore_sgd = onshore_rate if onshore_rate is not None else _ceil_to(tier["onshore_sell"] * usd_rate, 100)
+        offshore_sgd = offshore_rate if offshore_rate is not None else _ceil_to(tier["offshore_sell"] * usd_rate, 100)
         click.echo("SELLING PRICE  (SGD / USD)")
         click.echo()
         for mode, sell in [("onshore", onshore_sgd), ("offshore", offshore_sgd)]:
