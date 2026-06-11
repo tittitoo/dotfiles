@@ -44,6 +44,9 @@ set -gx PATH (echo $PATH | tr ' ' '\n' | sort -u | sed 's/:$//')
 # Supress greeting message
 set fish_greeting
 
+# Disable fish's built-in history (atuin handles all history)
+set -g fish_history ""
+
 # Enable vi mode
 fish_vi_key_bindings
 # set -g fish_key_bindings fish_vi_key_binding
