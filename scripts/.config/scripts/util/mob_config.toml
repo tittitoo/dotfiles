@@ -138,11 +138,13 @@ travel_days_one_way  = 1
 visa_note            = "Work visa required (B1/H-1B); allow 8–12 weeks"
 
 # ── Specialist tiers ──────────────────────────────────────────────────────────
-# Tiers are classified by supplier onshore day rate converted to USD.
+# Tiers are classified by supplier day rate converted to USD.
+# Use supplier onshore rate; for offshore-only suppliers (e.g. Kongsberg) use their
+# offshore/accommodated rate — their onshore hourly rate understates deployment cost.
 # short_haul_countries: 1 travel day each way from supplier base.
 # All other destinations are treated as long-haul (2+ travel days).
 # Data sources: TMS-DK (DKK ~12,500/day), Rutter (USD 1,850/day),
-#               S3 ID (GBP 2,050–2,772/day), Kongsberg (SGD 4,639–5,101/day).
+#               S3 ID (GBP 2,050–2,772/day), Kongsberg offshore (SGD 4,639–5,101/day).
 
 [specialist]
 short_haul_countries = ["SG", "CN", "KR", "TW"]

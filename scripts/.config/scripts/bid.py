@@ -1558,7 +1558,7 @@ def rate_cmd(
         tier_names = ("standard", "premium", "super")
         w_tier = 10
         w_col = 10
-        click.echo("SPECIALIST TIERS  ·  Supplier Onshore Day Rate Threshold  (cost figures)")
+        click.echo("SPECIALIST TIERS  ·  Supplier Day Rate Threshold  (cost figures; use onshore rate, or offshore rate for offshore-only suppliers)")
         click.echo()
         header = f"  {'Tier':<{w_tier}}" + "".join(f"  {c:>{w_col}}" for c in currencies)
         click.echo(header)
@@ -1657,7 +1657,7 @@ def _load_mob_config() -> dict:
               default=None,
               help="Specialist mob by tier")
 @click.option("--day-rate", "spec_day_rate", type=float, default=None, metavar="RATE",
-              help="Supplier onshore day rate to auto-classify tier; offshore rates are not used for classification (use with --currency)")
+              help="Supplier day rate for tier classification — use onshore rate; for offshore-only suppliers (e.g. Kongsberg) use their offshore/accommodated rate (use with --currency)")
 @click.option("--currency", "spec_currency",
               type=click.Choice(["USD", "SGD", "EUR", "GBP", "NOK", "DKK"], case_sensitive=False),
               default="USD", show_default=True,
