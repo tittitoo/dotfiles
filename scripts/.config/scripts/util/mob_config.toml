@@ -164,7 +164,7 @@ DKK = 5.10   # 1 SGD ≈ 5.10 DKK
 # TMS-DK, Rutter — flat rate regardless of onshore/offshore
 day_rate_usd_max = 2200
 onshore_sell     = 2300
-offshore_sell    = 3000
+offshore_sell    = 3450  # onshore × 1.5
 mob_short        = 7000
 mob_long         = 10500
 
@@ -172,7 +172,7 @@ mob_long         = 10500
 # S3 ID — distinct onshore/offshore rates, flat mob fee
 day_rate_usd_max = 3400
 onshore_sell     = 3200
-offshore_sell    = 4400
+offshore_sell    = 4800  # onshore × 1.5
 mob_short        = 7000
 mob_long         = 10500
 
@@ -180,6 +180,6 @@ mob_long         = 10500
 # Kongsberg — hourly billing, accommodated-onboard daily rate, high travel cost
 day_rate_usd_max = 99999
 onshore_sell     = 3300
-offshore_sell    = 4700
+offshore_sell    = 4950  # onshore × 1.5
 mob_short        = 9000
 mob_long         = 13500
