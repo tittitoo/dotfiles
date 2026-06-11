@@ -1609,12 +1609,11 @@ def rate_cmd(
         tier = tiers[specialist_tier]
         label = f"Specialist  ·  {specialist_tier.title()}"
         usd_rate = cfg["defaults"]["usd_exchange_rate"]
+        onshore_sgd = onshore_rate if onshore_rate is not None else tier["onshore_sell"] * usd_rate
+        offshore_sgd = offshore_rate if offshore_rate is not None else tier["offshore_sell"] * usd_rate
         click.echo("SELLING PRICE  (SGD / USD)")
         click.echo()
-        for mode, sell in [
-            ("onshore",  onshore_rate  if onshore_rate  is not None else tier["onshore_sell"]),
-            ("offshore", offshore_rate if offshore_rate is not None else tier["offshore_sell"]),
-        ]:
+        for mode, sell in [("onshore", onshore_sgd), ("offshore", offshore_sgd)]:
             _print_seatrium_section(mode, _calc_seatrium(sell, mode), label, usd_rate=usd_rate)
         _print_spec_mob(specialist_tier, tier)
         return

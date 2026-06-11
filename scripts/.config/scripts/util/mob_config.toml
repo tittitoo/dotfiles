@@ -157,29 +157,29 @@ GBP = 0.583  # 1 SGD ≈ 0.583 GBP
 NOK = 7.78   # 1 SGD ≈ 7.78 NOK
 DKK = 5.10   # 1 SGD ≈ 5.10 DKK
 
-# All sell rates and mob values are in SGD.
+# onshore_sell / offshore_sell are in USD. mob_short / mob_long are in SGD.
 # day_rate_usd_max is the supplier onshore threshold in USD for tier classification only.
 
 [specialist.tiers.standard]
 # TMS-DK, Rutter — flat rate regardless of onshore/offshore
 day_rate_usd_max = 2200
-onshore_sell     = 2300
-offshore_sell    = 3500  # onshore × 1.5, ceil to 100
+onshore_sell     = 2300   # USD
+offshore_sell    = 3500   # USD  onshore × 1.5, ceil to 100
 mob_short        = 7000
 mob_long         = 10500
 
 [specialist.tiers.premium]
 # S3 ID — distinct onshore/offshore rates, flat mob fee
 day_rate_usd_max = 3400
-onshore_sell     = 3200
-offshore_sell    = 4800  # onshore × 1.5, ceil to 100
+onshore_sell     = 3200   # USD
+offshore_sell    = 4800   # USD  onshore × 1.5, ceil to 100
 mob_short        = 7000
 mob_long         = 10500
 
 [specialist.tiers.super]
 # Kongsberg — hourly billing, accommodated-onboard daily rate, high travel cost
 day_rate_usd_max = 99999
-onshore_sell     = 3300
-offshore_sell    = 5000  # onshore × 1.5, ceil to 100
+onshore_sell     = 3300   # USD
+offshore_sell    = 5000   # USD  onshore × 1.5, ceil to 100
 mob_short        = 9000
 mob_long         = 13500
