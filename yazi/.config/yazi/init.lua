@@ -4,9 +4,6 @@
 -- (set by redraw()) so we avoid any unavailable string-width APIs.
 function Entity:ellipsis(max)
 	local f = self._file
-	if f.cha.is_dir then
-		return nil
-	end
 
 	-- Sum widths of children before highlights (id=4).
 	local overhead, name_w = 0, 0
