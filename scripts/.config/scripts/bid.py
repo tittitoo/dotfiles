@@ -1467,7 +1467,7 @@ def _print_std_section(mode: str, rates: dict, designation: str) -> None:
     click.echo()
 
 
-def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
+def _print_seatrium_section(mode: str, rates: dict, designation: str, usd_rate: float | None = None) -> None:
     label = "ONSHORE" if mode == "onshore" else "OFFSHORE"
     hours = 10 if mode == "onshore" else 12
     desc = f"Mon-Sat, {hours} hrs/day" if mode == "onshore" else f"Mon-Sun, {hours} hrs/day"
@@ -1477,11 +1477,11 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
     if mode == "onshore":
         ph_hourly = f"{_ceil_to(rates['sun_ph_day'] / hours, 5)}/hr"
         rows: list[tuple[str, object, str | None]] = [
-            ("Day Rate",   rates["day"],         hourly),
-            ("OT/hr",      rates["ot"],          "×3/2"),
-            ("Sun/PH Day Rate", rates["sun_ph_day"], ph_hourly),
-            ("Sun/PH OT/hr",   rates["sun_ph_ot"],   "×3/2"),
-            ("Standby",    rates["standby"],     None),
+            ("Day Rate",          rates["day"],         hourly),
+            ("OT/hr",             rates["ot"],          "×3/2"),
+            ("Sun/PH Day Rate",   rates["sun_ph_day"],  ph_hourly),
+            ("Sun/PH OT/hr",      rates["sun_ph_ot"],   "×3/2"),
+            ("Standby",           rates["standby"],     None),
         ]
     else:
         rows = [
@@ -1489,7 +1489,15 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
             ("OT/hr",    rates["ot"],      "×3/2"),
             ("Standby",  rates["standby"], None),
         ]
-    _print_rate_rows(rows)
+    if usd_rate:
+        w = max(len(r[0]) for r in rows)
+        click.echo(f"    {'':>{w}}  {'SGD':>8}   {'USD':>8}")
+        for lbl, sgd, note in rows:
+            usd = _ceil_to(sgd / usd_rate, 100)
+            note_str = f"  ({note})" if note else ""
+            click.echo(f"    {lbl:<{w}}  {_fmt_rate(sgd):>8}   {_fmt_rate(usd):>8}{note_str}")
+    else:
+        _print_rate_rows(rows)
     click.echo()
 
 
@@ -1501,14 +1509,17 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str) -> None:
               help="Offshore day rate (Mon-Sun, 12 hrs/day)")
 @click.option("--specialist", "specialist_tier",
               type=click.Choice(["standard", "premium", "super"], case_sensitive=False),
-              default=None, metavar="TIER",
-              help="Specialist tier rate card (standard/premium/super)")
+              default=None,
+              help="Specialist tier rate card (standard|premium|super)")
+@click.option("--tiers", "show_tiers", is_flag=True, default=False,
+              help="Show specialist tier definitions in SGD/USD/EUR/GBP")
 @click.option("--special", is_flag=True,
               help="MODEC/HOS rate structure, ×4/3 OT (default: ×3/2 standard)")
 def rate_cmd(
     onshore_rate: float | None,
     offshore_rate: float | None,
     specialist_tier: str | None,
+    show_tiers: bool,
     special: bool,
 ) -> None:
     """Calculate OT, Sun/PH, and Standby from a man-day rate.
@@ -1525,30 +1536,87 @@ def rate_cmd(
       bid rate --offshore 1700 --special
 
     \b
-    Specialist tier rate card (day rates + OT + standby + mob/demob):
+    Specialist tier overview (thresholds in SGD/USD/EUR/GBP):
+      bid rate --tiers
+
+    \b
+    Specialist tier rate card (specific tier only):
       bid rate --specialist standard
       bid rate --specialist premium
       bid rate --specialist super
+
+    \b
+    Specialist with custom selling rate:
       bid rate --onshore 3500 --specialist super
     """
+    if show_tiers:
+        cfg = _load_mob_config()
+        spec = cfg.get("specialist", {})
+        tiers = spec["tiers"]
+        fx = spec.get("fx", {})
+        currencies = ["SGD", "USD", "EUR", "GBP"]
+        tier_names = ("standard", "premium", "super")
+        w_tier = 10
+        w_col = 10
+        click.echo("SPECIALIST TIERS  ·  Supplier Onshore Day Rate Threshold")
+        click.echo()
+        header = f"  {'Tier':<{w_tier}}" + "".join(f"  {c:>{w_col}}" for c in currencies)
+        click.echo(header)
+        click.echo("  " + "─" * (w_tier + (w_col + 2) * len(currencies)))
+        def _thresh(usd_val: float, currency: str) -> float:
+            sgd_val = usd_val / fx.get("USD", 1)
+            raw = sgd_val * fx.get(currency, 1) if currency != "SGD" else sgd_val
+            return math.ceil(raw / 100) * 100
+
+        for t_name in tier_names:
+            tier = tiers[t_name]
+            usd_max = tier["day_rate_usd_max"]
+            if usd_max >= 99999:
+                ref = tiers["premium"]["day_rate_usd_max"]
+                vals = {c: f"> {_thresh(ref, c):,.0f}" for c in currencies}
+            else:
+                vals = {c: f"≤ {_thresh(usd_max, c):,.0f}" for c in currencies}
+            row = f"  {t_name.title():<{w_tier}}" + "".join(f"  {vals[c]:>{w_col}}" for c in currencies)
+            click.echo(row)
+        click.echo()
+        return
+
     if specialist_tier:
         cfg = _load_mob_config()
         spec = cfg.get("specialist", {})
-        tier = spec["tiers"][specialist_tier]
+        tiers = spec["tiers"]
+        short_haul = spec.get("short_haul_countries", [])
+        has_custom_rate = onshore_rate is not None or offshore_rate is not None
+
+        usd_rate = cfg["defaults"]["usd_exchange_rate"]
+        usd_round = cfg["defaults"]["usd_round"]
+
+        def _print_spec_mob(t_name: str, tier: dict) -> None:
+            click.echo(f"SELLING PRICE  ·  MOB/DEMOB  ·  Specialist  ·  {t_name.title()}")
+            click.echo()
+            w = len("Mob/Demob")
+            for haul, mob_sgd, note in [
+                ("Short-haul", tier["mob_short"], ", ".join(short_haul)),
+                ("Long-haul",  tier["mob_long"],  "all other destinations"),
+            ]:
+                mob_usd = _ceil_to(mob_sgd / usd_rate, usd_round)
+                click.echo(f"    {haul}  ({note})")
+                click.echo(f"    {'':>{w}}  {'SGD':>8}   {'USD':>8}")
+                for lbl, sgd, usd in [("Mob", mob_sgd, mob_usd), ("Demob", mob_sgd, mob_usd), ("Mob/Demob", mob_sgd * 2, mob_usd * 2)]:
+                    click.echo(f"    {lbl:<{w}}  {_fmt_rate(sgd):>8}   {_fmt_rate(usd):>8}")
+                click.echo()
+
+        tier = tiers[specialist_tier]
         label = f"Specialist  ·  {specialist_tier.title()}"
+        usd_rate = cfg["defaults"]["usd_exchange_rate"]
+        click.echo("SELLING PRICE  (SGD / USD)")
+        click.echo()
         for mode, sell in [
             ("onshore",  onshore_rate  if onshore_rate  is not None else tier["onshore_sell"]),
             ("offshore", offshore_rate if offshore_rate is not None else tier["offshore_sell"]),
         ]:
-            _print_seatrium_section(mode, _calc_seatrium(sell, mode), label)
-        short_haul = spec.get("short_haul_countries", [])
-        click.echo(f"MOB/DEMOB  ·  Specialist  ·  {specialist_tier.title()}  (USD)")
-        click.echo()
-        _print_rate_rows([
-            ("Short-haul / leg", tier["mob_short"], ", ".join(short_haul)),
-            ("Long-haul / leg",  tier["mob_long"],  "all other destinations"),
-        ], indent=4)
-        click.echo()
+            _print_seatrium_section(mode, _calc_seatrium(sell, mode), label, usd_rate=usd_rate)
+        _print_spec_mob(specialist_tier, tier)
         return
 
     has_rates = onshore_rate is not None or offshore_rate is not None
@@ -1587,12 +1655,12 @@ def _load_mob_config() -> dict:
               help="Additional cost item, repeatable (e.g. --buffer 1000 'agent fee')")
 @click.option("--specialist", "specialist_tier",
               type=click.Choice(["standard", "premium", "super"], case_sensitive=False),
-              default=None, metavar="TIER",
-              help="Specialist mob by tier (standard/premium/super)")
+              default=None,
+              help="Specialist mob by tier")
 @click.option("--day-rate", "spec_day_rate", type=float, default=None, metavar="RATE",
-              help="Supplier day rate to auto-classify tier (use with --currency)")
+              help="Supplier onshore day rate to auto-classify tier; offshore rates are not used for classification (use with --currency)")
 @click.option("--currency", "spec_currency",
-              type=click.Choice(["USD", "SGD", "EUR", "GBP", "NOK"], case_sensitive=False),
+              type=click.Choice(["USD", "SGD", "EUR", "GBP", "NOK", "DKK"], case_sensitive=False),
               default="USD", show_default=True,
               help="Currency of --day-rate")
 def mob_cmd(
@@ -1628,7 +1696,9 @@ def mob_cmd(
 
         if spec_day_rate is not None:
             fx = spec.get("fx", {})
-            rate_usd = spec_day_rate / fx.get(spec_currency.upper(), 1.0)
+            usd_rate = cfg["defaults"]["usd_exchange_rate"]
+            rate_sgd = spec_day_rate / fx.get(spec_currency.upper(), 1.0)
+            rate_usd = rate_sgd / usd_rate
             auto_tier = next(
                 n for n in ("standard", "premium", "super")
                 if rate_usd <= tiers[n]["day_rate_usd_max"]
@@ -1636,6 +1706,7 @@ def mob_cmd(
             if specialist_tier and specialist_tier != auto_tier:
                 click.echo(
                     f"  Note: {spec_currency.upper()} {_fmt_rate(spec_day_rate)}/day"
+                    f" → SGD {round(rate_sgd):,}/day"
                     f" → USD {round(rate_usd):,}/day classifies as {auto_tier};"
                     f" using specified {specialist_tier} instead.", err=True
                 )
@@ -1643,6 +1714,7 @@ def mob_cmd(
                 specialist_tier = auto_tier
                 click.echo(
                     f"  {spec_currency.upper()} {_fmt_rate(spec_day_rate)}/day"
+                    f"  →  SGD {round(rate_sgd):,}/day"
                     f"  →  USD {round(rate_usd):,}/day"
                     f"  →  {specialist_tier.title()}"
                 )
@@ -1657,20 +1729,31 @@ def mob_cmd(
             haul = "Long-haul" if is_long else "Short-haul"
             mob = tier["mob_long"] if is_long else tier["mob_short"]
             dest = cfg.get("countries", {}).get(code, {}).get("name", code)
-            click.echo(f"SPECIALIST  ·  {specialist_tier.title()}  ·  {dest}  ({haul})  ·  USD")
+            usd_rate = cfg["defaults"]["usd_exchange_rate"]
+            usd_round = cfg["defaults"]["usd_round"]
+            mob_usd = _ceil_to(mob / usd_rate, usd_round)
+            w = len("Mob/Demob")
+            click.echo(f"SELLING PRICE  ·  SPECIALIST  ·  {specialist_tier.title()}  ·  {dest}  ({haul})")
             click.echo()
-            _print_rate_rows([
-                ("Mob",       mob,     None),
-                ("Demob",     mob,     None),
-                ("Mob/Demob", mob * 2, None),
-            ], indent=4)
+            click.echo(f"    {'':>{w}}  {'SGD':>8}   {'USD':>8}")
+            for lbl, sgd, usd in [("Mob", mob, mob_usd), ("Demob", mob, mob_usd), ("Mob/Demob", mob * 2, mob_usd * 2)]:
+                click.echo(f"    {lbl:<{w}}  {_fmt_rate(sgd):>8}   {_fmt_rate(usd):>8}")
         else:
-            click.echo(f"SPECIALIST  ·  {specialist_tier.title()}  ·  USD")
+            usd_rate = cfg["defaults"]["usd_exchange_rate"]
+            usd_round = cfg["defaults"]["usd_round"]
+            w = len("Mob/Demob")
+            click.echo(f"SELLING PRICE  ·  SPECIALIST  ·  {specialist_tier.title()}")
             click.echo()
-            _print_rate_rows([
-                ("Short-haul / leg", tier["mob_short"], ", ".join(short_haul)),
-                ("Long-haul / leg",  tier["mob_long"],  "all other destinations"),
-            ], indent=4)
+            for haul, mob_sgd, note in [
+                ("Short-haul", tier["mob_short"], ", ".join(short_haul)),
+                ("Long-haul",  tier["mob_long"],  "all other destinations"),
+            ]:
+                mob_usd = _ceil_to(mob_sgd / usd_rate, usd_round)
+                click.echo(f"    {haul}  ({note})")
+                click.echo(f"    {'':>{w}}  {'SGD':>8}   {'USD':>8}")
+                for lbl, sgd, usd in [("Mob", mob_sgd, mob_usd), ("Demob", mob_sgd, mob_usd), ("Mob/Demob", mob_sgd * 2, mob_usd * 2)]:
+                    click.echo(f"    {lbl:<{w}}  {_fmt_rate(sgd):>8}   {_fmt_rate(usd):>8}")
+                click.echo()
 
         click.echo()
         click.echo(f"  → Rate card: bid rate --specialist {specialist_tier}")
