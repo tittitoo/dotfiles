@@ -128,6 +128,15 @@ transport_one_way    = 70
 hotel_per_night      = 150
 travel_days_one_way  = 1
 
+[countries.AU]
+name                 = "Australia"
+airfare_roundtrip    = 1500
+visa                 = 150
+transport_one_way    = 100
+hotel_per_night      = 200
+travel_days_one_way  = 1
+visa_note            = "Work visa required (subclass 400 short-stay specialist); allow 2–4 weeks"
+
 [countries.US]
 name                 = "United States"
 airfare_roundtrip    = 2200
