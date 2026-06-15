@@ -878,11 +878,14 @@ def setup():
         click.echo(f"Copied Excel.officeUI to {office_ui_dst.parent}")
 
         # Git Bash setup — write .bashrc alias and .minttyrc font config
-        with open(Path.home() / ".bashrc", "w") as f:
-            f.write(f"{BID_ALIAS} \n")
-        with open(Path.home() / ".minttyrc", "w") as f:
-            f.write("FontFamily=Victor Mono\nFontSize=15\n")
-        click.echo("Git Bash .bashrc and .minttyrc configured.")
+        try:
+            with open(Path.home() / ".bashrc", "w") as f:
+                f.write(f"{BID_ALIAS} \n")
+            with open(Path.home() / ".minttyrc", "w") as f:
+                f.write("FontFamily=Victor Mono\nFontSize=15\n")
+            click.echo("Git Bash .bashrc and .minttyrc configured.")
+        except PermissionError:
+            click.echo("Skipped Git Bash .bashrc/.minttyrc setup (permission denied).")
     elif platform.system() == "Darwin":
         # click.echo(RFQ)
         # click.echo(BID_ALIAS)
