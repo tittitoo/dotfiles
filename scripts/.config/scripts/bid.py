@@ -2049,6 +2049,59 @@ def mob_config_cmd(output: str) -> None:
 # ── End mob/demob helpers ─────────────────────────────────────────────────────
 
 
+# ── Schedule ──────────────────────────────────────────────────────────────────
+
+@click.command("schedule")
+@click.argument("input_file", type=click.Path(exists=True, path_type=Path))
+@click.option("--start", "start_date_str", default=None, metavar="YYYY-MM-DD",
+              help="Project start date (overrides 'start:' in markdown)")
+@click.option("--open", "open_after", is_flag=True,
+              help="Open the output file after generation")
+def schedule_cmd(input_file: Path, start_date_str: str | None, open_after: bool) -> None:
+    """Generate an Excel Gantt chart from a markdown schedule file.
+
+    \b
+    Markdown format:
+      # Project Name
+      start: 2026-08-01
+
+      ## Phase Name
+      - Item description: 12–14 wks EXW NO
+      - Another item: 4 wks
+      - milestone: Key Milestone
+
+      ## Next Phase [after: Phase Name]
+      - Item: 3 wks
+
+    \b
+    Parallel phases: give both the same [after:] dependency.
+    Multi-dep join:  [after: Phase A, Phase B]
+
+    \b
+    Examples:
+      bid schedule schedule.md
+      bid schedule schedule.md --start 2026-09-01 --open
+    """
+    from util.schedule import parse_schedule, generate_excel
+
+    md_text = input_file.read_text(encoding="utf-8")
+    schedule = parse_schedule(md_text)
+
+    if start_date_str:
+        from datetime import date
+        schedule.start_date = date.fromisoformat(start_date_str)
+
+    output_path = input_file.with_suffix(".xlsx")
+    generate_excel(schedule, output_path)
+    click.echo(f"Generated → {output_path}")
+
+    if open_after:
+        open_with_default_app(output_path)
+
+
+# ── End schedule ──────────────────────────────────────────────────────────────
+
+
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
@@ -2081,6 +2134,7 @@ bid_group.add_command(co)
 bid_group.add_command(rate_cmd)
 bid_group.add_command(mob_cmd)
 bid_group.add_command(mob_config_cmd)
+bid_group.add_command(schedule_cmd)
 
 if __name__ == "__main__":
     bid()
