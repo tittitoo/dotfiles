@@ -294,8 +294,12 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
                 c = ws.cell(row=row, column=1, value=f"◆  {item.name}")
                 c.font = MS_FONT
                 c.alignment = INDENT2
-                # Milestone falls at last week of its phase
-                ms_week = (phase.end_week - 1) if phase.end_week > phase.start_week else phase.start_week
+                # Position: start of phase if no non-milestone items precede this one, else end
+                at_start = not any(not it.is_milestone for it in phase.items[:j])
+                if at_start:
+                    ms_week = phase.start_week
+                else:
+                    ms_week = (phase.end_week - 1) if phase.end_week > phase.start_week else phase.start_week
                 ms_col = min(WK1 + ms_week, WK1 + total_weeks - 1)
                 mc = ws.cell(row=row, column=ms_col)
                 mc.value = "◆"
