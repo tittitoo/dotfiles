@@ -215,7 +215,7 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
     PHASE_BAR   = PatternFill("solid", fgColor="005BBF")
     HDR_FONT    = F(bold=True, size=9, color="FFFFFF")
     HDR_FILL    = PatternFill("solid", fgColor="005BBF")
-    ITEM_FONT   = F(size=10)
+    ITEM_FONT   = F(size=11)
     MS_FONT     = F(bold=True, size=10, color="833C00")
     MS_BAR      = PatternFill("solid", fgColor="F4B942")
     # Two alternating bar shades so adjacent items are visually distinct
