@@ -56,6 +56,7 @@ _LEAD_SINGLE_RE = re.compile(r":\s*(\d+)\s*wks?(.*)$", re.IGNORECASE)
 _AFTER_RE       = re.compile(r"\[after:\s*([^\]]+)\]", re.IGNORECASE)
 _PHASE_START_RE = re.compile(r"\[start:\s*(?:WK)?(\d+)\]", re.IGNORECASE)
 _START_RE       = re.compile(r"^start:\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
+_AIR_RE         = re.compile(r"\[air\]", re.IGNORECASE)
 
 
 def parse_schedule(md_text: str) -> Schedule:
@@ -103,12 +104,16 @@ def parse_schedule(md_text: str) -> Schedule:
                 )
                 continue
 
-            # Strip [after:] before origin capture so it isn't treated as origin text
+            # Strip [after:] and [air] before origin capture so they aren't treated as origin text
             item_deps: list[str] = []
             after_m = _AFTER_RE.search(text)
             if after_m:
                 item_deps = [d.strip() for d in after_m.group(1).split(",")]
                 text = (text[: after_m.start()] + text[after_m.end():]).strip()
+            air_m = _AIR_RE.search(text)
+            air = bool(air_m)
+            if air_m:
+                text = (text[: air_m.start()] + text[air_m.end():]).strip()
 
             m2 = _LEAD_RANGE_RE.search(text)
             if m2:
@@ -126,7 +131,7 @@ def parse_schedule(md_text: str) -> Schedule:
 
             current_phase.items.append(
                 Item(name=name, lead_min=lead_min, lead_max=lead_max,
-                     origin=origin, freight_weeks=_calc_freight(origin),
+                     origin=origin, freight_weeks=2 if air else _calc_freight(origin),
                      depends_on=item_deps)
             )
 
