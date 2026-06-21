@@ -14,6 +14,22 @@ class Item:
     lead_max: int
     origin: str | None = None
     is_milestone: bool = False
+    freight_weeks: int = 0  # sea freight buffer; computed from origin at parse time
+
+
+def _calc_freight(origin: str | None) -> int:
+    """Return sea freight weeks based on origin country code.
+
+    CN → 2 weeks (short sea), all other non-SG origins → 4 weeks (long haul).
+    """
+    if not origin:
+        return 0
+    country = origin.upper().split()[-1]
+    if country == "SG":
+        return 0
+    if country == "CN":
+        return 2
+    return 4  # 3–4 wks long-haul, use max for conservative scheduling
 
 
 @dataclass
@@ -92,7 +108,8 @@ def parse_schedule(md_text: str) -> Schedule:
                     name, lead_min, lead_max, origin = text, 0, 0, None
 
             current_phase.items.append(
-                Item(name=name, lead_min=lead_min, lead_max=lead_max, origin=origin)
+                Item(name=name, lead_min=lead_min, lead_max=lead_max,
+                     origin=origin, freight_weeks=_calc_freight(origin))
             )
 
     return Schedule(project_name=project_name, start_date=start_date, phases=phases)
@@ -108,7 +125,7 @@ def _compute_schedule(phases: list[Phase]) -> None:
             phase.start_week = 0 if i == 0 else phases[i - 1].end_week
 
         max_lead = max(
-            (item.lead_max for item in phase.items if not item.is_milestone),
+            (item.lead_max + item.freight_weeks for item in phase.items if not item.is_milestone),
             default=0,
         )
         phase.end_week = phase.start_week + max_lead
@@ -129,27 +146,40 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
     ws.title = "Schedule"
 
     # ── Styles ────────────────────────────────────────────────────────────────
-    PHASE_FONT  = Font(bold=True, color="FFFFFF", size=11)
+    # Aptos is the default Microsoft 365 font (2023+); Excel substitutes Arial on older installs.
+    def F(**kw) -> Font:
+        return Font(name="Aptos", **kw)
+
+    PHASE_FONT  = F(bold=True, color="FFFFFF", size=11)
     PHASE_FILL  = PatternFill("solid", fgColor="1F4E79")
     PHASE_BAR   = PatternFill("solid", fgColor="2E75B6")
-    HDR_FONT    = Font(bold=True, size=9, color="FFFFFF")
+    HDR_FONT    = F(bold=True, size=9, color="FFFFFF")
     HDR_FILL    = PatternFill("solid", fgColor="2E75B6")
-    ITEM_FONT   = Font(size=10)
-    MS_FONT     = Font(bold=True, size=10, color="833C00")
+    ITEM_FONT   = F(size=10)
+    MS_FONT     = F(bold=True, size=10, color="833C00")
     MS_BAR      = PatternFill("solid", fgColor="F4B942")
-    BAR_FILL    = PatternFill("solid", fgColor="9DC3E6")
-    ALT_FILL    = PatternFill("solid", fgColor="EBF3FB")
-    CENTER      = Alignment(horizontal="center", vertical="center")
+    # Two alternating bar shades so adjacent items are visually distinct
+    BAR_FILLS     = [
+        PatternFill("solid", fgColor="9DC3E6"),  # even rows: light blue
+        PatternFill("solid", fgColor="5F9DD1"),  # odd rows:  medium blue
+    ]
+    # Sea freight band: soft green — reads as "in transit / logistics"
+    FREIGHT_FILLS = [
+        PatternFill("solid", fgColor="A9D18E"),  # even rows: light green
+        PatternFill("solid", fgColor="70AD47"),  # odd rows:  medium green
+    ]
+    ALT_FILL      = PatternFill("solid", fgColor="EBF3FB")
+    CENTER      = Alignment(horizontal="center", vertical="center", wrap_text=True)
     INDENT1     = Alignment(horizontal="left", vertical="center", indent=1)
     INDENT2     = Alignment(horizontal="left", vertical="center", indent=2)
 
     FIXED = 5   # Name | Lead Time | Origin | Start Wk | End Wk
-    WK1   = FIXED + 1  # 1-based column index of week 1
+    WK1   = FIXED + 1
 
     # ── Row 1: project title ─────────────────────────────────────────────────
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=FIXED + total_weeks)
     tc = ws.cell(row=1, column=1, value=schedule.project_name)
-    tc.font = Font(bold=True, size=13, color="1F4E79")
+    tc.font = F(bold=True, size=13, color="1F4E79")
     tc.alignment = INDENT1
     ws.row_dimensions[1].height = 24
 
@@ -166,7 +196,7 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
         c.font = HDR_FONT
         c.fill = HDR_FILL
         c.alignment = CENTER
-    ws.row_dimensions[2].height = 28
+    ws.row_dimensions[2].height = 40  # taller to show two-line date clearly
 
     # ── Data rows ─────────────────────────────────────────────────────────────
     row = 3
@@ -184,16 +214,20 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
 
         for j, item in enumerate(phase.items):
             bg = ALT_FILL if j % 2 == 0 else None
+            bar_fill = BAR_FILLS[j % 2]
 
             if item.is_milestone:
                 c = ws.cell(row=row, column=1, value=f"◆  {item.name}")
                 c.font = MS_FONT
                 c.alignment = INDENT2
-                mc = ws.cell(row=row, column=WK1 + phase.start_week)
+                # Milestone falls at last week of its phase
+                ms_week = (phase.end_week - 1) if phase.end_week > phase.start_week else phase.start_week
+                ms_col = min(WK1 + ms_week, WK1 + total_weeks - 1)
+                mc = ws.cell(row=row, column=ms_col)
                 mc.value = "◆"
                 mc.fill = MS_BAR
                 mc.alignment = CENTER
-                mc.font = Font(bold=True, color="833C00")
+                mc.font = F(bold=True, color="833C00")
             else:
                 c = ws.cell(row=row, column=1, value=item.name)
                 c.font = ITEM_FONT
@@ -204,14 +238,24 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
                 ws.cell(row=row, column=2, value=lt).alignment = CENTER
                 ws.cell(row=row, column=3, value=item.origin or "").alignment = CENTER
                 ws.cell(row=row, column=4, value=phase.start_week + 1).alignment = CENTER
-                ws.cell(row=row, column=5, value=phase.start_week + item.lead_max).alignment = CENTER
+                # End Wk = delivery week (production + sea freight)
+                ws.cell(row=row, column=5,
+                        value=phase.start_week + item.lead_max + item.freight_weeks).alignment = CENTER
 
                 if item.lead_max > 0:
                     for ci in range(
                         WK1 + phase.start_week,
                         min(WK1 + phase.start_week + item.lead_max, WK1 + total_weeks),
                     ):
-                        ws.cell(row=row, column=ci).fill = BAR_FILL
+                        ws.cell(row=row, column=ci).fill = bar_fill
+
+                if item.freight_weeks > 0:
+                    freight_start = WK1 + phase.start_week + item.lead_max
+                    for ci in range(
+                        freight_start,
+                        min(freight_start + item.freight_weeks, WK1 + total_weeks),
+                    ):
+                        ws.cell(row=row, column=ci).fill = FREIGHT_FILLS[j % 2]
 
             if bg:
                 for ci in range(1, FIXED + 1):
@@ -233,7 +277,7 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
     ws.column_dimensions["D"].width = 7
     ws.column_dimensions["E"].width = 7
     for w in range(1, total_weeks + 1):
-        ws.column_dimensions[get_column_letter(WK1 + w - 1)].width = 5.5
+        ws.column_dimensions[get_column_letter(WK1 + w - 1)].width = 8.5  # wide enough for "01 Aug"
 
     ws.freeze_panes = ws.cell(row=3, column=WK1)
 
