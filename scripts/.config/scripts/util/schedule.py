@@ -126,13 +126,17 @@ def parse_schedule(md_text: str) -> Schedule:
 def _compute_schedule(phases: list[Phase]) -> None:
     by_name = {p.name: p for p in phases}
     for i, phase in enumerate(phases):
-        if phase.depends_on:
+        if phase.fixed_start is not None and not phase.depends_on:
+            # [start: WKN] with no [after:] → hard override; ignore implicit prev-phase sequencing
+            phase.start_week = phase.fixed_start
+        elif phase.depends_on:
             deps = [by_name[d] for d in phase.depends_on if d in by_name]
-            computed = max((d.end_week for d in deps), default=0)
+            dep_end = max((d.end_week for d in deps), default=0)
+            # [after: X] [start: WKN] → later of dependency end or fixed floor
+            phase.start_week = max(dep_end, phase.fixed_start) if phase.fixed_start is not None else dep_end
         else:
-            computed = 0 if i == 0 else phases[i - 1].end_week
-        # [start: WKN] sets a floor; if dependency ends later, dependency wins
-        phase.start_week = max(computed, phase.fixed_start) if phase.fixed_start is not None else computed
+            # No annotation → sequential after previous phase
+            phase.start_week = 0 if i == 0 else phases[i - 1].end_week
 
         max_lead = max(
             (item.lead_max + item.freight_weeks for item in phase.items if not item.is_milestone),
