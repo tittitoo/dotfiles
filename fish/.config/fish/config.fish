@@ -1,13 +1,13 @@
 # fish config
 
-# PATH
-set -gx PATH /usr/local/opt/coreutils/libexec/gnubin $PATH
-set -gx PATH $HOME/.local/bin $PATH
-set -gx PATH $HOME/.cargo/bin $PATH
-set -gx PATH $HOME/.config/scripts $PATH
-set -gx PATH $HOME/Repos/github.com/tittitoo/mee $PATH
-set -gx PATH $HOME/Repos/github.com/tittitoo/minimalist $PATH
-set -gx PATH $HOME/Repos/github.com/tittitoo/docr $PATH
+# PATH — fish_add_path -P: prepends directly to PATH (not universal fish_user_paths),
+# skips silently if already present. Last call wins highest priority.
+fish_add_path -P /usr/local/opt/coreutils/libexec/gnubin
+fish_add_path -P $HOME/.local/bin
+fish_add_path -P $HOME/.cargo/bin
+fish_add_path -P $HOME/Repos/github.com/tittitoo/mee
+fish_add_path -P $HOME/Repos/github.com/tittitoo/minimalist
+fish_add_path -P $HOME/Repos/github.com/tittitoo/docr
 
 # Homebrew PATH setting
 
@@ -27,19 +27,16 @@ end
 if test (uname -s) = Darwin
     set -gx DYLD_LIBRARY_PATH $HOMEBREW_PREFIX/lib $DYLD_LIBRARY_PATH
 end
-set -gx PATH $HOMEBREW_PREFIX/bin $PATH
+fish_add_path -P $HOMEBREW_PREFIX/bin
 
 # ruby PATH
-set -gx PATH $HOMEBREW_PREFIX/opt/ruby/bin $PATH
+fish_add_path -P $HOMEBREW_PREFIX/opt/ruby/bin
 
 # python PATH
-set -gx PATH $HOMEBREW_PREFIX/bin/python3.13 $PATH
+fish_add_path -P $HOMEBREW_PREFIX/bin/python3.13
 
 # image.nvim (covered by DYLD_LIBRARY_PATH above)
 set -gx DYLD_FALLBACK_LIBRARY_PATH $HOMEBREW_PREFIX/lib
-
-# remove duplicate path entries
-set -gx PATH (echo $PATH | tr ' ' '\n' | sort -u | sed 's/:$//')
 
 # Supress greeting message
 set fish_greeting
@@ -164,22 +161,19 @@ zoxide init fish | source
 status --is-interactive; and rbenv init - --no-rehash fish | source
 
 # Added by Windsurf
-fish_add_path /Users/infowizard/.codeium/windsurf/bin
+fish_add_path -P /Users/infowizard/.codeium/windsurf/bin
 
 set -gx XDG_CONFIG_HOME ~/.config
 set -gx VOLTA_HOME "$HOME/.volta"
-set -gx PATH "$VOLTA_HOME/bin" $PATH
+fish_add_path -P "$VOLTA_HOME/bin"
 
 # pnpm
 set -gx PNPM_HOME /Users/infowizard/Library/pnpm
-if not string match -q -- $PNPM_HOME $PATH
-    set -gx PATH "$PNPM_HOME" $PATH
-end
+fish_add_path -P "$PNPM_HOME"
 # pnpm end
 
-# Ensure scripts dir has highest PATH priority so wrappers shadow system tools
-# (the sort-based dedup above changes PATH order, so we re-add this last)
-set -gx PATH $HOME/.config/scripts $PATH
+# .config/scripts last = highest PATH priority (shadows system tools)
+fish_add_path -P $HOME/.config/scripts
 
 # Auto-attach to or start ai_general tmuxinator session
 # Skip when Atuin Desktop opens a terminal (ATUIN_TMUX_POPUP is set in that context)
