@@ -232,7 +232,7 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
 
     # ── Row 1: project title ─────────────────────────────────────────────────
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=FIXED + total_weeks)
-    tc = ws.cell(row=1, column=1, value=schedule.project_name)
+    tc = ws.cell(row=1, column=1, value=f"Project Schedule: {schedule.project_name}")
     tc.font = F(bold=True, size=13, color="1F4E79")
     tc.alignment = INDENT1
     ws.row_dimensions[1].height = 24
