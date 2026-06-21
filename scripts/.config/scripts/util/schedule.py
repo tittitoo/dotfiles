@@ -37,6 +37,7 @@ class Phase:
     name: str
     items: list[Item] = field(default_factory=list)
     depends_on: list[str] = field(default_factory=list)
+    fixed_start: int | None = None  # [start: WK15] → 15; overrides / floors dependency calc
     start_week: int = 0
     end_week: int = 0
 
@@ -51,6 +52,7 @@ class Schedule:
 _LEAD_RANGE_RE  = re.compile(r":\s*(\d+)\s*[–\-]\s*(\d+)\s*wks?(.*)$", re.IGNORECASE)
 _LEAD_SINGLE_RE = re.compile(r":\s*(\d+)\s*wks?(.*)$", re.IGNORECASE)
 _AFTER_RE       = re.compile(r"\[after:\s*([^\]]+)\]", re.IGNORECASE)
+_PHASE_START_RE = re.compile(r"\[start:\s*(?:WK)?(\d+)\]", re.IGNORECASE)
 _START_RE       = re.compile(r"^start:\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
 
 
@@ -75,11 +77,17 @@ def parse_schedule(md_text: str) -> Schedule:
         if s.startswith("## "):
             content = s[3:].strip()
             depends: list[str] = []
+            fixed_start: int | None = None
+            # Parse [start: WKN] first so [after:] doesn't consume it
+            ps_m = _PHASE_START_RE.search(content)
+            if ps_m:
+                fixed_start = int(ps_m.group(1)) - 1  # convert 1-based WK to 0-based
+                content = (content[: ps_m.start()] + content[ps_m.end():]).strip()
             after_m = _AFTER_RE.search(content)
             if after_m:
                 depends = [d.strip() for d in after_m.group(1).split(",")]
                 content = content[: after_m.start()].strip()
-            current_phase = Phase(name=content, depends_on=depends)
+            current_phase = Phase(name=content, depends_on=depends, fixed_start=fixed_start)
             phases.append(current_phase)
             continue
 
@@ -120,9 +128,11 @@ def _compute_schedule(phases: list[Phase]) -> None:
     for i, phase in enumerate(phases):
         if phase.depends_on:
             deps = [by_name[d] for d in phase.depends_on if d in by_name]
-            phase.start_week = max((d.end_week for d in deps), default=0)
+            computed = max((d.end_week for d in deps), default=0)
         else:
-            phase.start_week = 0 if i == 0 else phases[i - 1].end_week
+            computed = 0 if i == 0 else phases[i - 1].end_week
+        # [start: WKN] sets a floor; if dependency ends later, dependency wins
+        phase.start_week = max(computed, phase.fixed_start) if phase.fixed_start is not None else computed
 
         max_lead = max(
             (item.lead_max + item.freight_weeks for item in phase.items if not item.is_milestone),
