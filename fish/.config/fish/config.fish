@@ -2,15 +2,13 @@
 
 # PATH — fish_add_path -P: prepends directly to PATH (not universal fish_user_paths),
 # skips silently if already present. Last call wins highest priority.
-fish_add_path -P /usr/local/opt/coreutils/libexec/gnubin
 fish_add_path -P $HOME/.local/bin
 fish_add_path -P $HOME/.cargo/bin
 fish_add_path -P $HOME/Repos/github.com/tittitoo/mee
 fish_add_path -P $HOME/Repos/github.com/tittitoo/minimalist
 fish_add_path -P $HOME/Repos/github.com/tittitoo/docr
 
-# Homebrew PATH setting
-
+# Homebrew
 if test (uname -s) = Darwin
     if test (uname -m) = arm64
         set -gx HOMEBREW_PREFIX /opt/homebrew
@@ -28,12 +26,8 @@ if test (uname -s) = Darwin
     set -gx DYLD_LIBRARY_PATH $HOMEBREW_PREFIX/lib $DYLD_LIBRARY_PATH
 end
 fish_add_path -P $HOMEBREW_PREFIX/bin
-
-# ruby PATH
+fish_add_path -P $HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin
 fish_add_path -P $HOMEBREW_PREFIX/opt/ruby/bin
-
-# python PATH
-fish_add_path -P $HOMEBREW_PREFIX/bin/python3.13
 
 # image.nvim (covered by DYLD_LIBRARY_PATH above)
 set -gx DYLD_FALLBACK_LIBRARY_PATH $HOMEBREW_PREFIX/lib
@@ -46,17 +40,9 @@ set -g fish_history ""
 
 # Enable vi mode
 fish_vi_key_bindings
-# set -g fish_key_bindings fish_vi_key_binding
-# fish_key_bindings fish_mode_vi
 
 # fzf
-# fzf source
 fzf --fish | source
-# set awk_cmd '{gsub(/^[0-9]*\/|\//, ""); print}'
-set awk_cmd 'gsub(/^[0-9]*\/|\//, ""); print'
-# --bind "ctrl-n:execute(echo {} | awk '{gsub(/^[0-9]*\/|\//, \"\"); print}' | pbcopy)"
-# --bind "ctrl-n:execute(echo {} | awk \'{gsub(\/^[0-9]+\/, \"\"); print}\' | pbcopy)"
-# --bind "ctrl-u:execute(echo {} | pbcopy)"
 set -x FZF_DEFAULT_COMMAND 'fd -t d --follow --exclude .git --color=never'
 
 # Function to set FZF colors based on macOS appearance
@@ -117,16 +103,11 @@ set -x FZF_ALT_C_OPTS '
   --bind "ctrl-u:preview-page-up,ctrl-d:preview-page-down"
   --bind "ctrl-o:execute-silent(open {})"'
 
-#   --bind "ctrl-n:preview-page-up,ctrl-p:preview-page-down"
-
-# Configure keybidings for fzf
+# Configure keybindings for fzf
 # \e means ALT, \c means CTRL
 set fzf_fd_opts --color=never
 set fzf_directory_opts --prompt="Directories> "
 fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ca --git_status=\cg --git_log= --processes=\cp #--gi_log=\cl
-
-# fiz.fish
-# set fzf_preview_dir_cmd eza --all --color=always
 
 # Yazi
 function y
@@ -153,9 +134,6 @@ starship init fish | source
 
 # zoxide
 zoxide init fish | source
-
-# # Start the Neovim server if not already running
-# nvim_server
 
 # Added by `rbenv init` on Tue Oct 22 13:11:31 +08 2024
 status --is-interactive; and rbenv init - --no-rehash fish | source
