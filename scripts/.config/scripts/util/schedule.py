@@ -289,12 +289,15 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
 
                 lt = (f"{item.lead_max} wks" if item.lead_min == item.lead_max
                       else f"{item.lead_min}–{item.lead_max} wks") if item.lead_max else "–"
-                ws.cell(row=row, column=2, value=lt).alignment = CENTER
-                ws.cell(row=row, column=3, value=item.origin or "").alignment = CENTER
-                ws.cell(row=row, column=4, value=item.start_week + 1).alignment = CENTER
-                # End Wk = delivery week (production + sea freight)
-                ws.cell(row=row, column=5,
-                        value=item.start_week + item.lead_max + item.freight_weeks).alignment = CENTER
+                for ci, val in [
+                    (2, lt),
+                    (3, item.origin or ""),
+                    (4, item.start_week + 1),
+                    (5, item.start_week + item.lead_max + item.freight_weeks),
+                ]:
+                    cell = ws.cell(row=row, column=ci, value=val)
+                    cell.font = ITEM_FONT
+                    cell.alignment = CENTER
 
                 if item.lead_max > 0:
                     for ci in range(
