@@ -175,6 +175,10 @@ fish_add_path -P "$PNPM_HOME"
 # .config/scripts last = highest PATH priority (shadows system tools)
 fish_add_path -P $HOME/.config/scripts
 
+# Deduplicate PATH: keep first (highest-priority) occurrence; drop malformed
+# relative entries (e.g. "Fusion.app/..." caused by old space-splitting bug)
+set -gx PATH (printf '%s\n' $PATH | awk '!seen[$0]++ && /^\//')
+
 # Auto-attach to or start ai_general tmuxinator session
 # Skip when Atuin Desktop opens a terminal (ATUIN_TMUX_POPUP is set in that context)
 # Also re-attach if TMUX is set but the server is dead (e.g. after tmux kill-server)
