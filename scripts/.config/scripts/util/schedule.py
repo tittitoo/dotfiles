@@ -204,25 +204,31 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
     def F(**kw) -> Font:
         return Font(name="Aptos", **kw)
 
+    # Palette derived from Jason Blue 005BBF
+    # Dark shade (~70%): 003D80  — phase header background, title
+    # Dominant:           005BBF  — column header, phase span bar
+    # Medium tint (~35%): 5594D4  — odd item bars
+    # Light tint (~60%):  99BDE5  — even item bars
+    # Very light (~85%):  D9E6F5  — alt row background
     PHASE_FONT  = F(bold=True, color="FFFFFF", size=11)
-    PHASE_FILL  = PatternFill("solid", fgColor="1F4E79")
-    PHASE_BAR   = PatternFill("solid", fgColor="2E75B6")
+    PHASE_FILL  = PatternFill("solid", fgColor="003D80")
+    PHASE_BAR   = PatternFill("solid", fgColor="005BBF")
     HDR_FONT    = F(bold=True, size=9, color="FFFFFF")
-    HDR_FILL    = PatternFill("solid", fgColor="2E75B6")
+    HDR_FILL    = PatternFill("solid", fgColor="005BBF")
     ITEM_FONT   = F(size=10)
     MS_FONT     = F(bold=True, size=10, color="833C00")
     MS_BAR      = PatternFill("solid", fgColor="F4B942")
     # Two alternating bar shades so adjacent items are visually distinct
     BAR_FILLS     = [
-        PatternFill("solid", fgColor="9DC3E6"),  # even rows: light blue
-        PatternFill("solid", fgColor="5F9DD1"),  # odd rows:  medium blue
+        PatternFill("solid", fgColor="99BDE5"),  # even rows: light tint
+        PatternFill("solid", fgColor="5594D4"),  # odd rows:  medium tint
     ]
     # Sea freight band: soft green — reads as "in transit / logistics"
     FREIGHT_FILLS = [
         PatternFill("solid", fgColor="A9D18E"),  # even rows: light green
         PatternFill("solid", fgColor="70AD47"),  # odd rows:  medium green
     ]
-    ALT_FILL      = PatternFill("solid", fgColor="EBF3FB")
+    ALT_FILL      = PatternFill("solid", fgColor="D9E6F5")
     CENTER      = Alignment(horizontal="center", vertical="center", wrap_text=True)
     INDENT1     = Alignment(horizontal="left", vertical="center", indent=1)
     INDENT2     = Alignment(horizontal="left", vertical="center", indent=2)
@@ -233,7 +239,7 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
     # ── Row 1: project title ─────────────────────────────────────────────────
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=FIXED + total_weeks)
     tc = ws.cell(row=1, column=1, value=f"Project Schedule: {schedule.project_name}")
-    tc.font = F(bold=True, size=13, color="1F4E79")
+    tc.font = F(bold=True, size=13, color="003D80")
     tc.alignment = INDENT1
     ws.row_dimensions[1].height = 24
 
