@@ -15,6 +15,8 @@ class Item:
     origin: str | None = None
     is_milestone: bool = False
     freight_weeks: int = 0  # sea freight buffer; computed from origin at parse time
+    depends_on: list[str] = field(default_factory=list)
+    start_week: int = 0  # computed by _compute_schedule
 
 
 def _calc_freight(origin: str | None) -> int:
@@ -101,6 +103,13 @@ def parse_schedule(md_text: str) -> Schedule:
                 )
                 continue
 
+            # Strip [after:] before origin capture so it isn't treated as origin text
+            item_deps: list[str] = []
+            after_m = _AFTER_RE.search(text)
+            if after_m:
+                item_deps = [d.strip() for d in after_m.group(1).split(",")]
+                text = (text[: after_m.start()] + text[after_m.end():]).strip()
+
             m2 = _LEAD_RANGE_RE.search(text)
             if m2:
                 lead_min, lead_max = int(m2.group(1)), int(m2.group(2))
@@ -117,7 +126,8 @@ def parse_schedule(md_text: str) -> Schedule:
 
             current_phase.items.append(
                 Item(name=name, lead_min=lead_min, lead_max=lead_max,
-                     origin=origin, freight_weeks=_calc_freight(origin))
+                     origin=origin, freight_weeks=_calc_freight(origin),
+                     depends_on=item_deps)
             )
 
     return Schedule(project_name=project_name, start_date=start_date, phases=phases)
@@ -125,21 +135,22 @@ def parse_schedule(md_text: str) -> Schedule:
 
 def _compute_schedule(phases: list[Phase]) -> None:
     by_phase: dict[str, Phase] = {p.name: p for p in phases}
-    # Item lookup: item name → (phase, item); phase names take priority if name collision
-    by_item: dict[str, tuple[Phase, Item]] = {
-        item.name: (p, item)
+    # Item lookup: item name → item; phase names take priority if name collision
+    by_item: dict[str, Item] = {
+        item.name: item
         for p in phases
         for item in p.items
         if not item.is_milestone
     }
 
+    def _item_delivery(item: Item) -> int:
+        return item.start_week + item.lead_max + item.freight_weeks
+
     def _dep_end(name: str) -> int:
         if name in by_phase:
             return by_phase[name].end_week
         if name in by_item:
-            dep_phase, dep_item = by_item[name]
-            # Item finishes when delivered: phase start + production + freight
-            return dep_phase.start_week + dep_item.lead_max + dep_item.freight_weeks
+            return _item_delivery(by_item[name])
         return 0  # unknown reference, ignored
 
     for i, phase in enumerate(phases):
@@ -154,11 +165,19 @@ def _compute_schedule(phases: list[Phase]) -> None:
             # No annotation → sequential after previous phase
             phase.start_week = 0 if i == 0 else phases[i - 1].end_week
 
-        max_lead = max(
-            (item.lead_max + item.freight_weeks for item in phase.items if not item.is_milestone),
-            default=0,
+        # Compute per-item start weeks (items processed top-to-bottom so earlier items resolve first)
+        for item in phase.items:
+            if item.is_milestone:
+                continue
+            if item.depends_on:
+                item.start_week = max((_dep_end(d) for d in item.depends_on), default=phase.start_week)
+            else:
+                item.start_week = phase.start_week
+
+        phase.end_week = max(
+            (_item_delivery(item) for item in phase.items if not item.is_milestone),
+            default=phase.start_week,
         )
-        phase.end_week = phase.start_week + max_lead
 
 
 def generate_excel(schedule: Schedule, output_path: Path) -> None:
@@ -267,20 +286,20 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
                       else f"{item.lead_min}–{item.lead_max} wks") if item.lead_max else "–"
                 ws.cell(row=row, column=2, value=lt).alignment = CENTER
                 ws.cell(row=row, column=3, value=item.origin or "").alignment = CENTER
-                ws.cell(row=row, column=4, value=phase.start_week + 1).alignment = CENTER
+                ws.cell(row=row, column=4, value=item.start_week + 1).alignment = CENTER
                 # End Wk = delivery week (production + sea freight)
                 ws.cell(row=row, column=5,
-                        value=phase.start_week + item.lead_max + item.freight_weeks).alignment = CENTER
+                        value=item.start_week + item.lead_max + item.freight_weeks).alignment = CENTER
 
                 if item.lead_max > 0:
                     for ci in range(
-                        WK1 + phase.start_week,
-                        min(WK1 + phase.start_week + item.lead_max, WK1 + total_weeks),
+                        WK1 + item.start_week,
+                        min(WK1 + item.start_week + item.lead_max, WK1 + total_weeks),
                     ):
                         ws.cell(row=row, column=ci).fill = bar_fill
 
                 if item.freight_weeks > 0:
-                    freight_start = WK1 + phase.start_week + item.lead_max
+                    freight_start = WK1 + item.start_week + item.lead_max
                     for ci in range(
                         freight_start,
                         min(freight_start + item.freight_weeks, WK1 + total_weeks),
