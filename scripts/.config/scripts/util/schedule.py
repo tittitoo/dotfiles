@@ -124,14 +124,30 @@ def parse_schedule(md_text: str) -> Schedule:
 
 
 def _compute_schedule(phases: list[Phase]) -> None:
-    by_name = {p.name: p for p in phases}
+    by_phase: dict[str, Phase] = {p.name: p for p in phases}
+    # Item lookup: item name → (phase, item); phase names take priority if name collision
+    by_item: dict[str, tuple[Phase, Item]] = {
+        item.name: (p, item)
+        for p in phases
+        for item in p.items
+        if not item.is_milestone
+    }
+
+    def _dep_end(name: str) -> int:
+        if name in by_phase:
+            return by_phase[name].end_week
+        if name in by_item:
+            dep_phase, dep_item = by_item[name]
+            # Item finishes when delivered: phase start + production + freight
+            return dep_phase.start_week + dep_item.lead_max + dep_item.freight_weeks
+        return 0  # unknown reference, ignored
+
     for i, phase in enumerate(phases):
         if phase.fixed_start is not None and not phase.depends_on:
             # [start: WKN] with no [after:] → hard override; ignore implicit prev-phase sequencing
             phase.start_week = phase.fixed_start
         elif phase.depends_on:
-            deps = [by_name[d] for d in phase.depends_on if d in by_name]
-            dep_end = max((d.end_week for d in deps), default=0)
+            dep_end = max((_dep_end(d) for d in phase.depends_on), default=0)
             # [after: X] [start: WKN] → later of dependency end or fixed floor
             phase.start_week = max(dep_end, phase.fixed_start) if phase.fixed_start is not None else dep_end
         else:
