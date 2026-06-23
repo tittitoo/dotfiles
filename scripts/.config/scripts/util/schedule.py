@@ -20,6 +20,7 @@ class Item:
     fixed_start: int | None = None  # [start: WK15] → 14 (0-based); floors scheduling
     start_week: int = 0  # computed by _compute_schedule
     sync: bool = False   # [sync] — back-schedule to arrive with latest item in phase
+    air: bool = False    # [air] — air freight; shown in orange to flag higher cost
 
 
 def _calc_freight(origin: str | None) -> tuple[int, int]:
@@ -150,7 +151,7 @@ def parse_schedule(md_text: str) -> Schedule:
             current_phase.items.append(
                 Item(name=name, lead_min=lead_min, lead_max=lead_max,
                      origin=origin, freight_weeks_min=fmin, freight_weeks=fmax,
-                     depends_on=item_deps, fixed_start=item_fixed_start, sync=sync)
+                     depends_on=item_deps, fixed_start=item_fixed_start, sync=sync, air=air)
             )
 
     return Schedule(project_name=project_name, start_date=start_date, phases=phases)
@@ -263,8 +264,14 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
         PatternFill("solid", fgColor="A9D18E"),  # even rows: light green
         PatternFill("solid", fgColor="70AD47"),  # odd rows:  medium green
     ]
+    # Air freight band: orange — flags higher cost shipping
+    AIR_FILLS = [
+        PatternFill("solid", fgColor="FAC090"),  # even rows: light orange
+        PatternFill("solid", fgColor="ED7D31"),  # odd rows:  medium orange
+    ]
     ALT_FILL      = PatternFill("solid", fgColor="D9E6F5")
     CENTER      = Alignment(horizontal="center", vertical="center", wrap_text=False)
+    CENTER_WRAP = Alignment(horizontal="center", vertical="center", wrap_text=True)
     INDENT1     = Alignment(horizontal="left", vertical="center", indent=1)
     INDENT2     = Alignment(horizontal="left", vertical="center", indent=2)
 
@@ -290,7 +297,7 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
         c = ws.cell(row=2, column=WK1 + w - 1, value=f"W{w}\n{wdate.strftime('%d %b')}")
         c.font = HDR_FONT
         c.fill = HDR_FILL
-        c.alignment = CENTER
+        c.alignment = CENTER_WRAP
     ws.row_dimensions[2].height = 40  # taller to show two-line date clearly
 
     # ── Data rows ─────────────────────────────────────────────────────────────
@@ -356,12 +363,13 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
                         ws.cell(row=row, column=ci).fill = bar_fill
 
                 if item.freight_weeks > 0:
+                    freight_fill = AIR_FILLS[j % 2] if item.air else FREIGHT_FILLS[j % 2]
                     freight_start = WK1 + item.start_week + item.lead_max
                     for ci in range(
                         freight_start,
                         min(freight_start + item.freight_weeks, WK1 + total_weeks),
                     ):
-                        ws.cell(row=row, column=ci).fill = FREIGHT_FILLS[j % 2]
+                        ws.cell(row=row, column=ci).fill = freight_fill
 
             if bg:
                 for ci in range(1, FIXED + 1):
