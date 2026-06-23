@@ -197,7 +197,12 @@ def _compute_schedule(phases: list[Phase]) -> None:
             else:
                 dep_start = phase.start_week
             if item.fixed_start is not None:
-                item.start_week = max(dep_start, item.fixed_start)
+                # [start:] on an item is an absolute override — allows early ordering
+                # ahead of the phase start. [after:] still wins if explicitly set.
+                if item.depends_on:
+                    item.start_week = max(dep_start, item.fixed_start)
+                else:
+                    item.start_week = item.fixed_start
             else:
                 item.start_week = dep_start
 
