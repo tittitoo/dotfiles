@@ -259,7 +259,7 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
         PatternFill("solid", fgColor="70AD47"),  # odd rows:  medium green
     ]
     ALT_FILL      = PatternFill("solid", fgColor="D9E6F5")
-    CENTER      = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    CENTER      = Alignment(horizontal="center", vertical="center", wrap_text=False)
     INDENT1     = Alignment(horizontal="left", vertical="center", indent=1)
     INDENT2     = Alignment(horizontal="left", vertical="center", indent=2)
 
@@ -374,9 +374,9 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
     # ── Column widths ─────────────────────────────────────────────────────────
     ws.column_dimensions["A"].width = 40
     ws.column_dimensions["B"].width = 12
-    ws.column_dimensions["C"].width = 10
-    ws.column_dimensions["D"].width = 7
-    ws.column_dimensions["E"].width = 7
+    ws.column_dimensions["C"].width = 12
+    ws.column_dimensions["D"].width = 9
+    ws.column_dimensions["E"].width = 12
     for w in range(1, total_weeks + 1):
         ws.column_dimensions[get_column_letter(WK1 + w - 1)].width = 8.5  # wide enough for "01 Aug"
 
