@@ -14,25 +14,27 @@ class Item:
     lead_max: int
     origin: str | None = None
     is_milestone: bool = False
-    freight_weeks: int = 0  # sea freight buffer; computed from origin at parse time
+    freight_weeks_min: int = 0  # conservative low end (for display)
+    freight_weeks: int = 0      # conservative high end; used for scheduling
     depends_on: list[str] = field(default_factory=list)
     start_week: int = 0  # computed by _compute_schedule
     sync: bool = False   # [sync] — back-schedule to arrive with latest item in phase
 
 
-def _calc_freight(origin: str | None) -> int:
-    """Return sea freight weeks based on origin country code.
+def _calc_freight(origin: str | None) -> tuple[int, int]:
+    """Return (min, max) sea freight weeks based on origin country code.
 
-    CN → 2 weeks (short sea), all other non-SG origins → 4 weeks (long haul).
+    SG → 0, CN → 2 weeks (short sea), all other non-SG → 4–6 weeks (long haul).
+    Returns (min, max); max is used for conservative scheduling.
     """
     if not origin:
-        return 0
+        return (0, 0)
     country = origin.upper().split()[-1]
     if country == "SG":
-        return 0
+        return (0, 0)
     if country == "CN":
-        return 2
-    return 4  # 3–4 wks long-haul, use max for conservative scheduling
+        return (2, 2)
+    return (4, 6)  # long-haul sea freight
 
 
 @dataclass
@@ -135,9 +137,13 @@ def parse_schedule(md_text: str) -> Schedule:
                 else:
                     name, lead_min, lead_max, origin = text, 0, 0, None
 
+            if air:
+                fmin, fmax = 2, 2
+            else:
+                fmin, fmax = _calc_freight(origin)
             current_phase.items.append(
                 Item(name=name, lead_min=lead_min, lead_max=lead_max,
-                     origin=origin, freight_weeks=2 if air else _calc_freight(origin),
+                     origin=origin, freight_weeks_min=fmin, freight_weeks=fmax,
                      depends_on=item_deps, sync=sync)
             )
 
@@ -313,11 +319,15 @@ def generate_excel(schedule: Schedule, output_path: Path) -> None:
 
                 lt = (f"{item.lead_max} wks" if item.lead_min == item.lead_max
                       else f"{item.lead_min}–{item.lead_max} wks") if item.lead_max else "–"
+                delivery_max = item.start_week + item.lead_max + item.freight_weeks
+                delivery_min = item.start_week + item.lead_max + item.freight_weeks_min
+                delivery = (f"WK {delivery_max}" if delivery_min == delivery_max
+                            else f"WK {delivery_min}–{delivery_max}")
                 for ci, val in [
                     (2, lt),
                     (3, item.origin or ""),
                     (4, item.start_week + 1),
-                    (5, item.start_week + item.lead_max + item.freight_weeks),
+                    (5, delivery),
                 ]:
                     cell = ws.cell(row=row, column=ci, value=val)
                     cell.font = ITEM_FONT
