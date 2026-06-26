@@ -1504,6 +1504,171 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str, usd_rate: 
     click.echo()
 
 
+# ── Markdown export helpers ───────────────────────────────────────────────────
+
+_MD_FILE = "man-day-rates.md"
+
+
+def _calc_valid_date(val: str, publish: "date") -> "date":
+    from datetime import date
+    import calendar, re as _re
+    if _re.fullmatch(r"\d+", val):
+        n = int(val)
+        target_year  = publish.year + n
+        target_month = publish.month
+        last_day     = calendar.monthrange(target_year, target_month)[1]
+        return date(target_year, target_month, last_day)
+    return date.fromisoformat(val)
+
+
+def _fmt_date(d: "date") -> str:
+    return f"{d.day} {d.strftime('%B %Y')}"
+
+
+def _md_legend() -> str:
+    return "\n".join([
+        "## Legend",
+        "",
+        "| Abbreviation | Meaning |",
+        "|:---|:---|",
+        "| Cur | Currency |",
+        "| OT/hr | Overtime hourly rate |",
+        "| Standby | Day rate when engineer is on standby (not actively working) |",
+        "| Mob | Mobilisation — travel, accommodation and allowances to deploy an engineer to site |",
+        "| Demob | Demobilisation — return trip costs |",
+        "| Mob/Demob | Combined mobilisation and demobilisation (Mob + Demob) |",
+        "| Sun/PH hr | Sunday and Public Holiday hourly rate (onshore only) |",
+    ])
+
+
+def _md_header(publish: "date", valid_until: "date | None", caveat: bool) -> str:
+    lines = [
+        "# COMMISSIONING RATES",
+        "",
+        f"*Date: {_fmt_date(publish)}*",
+        "",
+        "*All prices quoted are exclusive of applicable taxes.*",
+    ]
+    if valid_until:
+        lines += ["", f"*Rates are valid until {_fmt_date(valid_until)}.*"]
+        if caveat:
+            lines += [
+                "",
+                f"*Rates are subject to review should project commencement be delayed "
+                f"beyond {_fmt_date(valid_until)}.*",
+            ]
+    return "\n".join(lines)
+
+
+def _write_md_section(section_id: str, content: str) -> None:
+    """Upsert a named section in man-day-rates.md in the current directory."""
+    import re
+    outfile   = Path(_MD_FILE)
+    open_tag  = f"<!-- section:{section_id} -->"
+    close_tag = f"<!-- /section:{section_id} -->"
+    block     = f"{open_tag}\n{content}\n{close_tag}\n"
+    if outfile.exists():
+        text = outfile.read_text(encoding="utf-8")
+        pattern = re.compile(
+            rf"{re.escape(open_tag)}.*?{re.escape(close_tag)}\n?",
+            re.DOTALL,
+        )
+        new_text = pattern.sub(block, text) if pattern.search(text) else text.rstrip("\n") + "\n\n" + block
+    else:
+        new_text = block
+    outfile.write_text(new_text, encoding="utf-8")
+    if section_id not in ("header", "legend"):
+        click.echo(f"  → {_MD_FILE}  [{section_id}]")
+
+
+def _read_section_meta(section_id: str) -> "dict | None":
+    """Read the stored rate metadata from a section's hidden meta comment."""
+    import json, re
+    outfile = Path(_MD_FILE)
+    if not outfile.exists():
+        return None
+    text = outfile.read_text(encoding="utf-8")
+    m = re.search(
+        rf"<!-- section:{re.escape(section_id)} -->.*?<!-- meta:{re.escape(section_id)} ({{.*?}}) -->",
+        text, re.DOTALL,
+    )
+    return json.loads(m.group(1)) if m else None
+
+
+def _upsert_mob_row(section_id: str, loc: str, row: str) -> bool:
+    """Add or replace a row (keyed by first column = loc) inside a section table."""
+    import re
+    outfile = Path(_MD_FILE)
+    if not outfile.exists():
+        return False
+    text      = outfile.read_text(encoding="utf-8")
+    open_tag  = f"<!-- section:{section_id} -->"
+    close_tag = f"<!-- /section:{section_id} -->"
+    start = text.find(open_tag)
+    end   = text.find(close_tag)
+    if start == -1 or end == -1:
+        return False
+    body    = text[start : end + len(close_tag)]
+    row_pat = re.compile(rf"^\| {re.escape(loc)} \|.*\n?", re.MULTILINE)
+    if row_pat.search(body):
+        new_body = row_pat.sub(row + "\n", body)
+    else:
+        # Insert after the last table row (line starting with |)
+        matches = list(re.finditer(r"^\|.*\n?", body, re.MULTILINE))
+        if matches:
+            insert_at = matches[-1].end()
+            new_body  = body[:insert_at] + row + "\n" + body[insert_at:]
+        else:
+            new_body = body[:body.rfind(close_tag)].rstrip("\n") + "\n" + row + "\n" + close_tag
+    outfile.write_text(text[:start] + new_body + text[end + len(close_tag):], encoding="utf-8")
+    return True
+
+
+def _md_onshore(rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int, loc: str = "SG") -> str:
+    import json
+    day     = rates["day"]
+    ot      = rates["ot"]
+    standby = rates["standby"]
+    sun_ph  = rates.get("sun_ph_ot", rates.get("sun_ph", "—"))
+    meta = {
+        "currency": currency, "usd_rate": usd_rate, "usd_round": usd_round,
+    }
+    return "\n".join([
+        f"<!-- meta:onshore {json.dumps(meta, separators=(',', ':'))} -->",
+        "## Onshore Rates",
+        "",
+        "| Location | Designation | Cur | Day Rate | OT/hr | Standby | Mob | Demob | Mob/Demob | Sun/PH hr |",
+        "|:---|:---|:---|---:|---:|---:|---:|---:|---:|---:|",
+        f"| {loc} | {designation} | {currency} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | — | — | — | {_fmt_rate(sun_ph)} |",
+        "",
+        "Onshore working hours: 10 hours per day (Mon–Sat)",
+        "",
+        f"*Mob/demob rates are based on a minimum 10-working-day deployment per engineer. "
+        f"Hotel and daily allowance of {currency} 250 per day applies for each day exceeding 10 working days.*",
+    ])
+
+
+def _md_offshore(rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int, loc: str = "SG") -> str:
+    import json
+    day     = rates["day"]
+    ot      = rates["ot"]
+    standby = rates["standby"]
+    meta = {
+        "currency": currency, "usd_rate": usd_rate, "usd_round": usd_round,
+    }
+    return "\n".join([
+        f"<!-- meta:offshore {json.dumps(meta, separators=(',', ':'))} -->",
+        "## Offshore Rates",
+        "",
+        "| Location | Designation | Cur | Day Rate | OT/hr | Standby | Mob | Demob | Mob/Demob |",
+        "|:---|:---|:---|---:|---:|---:|---:|---:|---:|",
+        f"| {loc} | {designation} | {currency} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | — | — | — |",
+        "",
+        "Offshore working hours: 12 hours per day (Mon–Sun, all days same rate)",
+    ])
+
+# ── End markdown export helpers ───────────────────────────────────────────────
+
 
 @click.command("rate")
 @click.option("--onshore", "onshore_rate", type=float, default=None, metavar="RATE",
@@ -1518,12 +1683,32 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str, usd_rate: 
               help="Show specialist tier definitions in SGD/USD/EUR/GBP")
 @click.option("--special", is_flag=True,
               help="MODEC/HOS rate structure, ×4/3 OT (default: ×3/2 standard)")
+@click.option("--md", "write_md", is_flag=True,
+              help="Write selling rates to man-day-rates.md in current directory")
+@click.option("--currency", "md_currency",
+              type=click.Choice(["SGD", "USD"], case_sensitive=False),
+              default="SGD", show_default=True,
+              help="Currency for --md output")
+@click.option("--loc", "md_loc", default="SG", show_default=True, metavar="LOC",
+              help="Location code for the rate row in --md output (e.g. NL, DE, SG)")
+@click.option("--valid", "md_valid", default=None, metavar="YEARS|DATE",
+              help="Validity period: years from publish date (e.g. 2) or fixed date (YYYY-MM-DD). Years snap to last day of publish month.")
+@click.option("--caveat", "md_caveat", is_flag=True,
+              help="Add caveat that rates are subject to review if commencement is delayed (requires --valid)")
+@click.option("--date", "md_date", default=None, metavar="YYYY-MM-DD",
+              help="Publish date for --md output (default: today)")
 def rate_cmd(
     onshore_rate: float | None,
     offshore_rate: float | None,
     specialist_tier: str | None,
     show_tiers: bool,
     special: bool,
+    write_md: bool,
+    md_currency: str,
+    md_loc: str,
+    md_valid: str | None,
+    md_caveat: bool,
+    md_date: str | None,
 ) -> None:
     """Calculate OT, Sun/PH, and Standby from a man-day rate.
 
@@ -1625,13 +1810,49 @@ def rate_cmd(
     if not has_rates:
         raise click.UsageError("Provide --onshore RATE and/or --offshore RATE, or --specialist TIER.")
 
+    # ── Prepare --md context once before the loop ─────────────────────────────
+    if write_md:
+        from datetime import date as _date
+        cfg        = _load_mob_config()
+        usd_rate   = cfg["defaults"]["usd_exchange_rate"]
+        usd_round  = cfg["defaults"]["usd_round"]
+        loc        = md_loc.upper()
+        currency   = md_currency.upper()
+        publish_dt = _date.fromisoformat(md_date) if md_date else _date.today()
+        valid_dt   = _calc_valid_date(md_valid, publish_dt) if md_valid else None
+        _write_md_section("header", _md_header(publish_dt, valid_dt, md_caveat))
+
     for mode, day in [("onshore", onshore_rate), ("offshore", offshore_rate)]:
         if day is None:
             continue
         if special:
-            _print_std_section(mode, _calc_standard(day, mode), "JEN Engineer")
+            rates = _calc_standard(day, mode)
+            _print_std_section(mode, rates, "JEN Engineer")
         else:
-            _print_seatrium_section(mode, _calc_seatrium(day, mode), "JEN Engineer")
+            rates = _calc_seatrium(day, mode)
+            _print_seatrium_section(mode, rates, "JEN Engineer")
+        if write_md:
+            outfile = Path(_MD_FILE)
+            has_sec = f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
+            if not has_sec:
+                fn = _md_onshore if mode == "onshore" else _md_offshore
+                _write_md_section(mode, fn(rates, "JEN Engineer", currency, usd_rate, usd_round, loc))
+            else:
+                if mode == "onshore":
+                    sun_ph = rates.get("sun_ph_ot", rates.get("sun_ph", "—"))
+                    row = (f"| {loc} | JEN Engineer | {currency} |"
+                           f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
+                           f" {_fmt_rate(rates['standby'])} | — | — | — | {_fmt_rate(sun_ph)} |")
+                else:
+                    row = (f"| {loc} | JEN Engineer | {currency} |"
+                           f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
+                           f" {_fmt_rate(rates['standby'])} | — | — | — |")
+                _upsert_mob_row(mode, loc, row)
+                click.echo(f"  → {_MD_FILE}  [{mode}: {loc}]")
+
+    # Legend always at the end
+    if write_md:
+        _write_md_section("legend", _md_legend())
 
 
 # ── End rate helpers ──────────────────────────────────────────────────────────
@@ -1665,6 +1886,12 @@ def _load_mob_config() -> dict:
               type=click.Choice(["USD", "SGD", "EUR", "GBP", "NOK", "DKK"], case_sensitive=False),
               default="USD", show_default=True,
               help="Currency of --day-rate")
+@click.option("--md", "write_md", is_flag=True,
+              help="Write mob/demob selling price to man-day-rates.md in current directory")
+@click.option("--md-currency", "mob_md_currency",
+              type=click.Choice(["SGD", "USD"], case_sensitive=False),
+              default=None,
+              help="Currency for --md output; overrides currency stored in man-day-rates.md")
 def mob_cmd(
     country: str | None,
     batam: bool,
@@ -1674,6 +1901,8 @@ def mob_cmd(
     specialist_tier: str | None,
     spec_day_rate: float | None,
     spec_currency: str,
+    write_md: bool,
+    mob_md_currency: str | None,
 ) -> None:
     """Estimate mob/demob lumpsum for engineer or specialist deployment.
 
@@ -1903,6 +2132,44 @@ def mob_cmd(
     click.echo(f"    {'Mob':<{w}}  {_fmt_rate(mob_sgd):>8}   {_fmt_rate(mob_usd):>8}")
     click.echo(f"    {'Demob':<{w}}  {_fmt_rate(mob_sgd):>8}   {_fmt_rate(mob_usd):>8}")
     click.echo(f"    {'Mob/Demob':<{w}}  {_fmt_rate(mob_sgd * 2):>8}   {_fmt_rate(mob_usd * 2):>8}")
+
+    if write_md:
+        row_loc = "Batam" if batam else code
+        outfile = Path(_MD_FILE)
+        text    = outfile.read_text(encoding="utf-8") if outfile.exists() else ""
+        for sid in ("onshore", "offshore"):
+            meta = _read_section_meta(sid)
+            if meta is None:
+                continue
+            cur     = mob_md_currency.upper() if mob_md_currency else meta["currency"]
+            mob_val = mob_usd if cur == "USD" else mob_sgd
+            # Read base rates from the SG row
+            open_tag  = f"<!-- section:{sid} -->"
+            close_tag = f"<!-- /section:{sid} -->"
+            sec_start = text.find(open_tag)
+            sec_end   = text.find(close_tag)
+            day = ot = standby = sun_ph = "—"
+            if sec_start != -1 and sec_end != -1:
+                for line in text[sec_start:sec_end].splitlines():
+                    if line.startswith("| SG |"):
+                        cells = [c.strip() for c in line.split("|")]
+                        # cells: ['','SG','desig','cur','day','ot','standby','mob','demob','mob/demob',<sun_ph if onshore>,'remarks','']
+                        day, ot, standby = cells[4], cells[5], cells[6]
+                        if sid == "onshore":
+                            sun_ph = cells[10]
+                        break
+            if sid == "onshore":
+                row = (f"| {row_loc} | JEN Engineer | {cur} | {day} | {ot} |"
+                       f" {standby} | {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                       f" {_fmt_rate(mob_val * 2)} | {sun_ph} |")
+            else:
+                row = (f"| {row_loc} | JEN Engineer | {cur} | {day} | {ot} |"
+                       f" {standby} | {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                       f" {_fmt_rate(mob_val * 2)} |")
+            if _upsert_mob_row(sid, row_loc, row):
+                click.echo(f"  → {_MD_FILE}  [{sid}: {row_loc}]")
+            else:
+                click.echo(f"  ↓ {_MD_FILE}  [{sid}] not found — run bid rate --{sid} --md first", err=True)
 
 
 @click.command("mob-config")
