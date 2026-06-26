@@ -1529,15 +1529,13 @@ def _md_legend() -> str:
     return "\n".join([
         "## Legend",
         "",
-        "| Abbreviation | Meaning |",
-        "|:---|:---|",
-        "| Cur | Currency |",
-        "| OT/hr | Overtime hourly rate |",
-        "| Standby | Day rate when engineer is on standby (not actively working) |",
-        "| Mob | Mobilisation — travel, accommodation and allowances to deploy an engineer to site |",
-        "| Demob | Demobilisation — return trip costs |",
-        "| Mob/Demob | Combined mobilisation and demobilisation (Mob + Demob) |",
-        "| Sun/PH hr | Sunday and Public Holiday hourly rate (onshore only) |",
+        "- **Cur**: Currency",
+        "- **OT/hr**: Overtime hourly rate",
+        "- **Standby**: Day rate when engineer is on standby (not actively working)",
+        "- **Mob**: Mobilisation — travel, accommodation and allowances to deploy an engineer to site",
+        "- **Demob**: Demobilisation — return trip costs",
+        "- **Mob/Demob**: Combined mobilisation and demobilisation (Mob + Demob)",
+        "- **Sun/PH hr**: Sunday and Public Holiday hourly rate (onshore only)",
     ])
 
 
