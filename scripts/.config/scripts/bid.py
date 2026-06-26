@@ -1633,11 +1633,11 @@ def _md_onshore(rates: dict, designation: str, currency: str, usd_rate: float, u
     }
     return "\n".join([
         f"<!-- meta:onshore {json.dumps(meta, separators=(',', ':'))} -->",
-        "## Onshore Rates",
+        f"## Onshore Rates ({currency})",
         "",
-        "| Location | Designation | Cur | Day Rate | OT/hr | Standby | Mob | Demob | Mob/Demob | Sun/PH hr |",
-        "|:---|:---|:---|---:|---:|---:|---:|---:|---:|---:|",
-        f"| {loc} | {designation} | {currency} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | — | — | — | {_fmt_rate(sun_ph)} |",
+        "| Location | Designation | Day Rate | OT/hr | Standby | Mob | Demob | Mob/Demob | Sun/PH hr |",
+        "|:---|:---|---:|---:|---:|---:|---:|---:|---:|",
+        f"| {loc} | {designation} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | — | — | — | {_fmt_rate(sun_ph)} |",
         "",
         "Onshore working hours: 10 hours per day (Mon–Sat)",
         "",
@@ -1656,11 +1656,11 @@ def _md_offshore(rates: dict, designation: str, currency: str, usd_rate: float, 
     }
     return "\n".join([
         f"<!-- meta:offshore {json.dumps(meta, separators=(',', ':'))} -->",
-        "## Offshore Rates",
+        f"## Offshore Rates ({currency})",
         "",
-        "| Location | Designation | Cur | Day Rate | OT/hr | Standby | Mob | Demob | Mob/Demob |",
-        "|:---|:---|:---|---:|---:|---:|---:|---:|---:|",
-        f"| {loc} | {designation} | {currency} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | — | — | — |",
+        "| Location | Designation | Day Rate | OT/hr | Standby | Mob | Demob | Mob/Demob |",
+        "|:---|:---|---:|---:|---:|---:|---:|---:|",
+        f"| {loc} | {designation} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | — | — | — |",
         "",
         "Offshore working hours: 12 hours per day (Mon–Sun, all days same rate)",
     ])
@@ -1838,11 +1838,11 @@ def rate_cmd(
             else:
                 if mode == "onshore":
                     sun_ph = rates.get("sun_ph_ot", rates.get("sun_ph", "—"))
-                    row = (f"| {loc} | JEN Engineer | {currency} |"
+                    row = (f"| {loc} | JEN Engineer |"
                            f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
                            f" {_fmt_rate(rates['standby'])} | — | — | — | {_fmt_rate(sun_ph)} |")
                 else:
-                    row = (f"| {loc} | JEN Engineer | {currency} |"
+                    row = (f"| {loc} | JEN Engineer |"
                            f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
                            f" {_fmt_rate(rates['standby'])} | — | — | — |")
                 _upsert_mob_row(mode, loc, row)
@@ -2151,18 +2151,20 @@ def mob_cmd(
                 for line in text[sec_start:sec_end].splitlines():
                     if line.startswith("| SG |"):
                         cells = [c.strip() for c in line.split("|")]
-                        # cells: ['','SG','desig','cur','day','ot','standby','mob','demob','mob/demob',<sun_ph if onshore>,'remarks','']
-                        day, ot, standby = cells[4], cells[5], cells[6]
+                        # cells: ['','SG','desig','day','ot','standby','mob','demob','mob/demob',<sun_ph if onshore>,'']
+                        day, ot, standby = cells[3], cells[4], cells[5]
                         if sid == "onshore":
-                            sun_ph = cells[10]
+                            sun_ph = cells[9]
                         break
             if sid == "onshore":
-                row = (f"| {row_loc} | JEN Engineer | {cur} | {day} | {ot} |"
-                       f" {standby} | {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                row = (f"| {row_loc} | JEN Engineer |"
+                       f" {day} | {ot} | {standby} |"
+                       f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
                        f" {_fmt_rate(mob_val * 2)} | {sun_ph} |")
             else:
-                row = (f"| {row_loc} | JEN Engineer | {cur} | {day} | {ot} |"
-                       f" {standby} | {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                row = (f"| {row_loc} | JEN Engineer |"
+                       f" {day} | {ot} | {standby} |"
+                       f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
                        f" {_fmt_rate(mob_val * 2)} |")
             if _upsert_mob_row(sid, row_loc, row):
                 click.echo(f"  → {_MD_FILE}  [{sid}: {row_loc}]")
