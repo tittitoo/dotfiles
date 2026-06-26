@@ -1535,7 +1535,7 @@ def _md_legend() -> str:
         "- **Mob**: Mobilisation — travel, accommodation and allowances to deploy an engineer to site",
         "- **Demob**: Demobilisation — return trip costs",
         "- **Mob/Demob**: Combined mobilisation and demobilisation (Mob + Demob)",
-        "- **Sun/PH hr**: Sunday and Public Holiday hourly rate (onshore only)",
+        "- **Sun/PH hr**: Sunday and Public Holiday hourly rate — applicable to onshore only",
     ])
 
 
