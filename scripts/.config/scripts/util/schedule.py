@@ -19,7 +19,7 @@ class Item:
     depends_on: list[str] = field(default_factory=list)
     fixed_start: int | None = None  # [start: WK15] → 14 (0-based); floors scheduling
     start_week: int = 0  # computed by _compute_schedule
-    sync: bool = False   # [sync] — back-schedule to arrive with latest item in phase
+    sync_rank: int = 0   # [sync] or [sync:N] — back-schedule to arrive with Nth longest item (0 = not synced)
     air: bool = False    # [air] — air freight; shown in orange to flag higher cost
 
 
@@ -62,7 +62,7 @@ _AFTER_RE       = re.compile(r"\[after:\s*([^\]]+)\]", re.IGNORECASE)
 _PHASE_START_RE = re.compile(r"\[start:\s*(?:WK)?(\d+)\]", re.IGNORECASE)
 _START_RE       = re.compile(r"^start:\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
 _AIR_RE         = re.compile(r"\[air\]", re.IGNORECASE)
-_SYNC_RE        = re.compile(r"\[sync\]", re.IGNORECASE)
+_SYNC_RE        = re.compile(r"\[sync(?::(\d+))?\]", re.IGNORECASE)
 
 
 def parse_schedule(md_text: str) -> Schedule:
@@ -126,7 +126,7 @@ def parse_schedule(md_text: str) -> Schedule:
             if air_m:
                 text = (text[: air_m.start()] + text[air_m.end():]).strip()
             sync_m = _SYNC_RE.search(text)
-            sync = bool(sync_m)
+            sync_rank = int(sync_m.group(1)) if sync_m and sync_m.group(1) else (1 if sync_m else 0)
             if sync_m:
                 text = (text[: sync_m.start()] + text[sync_m.end():]).strip()
 
@@ -151,7 +151,7 @@ def parse_schedule(md_text: str) -> Schedule:
             current_phase.items.append(
                 Item(name=name, lead_min=lead_min, lead_max=lead_max,
                      origin=origin, freight_weeks_min=fmin, freight_weeks=fmax,
-                     depends_on=item_deps, fixed_start=item_fixed_start, sync=sync, air=air)
+                     depends_on=item_deps, fixed_start=item_fixed_start, sync_rank=sync_rank, air=air)
             )
 
     return Schedule(project_name=project_name, start_date=start_date, phases=phases)
@@ -191,7 +191,7 @@ def _compute_schedule(phases: list[Phase]) -> None:
 
         # Pass 1: compute start weeks for non-sync items
         for item in phase.items:
-            if item.is_milestone or item.sync:
+            if item.is_milestone or item.sync_rank > 0:
                 continue
             if item.depends_on:
                 dep_start = max((_dep_end(d) for d in item.depends_on), default=phase.start_week)
@@ -207,13 +207,15 @@ def _compute_schedule(phases: list[Phase]) -> None:
             else:
                 item.start_week = dep_start
 
-        # Pass 2: back-schedule sync items to arrive with the latest non-sync delivery
-        non_sync = [it for it in phase.items if not it.is_milestone and not it.sync]
-        max_delivery = max((_item_delivery(it) for it in non_sync), default=phase.start_week)
+        # Pass 2: back-schedule sync items to the Nth longest non-sync delivery
+        non_sync = [it for it in phase.items if not it.is_milestone and it.sync_rank == 0]
+        sorted_deliveries = sorted((_item_delivery(it) for it in non_sync), reverse=True)
         for item in phase.items:
-            if item.is_milestone or not item.sync:
+            if item.is_milestone or item.sync_rank == 0:
                 continue
-            item.start_week = max(phase.start_week, max_delivery - item.lead_max - item.freight_weeks)
+            idx = min(item.sync_rank - 1, len(sorted_deliveries) - 1) if sorted_deliveries else 0
+            target = sorted_deliveries[idx] if sorted_deliveries else phase.start_week
+            item.start_week = max(phase.start_week, target - item.lead_max - item.freight_weeks)
 
         phase.end_week = max(
             (_item_delivery(item) for item in phase.items if not item.is_milestone),
