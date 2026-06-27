@@ -1434,11 +1434,10 @@ def _calc_seatrium(day: float, mode: str) -> dict:
     ot = _ceil_to(day * 0.15, 5)
     if mode == "onshore":
         sun_ph_day = _ceil_to(day * 1.5, 50)
-        sun_ph_ot = _ceil_to(sun_ph_day * 0.15, 5)
         standby = _round_to(day * 0.80, 5)
         return {
             "day": int(day), "ot": ot,
-            "sun_ph_day": sun_ph_day, "sun_ph_ot": sun_ph_ot,
+            "sun_ph_day": sun_ph_day, "sun_ph": ot,
             "standby": standby,
         }
     else:
@@ -1480,11 +1479,11 @@ def _print_seatrium_section(mode: str, rates: dict, designation: str, usd_rate: 
     if mode == "onshore":
         ph_hourly = f"{_ceil_to(rates['sun_ph_day'] / hours, 5)}/hr"
         rows: list[tuple[str, object, str | None]] = [
-            ("Day Rate",          rates["day"],         hourly),
-            ("OT/hr",             rates["ot"],          "×3/2"),
-            ("Sun/PH Day Rate",   rates["sun_ph_day"],  ph_hourly),
-            ("Sun/PH OT/hr",      rates["sun_ph_ot"],   "×3/2"),
-            ("Standby",           rates["standby"],     None),
+            ("Day Rate",        rates["day"],         hourly),
+            ("OT/hr",           rates["ot"],          "×3/2"),
+            ("Sun/PH Day Rate", rates["sun_ph_day"],  ph_hourly),
+            ("Sun/PH hr",       rates["sun_ph"],      None),
+            ("Standby",         rates["standby"],     None),
         ]
     else:
         rows = [
@@ -1626,7 +1625,7 @@ def _md_onshore(rates: dict, designation: str, currency: str, usd_rate: float, u
     day     = rates["day"]
     ot      = rates["ot"]
     standby = rates["standby"]
-    sun_ph  = rates.get("sun_ph_ot", rates.get("sun_ph", "—"))
+    sun_ph  = rates.get("sun_ph", "—")
     meta = {
         "currency": currency, "usd_rate": usd_rate, "usd_round": usd_round,
     }
@@ -1836,7 +1835,7 @@ def rate_cmd(
                 _write_md_section(mode, fn(rates, "JEN Engineer", currency, usd_rate, usd_round, loc))
             else:
                 if mode == "onshore":
-                    sun_ph = rates.get("sun_ph_ot", rates.get("sun_ph", "—"))
+                    sun_ph = rates.get("sun_ph", "—")
                     row = (f"| {loc} | JEN Engineer |"
                            f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
                            f" {_fmt_rate(rates['standby'])} | — | — | — | {_fmt_rate(sun_ph)} |")
