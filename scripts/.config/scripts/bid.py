@@ -719,18 +719,25 @@ def setup():
         managed_python.mkdir(exist_ok=True)
         click.echo(f"Created {managed_python}")
 
-        # Step 1b — Redirect UV cache out of AppData to avoid endpoint-security blocks
-        uv_cache = Path.home() / "uv-cache"
-        uv_cache.mkdir(exist_ok=True)
+        # Step 1b — Redirect UV cache and temp out of AppData to avoid endpoint-security blocks
         bashrc = Path.home() / ".bashrc"
-        export_line = 'export UV_CACHE_DIR="$HOME/uv-cache"'
         existing = bashrc.read_text() if bashrc.exists() else ""
-        if "UV_CACHE_DIR" not in existing:
-            with open(bashrc, "a") as f:
-                f.write(f"\n{export_line}\n")
-            click.echo(f"Added UV_CACHE_DIR to {bashrc}")
+        uv_exports = {
+            "UV_CACHE_DIR": ('export UV_CACHE_DIR="$HOME/uv-cache"', "uv-cache"),
+            "UV_TEMP_DIR":  ('export UV_TEMP_DIR="$HOME/uv-temp"',  "uv-temp"),
+        }
+        added = []
+        for key, (line, dirname) in uv_exports.items():
+            (Path.home() / dirname).mkdir(exist_ok=True)
+            if key not in existing:
+                with open(bashrc, "a") as f:
+                    f.write(f"\n{line}\n")
+                added.append(key)
+
+        if added:
+            click.echo(f"Added to {bashrc}: {', '.join(added)}")
         else:
-            click.echo("UV_CACHE_DIR already set in .bashrc, skipping.")
+            click.echo("UV_CACHE_DIR and UV_TEMP_DIR already set in .bashrc, skipping.")
 
         # Step 2 — Copy pyproject.toml from @tools (use script's own directory)
         tools_path = Path(__file__).parent
