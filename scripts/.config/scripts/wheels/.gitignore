@@ -1,0 +1,3 @@
+# Ignore wheel binaries — drop them here manually on locked-down Windows machines.
+# See bid setup for how this folder is used.
+*.whl

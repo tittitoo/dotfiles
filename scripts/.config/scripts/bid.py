@@ -719,19 +719,18 @@ def setup():
         managed_python.mkdir(exist_ok=True)
         click.echo(f"Created {managed_python}")
 
-        # Step 1b — Set UV_CACHE_DIR in .bashrc to avoid AV-locked AppData cache
-        if username == "carol_lim":
-            uv_cache = Path.home() / "uv-cache"
-            uv_cache.mkdir(exist_ok=True)
-            bashrc = Path.home() / ".bashrc"
-            export_line = 'export UV_CACHE_DIR="$HOME/uv-cache"'
-            existing = bashrc.read_text() if bashrc.exists() else ""
-            if "UV_CACHE_DIR" not in existing:
-                with open(bashrc, "a") as f:
-                    f.write(f"\n{export_line}\n")
-                click.echo(f"Added UV_CACHE_DIR to {bashrc}")
-            else:
-                click.echo("UV_CACHE_DIR already set in .bashrc, skipping.")
+        # Step 1b — Redirect UV cache out of AppData to avoid endpoint-security blocks
+        uv_cache = Path.home() / "uv-cache"
+        uv_cache.mkdir(exist_ok=True)
+        bashrc = Path.home() / ".bashrc"
+        export_line = 'export UV_CACHE_DIR="$HOME/uv-cache"'
+        existing = bashrc.read_text() if bashrc.exists() else ""
+        if "UV_CACHE_DIR" not in existing:
+            with open(bashrc, "a") as f:
+                f.write(f"\n{export_line}\n")
+            click.echo(f"Added UV_CACHE_DIR to {bashrc}")
+        else:
+            click.echo("UV_CACHE_DIR already set in .bashrc, skipping.")
 
         # Step 2 — Copy pyproject.toml from @tools (use script's own directory)
         tools_path = Path(__file__).parent
@@ -739,12 +738,20 @@ def setup():
         click.echo("Copied pyproject.toml to .managed_python.")
 
         # Step 3 — Run uv sync (skip if venv already exists)
+        # If a wheels/ folder exists next to bid.py, use --find-links so packages
+        # like pywin32 are sourced locally, bypassing endpoint-security blocks on
+        # temp-file operations during download.
         venv_python = managed_python / ".venv" / "Scripts" / "python.exe"
         if venv_python.exists():
             click.echo("Virtual environment already exists, skipping uv sync.")
         else:
             click.echo("Running uv sync...")
-            subprocess.run(["uv", "sync"], cwd=str(managed_python), check=True)
+            wheels_dir = tools_path / "wheels"
+            sync_cmd = ["uv", "sync"]
+            if wheels_dir.is_dir():
+                sync_cmd += ["--find-links", str(wheels_dir)]
+                click.echo(f"Using local wheels from {wheels_dir}")
+            subprocess.run(sync_cmd, cwd=str(managed_python), check=True)
             click.echo("uv sync complete.")
 
         # Step 4 — Add .venv/Scripts Python to user PATH (top priority)
