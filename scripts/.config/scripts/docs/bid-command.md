@@ -275,11 +275,12 @@ Apply formatting to Excel files.
 bid beautify <excel_file> [options]
 ```
 
-| Option       | Description                                   |
-| ------------ | --------------------------------------------- |
-| `-f, --font` | Apply font formatting only (skip smart width) |
+| Option             | Description                                       |
+| ------------------ | --------------------------------------------------- |
+| `-w, --width`      | Apply smart width only (skip font formatting)      |
+| `-f, --font-only`  | Apply font/size only (skip smart width)            |
 
-Default applies smart column width (max 80 chars, word wrap).
+Default shows the font template menu first (select 0 to keep the current font/size), resets sheet view to Normal, then applies smart width. Sheet view reset always runs, regardless of flags.
 
 ---
 

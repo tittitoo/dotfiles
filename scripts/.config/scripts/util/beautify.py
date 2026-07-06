@@ -6,15 +6,15 @@ import xlwings as xw
 from . import excelx
 
 TEMPLATES = [
+    "Arial, Size 12",
+    "Arial, Size 11",
+    "Arial, Size 10",
     "Aptos, Size 12",
     "Aptos, Size 11",
     "Aptos, Size 10",
     "Aptos Narrow, Size 12",
     "Aptos Narrow, Size 11",
     "Aptos Narrow, Size 10",
-    "Arial, Size 12",
-    "Arial, Size 11",
-    "Arial, Size 10",
     "Calibri, Size 11",
     "Calibri, Size 10",
     "Helvetica, Size 12",
@@ -28,18 +28,29 @@ TEMPLATES = [
 @click.command()
 @click.argument("xl_file", default="")
 @click.option(
-    "-f",
-    "--font",
+    "-w",
+    "--width",
     is_flag=True,
-    help="Apply font formatting only (shows template menu, default: Aptos Narrow Size 11)",
+    help="Apply smart width only, skip font formatting (based on content, max 80 chars, word wrap)",
 )
-def beautify(xl_file: str, font: bool) -> None:
+@click.option(
+    "-f",
+    "--font-only",
+    is_flag=True,
+    help="Apply font/size only, skip smart width (sheet view is always reset)",
+)
+def beautify(xl_file: str, width: bool, font_only: bool) -> None:
     """
     Beautify excel file.
 
-    By default, applies smart width (based on content, max 80 chars, word wrap).
-    Use -f to apply font formatting only (no smart width).
+    By default, shows a font template menu first (default: Arial Size 11, or
+    select 0 to keep the current font/size), resets sheet view to Normal, then
+    applies smart width. Use -w to skip the font prompt entirely and apply smart
+    width only. Use -f to apply font/size only, skipping smart width.
     """
+    if width and font_only:
+        raise click.UsageError("-w and -f cannot be used together.")
+
     while True:
         if xl_file == "":
             xl_file = click.prompt(
@@ -64,31 +75,38 @@ def beautify(xl_file: str, font: bool) -> None:
     if wb is None:
         return
 
-    # Apply font formatting if -f flag is used
-    if font:
+    # Font choice comes first, before any other formatting. -w skips it entirely.
+    if not width:
         click.echo("Available font templates:")
+        click.echo("  0: Keep current font/size (no change)")
         for idx, tmpl in enumerate(TEMPLATES, start=1):
             click.echo(f"  {idx}: {tmpl}")
         while True:
             choice = click.prompt(
-                "Select template number (Enter for default)", default="2"
+                "Select template number (Enter for default, 0 to keep unchanged)",
+                default="2",
             )
             try:
                 template_idx = int(choice)
-                if 1 <= template_idx <= len(TEMPLATES):
+                if 0 <= template_idx <= len(TEMPLATES):
                     break
             except ValueError:
                 pass
-            click.echo(f"Please enter a number between 1 and {len(TEMPLATES)}")
+            click.echo(f"Please enter a number between 0 and {len(TEMPLATES)}")
 
-        template = TEMPLATES[template_idx - 1]
-        parts = template.rsplit(", Size ", 1)
-        font_name = parts[0]
-        font_size = int(parts[1])
-        excelx.set_format(wb, font_name=font_name, font_size=font_size)
-        click.echo(f"Applied font: {template}")
-    else:
-        # Apply smart width only when -f flag is not used
+        if template_idx == 0:
+            click.echo("Keeping current font and size.")
+        else:
+            template = TEMPLATES[template_idx - 1]
+            parts = template.rsplit(", Size ", 1)
+            font_name = parts[0]
+            font_size = int(parts[1])
+            excelx.set_format(wb, font_name=font_name, font_size=font_size)
+            click.echo(f"Applied font: {template}")
+
+    # Sheet view always resets to Normal; smart width is skipped for -f
+    excelx.set_normal_view(wb)
+    if not font_only:
         excelx.set_column_width_by_content(wb)
 
     click.echo(f"Done. Please review and save {wb.name} manually.")

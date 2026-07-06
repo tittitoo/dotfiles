@@ -34,30 +34,112 @@ import click
 # Recommended is to define in __init__.py but I am doing it here.
 __version__ = "0.1.0"
 
-# Handle case for different users
+# Handle case for different users. Local SharePoint/OneDrive sync folder naming
+# varies per machine (different OneDrive client versions/company display names),
+# so the root is detected/confirmed once via `bid setup` and cached here rather
+# than hardcoded per username.
 username = getpass.getuser()
-match username:
-    case "oliver":
-        RFQ = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@rfqs/"
-        HO = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@handover/"
-        CO = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@costing/"
-        DOCS = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@docs/"
-        TOOLS = "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/"
-        BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/@tools/bid.py').expanduser().resolve()}'\""
 
-    case "carol_lim":
-        RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
-        DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
-        TOOLS = "~/Jason Electronics Pte Ltd/Bid Proposal - @tools/"
-        BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - @tools/bid.py').expanduser().resolve()}'\""
+BID_CONFIG_FILE = Path.home() / ".bid" / "root.txt"
 
-    case _:
-        RFQ = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@rfqs/"
-        HO = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@handover/"
-        CO = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@costing/"
-        DOCS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@docs/"
-        TOOLS = "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/"
-        BID_ALIAS = f"alias bid=\"uv run --quiet '{Path(r'~/Jason Electronics Pte Ltd/Bid Proposal - Documents/@tools/bid.py').expanduser().resolve()}'\""
+# Known folder layouts from before auto-detection existed. Checked as detection
+# candidates so already-working machines don't need to re-run `bid setup`.
+_LEGACY_ROOT_CANDIDATES = [
+    "~/OneDrive - Jason Electronics Pte Ltd/Shared Documents/",
+    "~/Jason Electronics Pte Ltd/Bid Proposal - Documents/",
+]
+
+
+def load_configured_root() -> Path | None:
+    "Read the root folder persisted by `bid setup`, if any."
+    if BID_CONFIG_FILE.exists():
+        saved = Path(BID_CONFIG_FILE.read_text().strip()).expanduser()
+        if (saved / "@rfqs").is_dir():
+            return saved
+    return None
+
+
+def save_configured_root(root: Path) -> None:
+    "Persist the confirmed root folder so future runs skip detection."
+    BID_CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    BID_CONFIG_FILE.write_text(str(root) + "\n")
+
+
+def find_legacy_root() -> Path | None:
+    "Check known pre-detection folder layouts."
+    for candidate in _LEGACY_ROOT_CANDIDATES:
+        path = Path(candidate).expanduser()
+        if (path / "@rfqs").is_dir():
+            return path
+    return None
+
+
+def search_for_root(max_depth: int = 3, max_scanned: int = 2000) -> Path | None:
+    """
+    Shallow-search likely local sync roots for a folder containing '@rfqs',
+    to find where this machine's SharePoint/OneDrive library actually landed.
+    """
+    skip_names = {
+        "Library",
+        "Applications",
+        "node_modules",
+        ".git",
+        ".venv",
+        "AppData",
+    }
+    bases = [Path.home()]
+    if platform.system() == "Darwin":
+        bases.append(Path.home() / "Library" / "CloudStorage")
+    elif platform.system() == "Windows":
+        for env_var in ("OneDrive", "OneDriveCommercial"):
+            value = os.environ.get(env_var)
+            if value:
+                bases.append(Path(value))
+
+    seen: set[Path] = set()
+    scanned = 0
+    stack = [(base, 0) for base in bases if base.is_dir()]
+    while stack:
+        current, depth = stack.pop()
+        if current in seen or scanned > max_scanned:
+            continue
+        seen.add(current)
+        scanned += 1
+        try:
+            if (current / "@rfqs").is_dir():
+                return current
+            if depth < max_depth:
+                for child in current.iterdir():
+                    if (
+                        child.is_dir()
+                        and not child.name.startswith(".")
+                        and child.name not in skip_names
+                    ):
+                        stack.append((child, depth + 1))
+        except (PermissionError, OSError):
+            continue
+    return None
+
+
+def resolve_bid_root() -> Path | None:
+    return load_configured_root() or find_legacy_root() or search_for_root()
+
+
+BID_ROOT = resolve_bid_root()
+
+if BID_ROOT is not None:
+    RFQ = str(BID_ROOT / "@rfqs") + "/"
+    HO = str(BID_ROOT / "@handover") + "/"
+    CO = str(BID_ROOT / "@costing") + "/"
+    DOCS = str(BID_ROOT / "@docs") + "/"
+    TOOLS = str(BID_ROOT / "@tools") + "/"
+    BID_ALIAS = f"alias bid=\"uv run --quiet '{(BID_ROOT / '@tools' / 'bid.py').resolve()}'\""
+else:
+    # Left unresolved on purpose (rather than a guessed path) so existence checks
+    # fail clearly and point the user at `bid setup` instead of silently
+    # operating on the wrong folder.
+    RFQ = HO = CO = DOCS = TOOLS = "~/.bid-not-configured/"
+    BID_ALIAS = ""
 
 
 RESTRICTED_FOLDER = [
@@ -711,6 +793,38 @@ def setup():
     """
     Setup necessary environment variables and alias.
     """
+    # Step 0 — Detect (or ask for) the local SharePoint/OneDrive root folder,
+    # since where each machine synced it to isn't guaranteed to match any
+    # previously-seen layout.
+    detected = load_configured_root() or find_legacy_root() or search_for_root()
+
+    if detected is not None:
+        click.echo(f"Detected SharePoint/OneDrive root: {detected}")
+        if not click.confirm("Use this folder?", default=True):
+            detected = None
+
+    while detected is None:
+        manual = click.prompt(
+            "Enter the path to your local 'Bid Proposal' SharePoint/OneDrive "
+            "folder (the one containing @rfqs, @tools, etc.)"
+        )
+        candidate = Path(manual).expanduser()
+        if (candidate / "@rfqs").is_dir():
+            detected = candidate
+        else:
+            click.echo(f"No '@rfqs' folder found under {candidate}. Try again.")
+
+    save_configured_root(detected)
+    click.echo(f"Saved root folder to {BID_CONFIG_FILE}")
+
+    global RFQ, HO, CO, DOCS, TOOLS, BID_ALIAS
+    RFQ = str(detected / "@rfqs") + "/"
+    HO = str(detected / "@handover") + "/"
+    CO = str(detected / "@costing") + "/"
+    DOCS = str(detected / "@docs") + "/"
+    TOOLS = str(detected / "@tools") + "/"
+    BID_ALIAS = f"alias bid=\"uv run --quiet '{(detected / '@tools' / 'bid.py').resolve()}'\""
+
     if platform.system() == "Linux":
         pass
     elif platform.system() == "Windows":
@@ -921,22 +1035,30 @@ def test():
 @click.command()
 @click.argument("xl_file", default="")
 @click.option(
-    "-f",
-    "--font",
+    "-w",
+    "--width",
     is_flag=True,
-    help="Apply font formatting only (shows template menu, default: Arial Size 12)",
+    help="Apply smart width only, skip font formatting (based on content, max 80 chars, word wrap)",
 )
-def beautify(xl_file: str, font: bool) -> None:
+@click.option(
+    "-f",
+    "--font-only",
+    is_flag=True,
+    help="Apply font/size only, skip smart width (sheet view is always reset)",
+)
+def beautify(xl_file: str, width: bool, font_only: bool) -> None:
     """
     Beautify excel file.
 
-    By default, applies smart width (based on content, max 80 chars, word wrap).
-    Use -f to apply font formatting only (no smart width).
+    By default, shows a font template menu first (default: Arial Size 11, or
+    select 0 to keep the current font/size), resets sheet view to Normal, then
+    applies smart width. Use -w to skip the font prompt entirely and apply smart
+    width only. Use -f to apply font/size only, skipping smart width.
     """
     from util.beautify import beautify as _beautify
 
     ctx = click.Context(_beautify)
-    ctx.invoke(_beautify, xl_file=xl_file, font=font)
+    ctx.invoke(_beautify, xl_file=xl_file, width=width, font_only=font_only)
 
 
 @click.command()

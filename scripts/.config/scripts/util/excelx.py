@@ -1,5 +1,6 @@
 "Utilities for managing excel files"
 
+import platform
 import click
 from pathlib import Path
 from decouple import config
@@ -53,6 +54,22 @@ def set_format(
             sheet.used_range.font.size = font_size
         except Exception:
             click.echo(f"Beautifying excel sheet '{sheet.name}' not successful.")
+
+
+def set_normal_view(wb: xw.Book) -> None:
+    "Set sheet view to Normal (not Page Break Preview/Page Layout) for all sheets"
+    system = platform.system()
+    for sheet in wb.sheets:
+        try:
+            sheet.activate()
+            if system == "Windows":
+                wb.app.api.ActiveWindow.View = 1  # xlNormalView
+            elif system == "Darwin":
+                from appscript import k
+
+                wb.app.api.active_window.view.set(k.normal_view)
+        except Exception:
+            click.echo(f"Setting normal view for sheet '{sheet.name}' not successful.")
 
 
 def find_table_start(values: list, min_columns: int = 3) -> int:
