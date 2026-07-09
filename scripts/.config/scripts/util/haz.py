@@ -40,7 +40,10 @@ IP_LIQUIDS = _DATA["ip_liquids"]
 # (e.g. try "pxb" before "p" when peeling a compact token like "pxbia").
 _PROTECTION_CODES_BY_LENGTH = sorted(PROTECTION_TYPES.keys(), key=len, reverse=True)
 
-_IGNORED_TOKENS = {"ex", "group", "groups", "/"}
+# "EEx" is the legacy CENELEC/pre-ATEX marking prefix (pre-2003), functionally
+# identical to plain "Ex" — treated as a synonym so it isn't mistaken for two
+# 'e' (increased safety) protection codes plus a stray leftover 'x'.
+_IGNORED_TOKENS = {"ex", "eex", "group", "groups", "/"}
 
 # EPL codes always follow this exact case pattern (G/D/M + lowercase a/b/c) in
 # the standard, e.g. "Gb". Matching case-insensitively would collide with
