@@ -284,6 +284,30 @@ Default shows the font template menu first (select 0 to keep the current font/si
 
 ---
 
+### `haz`
+
+Explain a hazardous area equipment marking (ATEX/IECEx/Inmetro/NEC-CEC).
+
+```bash
+bid haz [marking]
+```
+
+Paste the marking as-is, in any order (e.g. `Ex ib IIC T4 Gb`) — it's
+tokenized and re-ordered into canonical form regardless of input order.
+Prompts for the marking if omitted.
+
+Certification scheme is inferred from certificate numbers, ATEX category
+prefixes, or NEC/CEC markers found in the input. The bare `Ex ...` string
+is identical across ATEX/IECEx/Inmetro, so if none of those markers are
+present, all three are reported as possible schemes.
+
+```bash
+bid haz "Ex ib IIC T4 Gb"
+bid haz "[EEx ia] IIC"      # bracketed = associated apparatus rating
+```
+
+---
+
 ### `word2pdf`
 
 Batch convert Word documents to PDF in the current directory.
