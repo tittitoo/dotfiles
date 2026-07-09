@@ -1,0 +1,632 @@
+# Hazardous area equipment marking reference data.
+#
+# Covers the shared IEC 60079 grammar used by ATEX, IECEx, and Inmetro
+# (protection type + gas/dust group + temperature class + EPL), plus the
+# North American NEC/CEC Class/Division and AEx/Zone systems.
+#
+# IMPORTANT: the core "Ex ib IIC T4 Gb"-style string is IDENTICAL across
+# ATEX/IECEx/Inmetro — you cannot tell which scheme it's from just by looking
+# at that string. Scheme is only identifiable from surrounding certificate
+# markers (ATEX Group/Category + CE + Notified Body number; an IECEx
+# certificate number "IECEx <body> YY.NNNN[X]"; or Inmetro's Portaria/ABNT
+# NBR/Brazilian-CB certificate references). See [scheme_markers] below.
+#
+# Gas equipment is our primary focus (dust included for completeness).
+#
+# Every entry has a `plain` field — a layman explanation in everyday
+# language, alongside the technical `description`, for anyone not already
+# fluent in hazardous-area terminology.
+#
+# Sources: IEC 60079 series, ATEX Directive 2014/34/EU, IECEx.com, INMETRO
+# Portaria 115/2022, NFPA 70 / CSA C22.1, R. STAHL "Types of protection"
+# reference poster (103061, 2016-11), Pepperl+Fuchs tdoct5494 & tdoct7089
+# technical guides, real ATEX/IECEx/Inmetro certificates. To add a protection
+# type: copy any [protection_types.X] block and update the values.
+
+# ---------------------------------------------------------------------------
+# Types of protection
+# ---------------------------------------------------------------------------
+
+[protection_types.ia]
+name = "Intrinsic safety 'ia'"
+standard = "IEC/EN 60079-11"
+epl = "Ga"
+family = "gas"
+description = "Circuit energy (voltage/current/stored reactance) limited below the ignition threshold; remains safe with two independent faults."
+plain = "Electrical circuits are kept so weak they can never make a spark hot enough to ignite the gas — and it stays safe even if two things go wrong at the same time. The strongest intrinsic-safety rating."
+notes = "Requires >=50 mm segregation between IS and non-IS terminals; verification must be documented per IEC 60079-14 (or NEC Art. 504 / CE Code S18). Associated apparatus in the safe area is marked e.g. '[Ex ia Ga] IIC'."
+
+[protection_types.ib]
+name = "Intrinsic safety 'ib'"
+standard = "IEC/EN 60079-11"
+epl = "Gb"
+family = "gas"
+description = "Circuit energy limited below the ignition threshold; remains safe with one fault."
+plain = "Same idea as 'ia' — circuits too weak to spark — but only guaranteed safe if one thing goes wrong, not two."
+notes = "Same >=50 mm IS/non-IS segregation and documentation requirement as 'ia'."
+
+[protection_types.ic]
+name = "Intrinsic safety 'ic'"
+standard = "IEC/EN 60079-11"
+epl = "Gc"
+family = "gas"
+description = "Circuit energy limited below the ignition threshold; safe in normal operation only (no fault tolerance claimed)."
+plain = "Same idea again — circuits too weak to spark — but only guaranteed safe under normal working conditions, with no allowance for something going wrong."
+notes = ""
+
+[protection_types.d]
+name = "Flameproof enclosure 'd' (legacy marking, no EPL suffix)"
+standard = "IEC/EN 60079-1"
+epl = "Gb"
+family = "gas"
+description = "Enclosure withstands an internal explosion and prevents propagation to the surrounding atmosphere via a flameproof joint. Bare 'd' (no b/c suffix) is an older-style marking; treat as equivalent to 'db' (Zone 1) unless the certificate says otherwise."
+plain = "The equipment sits inside a strong, sealed metal box. If something inside sparks and ignites, the box contains the explosion so flames can't escape and ignite the gas outside."
+notes = "Flat flame-path joints are only permitted for gas groups IIA/IIB — NOT IIC (a flat joint's gap widens under explosion pressure). IIC-rated Ex d equipment uses cylindrical or threaded joints. Do not modify the flameproof joint or its surface finish."
+
+[protection_types.db]
+name = "Flameproof enclosure 'db'"
+standard = "IEC/EN 60079-1"
+epl = "Gb"
+family = "gas"
+description = "Enclosure withstands an internal explosion and prevents propagation to the surrounding atmosphere via a flameproof joint."
+plain = "The equipment sits inside a strong, sealed metal box. If something inside sparks and ignites, the box contains the explosion so flames can't escape and ignite the gas outside."
+notes = "Flat flame-path joints are only permitted for gas groups IIA/IIB — NOT IIC. Cable entry must use an Ex d gland/seal, Ex e terminal compartment, or conduit with seals per IEC 60079-14. Do not modify the flameproof joint or its surface finish."
+
+[protection_types.dc]
+name = "Flameproof enclosure 'dc'"
+standard = "IEC/EN 60079-1"
+epl = "Gc"
+family = "gas"
+description = "Flameproof enclosure concept applied at Zone 2 (enhanced) protection level."
+plain = "Same 'strong sealed box contains the explosion' idea as 'db', but built for areas where gas is much less likely to be present."
+notes = "Same flat-joint restriction for IIC as 'db'."
+
+[protection_types.da]
+name = "Flameproof enclosure 'da'"
+standard = "IEC/EN 60079-1"
+epl = "Ga"
+family = "gas"
+description = "Flameproof protection achieved only by combining two independent 'db'-level protections."
+plain = "Same 'strong sealed box' idea, but built to the highest standard — typically seen on small handheld gas detectors used in the most hazardous areas."
+notes = "Restricted in practice to catalytic/portable gas sensors with free internal volume <=5 cm3."
+
+[protection_types.e]
+name = "Increased safety 'e' (legacy marking, no EPL suffix)"
+standard = "IEC/EN 60079-7"
+epl = "Gb"
+family = "gas"
+description = "Prevents sparks/arcs/excess temperature by over-dimensioning insulation, mechanical strength, terminal fixing, and thermal-overload protection. Bare 'e' is an older-style marking; treat as equivalent to 'eb'."
+plain = "The equipment is over-built — thicker wires, extra insulation, more spacing between parts — so sparks and overheating simply can't happen under normal use."
+notes = "Limited to terminals, terminal connections, motors, and lights — not complex electronics. No 'ea' (Zone 0) variant exists."
+
+[protection_types.eb]
+name = "Increased safety 'eb'"
+standard = "IEC/EN 60079-7"
+epl = "Gb"
+family = "gas"
+description = "Prevents sparks/arcs/excess temperature by over-dimensioning insulation, mechanical strength, terminal fixing, and thermal-overload protection."
+plain = "The equipment is over-built — thicker wires, extra insulation, more spacing between parts — so sparks and overheating simply can't happen under normal use."
+notes = "Limited to terminals, terminal connections, motors, and lights. No 'ea' (Zone 0) variant exists."
+
+[protection_types.ec]
+name = "Increased safety 'ec'"
+standard = "IEC/EN 60079-7"
+epl = "Gc"
+family = "gas"
+description = "Increased-safety concept at Zone 2 (enhanced) level. Renamed from the old 'nA' marking in the 2015/2016 revision of IEC 60079-15/-7."
+plain = "Same 'over-built so it can't spark' idea as 'eb', but for areas where gas is much less likely to be present, which allows more complex electronics to qualify."
+notes = "Permits more complex electronics than 'eb'/'e', since Zone 2 fault tolerance requirements are lower."
+
+[protection_types.p]
+name = "Pressurization 'p' (legacy marking, no EPL suffix)"
+standard = "IEC/EN 60079-2"
+epl = "Gb"
+family = "gas"
+description = "Protective gas (air drawn from a non-hazardous area, or inert gas) maintained at overpressure inside the enclosure to exclude the explosive atmosphere. Bare 'p' is an older-style marking; treat as equivalent to 'pxb'/'pyb'."
+plain = "The equipment's enclosure is kept filled with clean air or safe gas at a slightly higher pressure than outside — like a bubble — so the explosive gas outside can't get in and reach anything that could spark."
+notes = "Minimum overpressure 25-50 Pa (0.25-0.5 mbar), monitored continuously; loss of overpressure triggers alarm or automatic shutdown. Pre-purge required before energizing — typically 5 volume exchanges under IEC/EN 60079-2 (vs 4 under NFPA 496 for Class/Division installations). Specify protective gas type and minimum overpressure (bar) when quoting."
+
+[protection_types.px]
+name = "Pressurization 'px'"
+standard = "IEC/EN 60079-2"
+epl = "Gb"
+family = "gas"
+description = "Interior of the enclosure is fully de-classified by pressurization; standard (non-Ex) internal equipment is safe to use inside."
+plain = "The 'pressurized bubble' idea, done thoroughly enough that ordinary (non-Ex) parts can safely be used inside the enclosure."
+notes = "Minimum overpressure 25-50 Pa (0.25-0.5 mbar); 5 volume exchanges pre-purge typical. Specify protective gas type and minimum overpressure (bar) when quoting."
+
+[protection_types.pxb]
+name = "Pressurization 'pxb'"
+standard = "IEC/EN 60079-2"
+epl = "Gb"
+family = "gas"
+description = "Interior of the enclosure is fully de-classified by pressurization; standard (non-Ex) internal equipment is safe to use inside."
+plain = "The 'pressurized bubble' idea, done thoroughly enough that ordinary (non-Ex) parts can safely be used inside the enclosure."
+notes = "Minimum overpressure 25-50 Pa (0.25-0.5 mbar); 5 volume exchanges pre-purge typical. Specify protective gas type and minimum overpressure (bar) when quoting."
+
+[protection_types.py]
+name = "Pressurization 'py'"
+standard = "IEC/EN 60079-2"
+epl = "Gb"
+family = "gas"
+description = "Interior of the enclosure is reduced to a Zone 2 equivalent by pressurization."
+plain = "The 'pressurized bubble' idea, but only reduces the risk inside the enclosure down to a lower-hazard level rather than eliminating it entirely."
+notes = "Minimum overpressure 25-50 Pa (0.25-0.5 mbar); 5 volume exchanges pre-purge typical. Specify protective gas type and minimum overpressure (bar) when quoting."
+
+[protection_types.pyb]
+name = "Pressurization 'pyb'"
+standard = "IEC/EN 60079-2"
+epl = "Gb"
+family = "gas"
+description = "Interior of the enclosure is reduced to a Zone 2 equivalent by pressurization."
+plain = "The 'pressurized bubble' idea, but only reduces the risk inside the enclosure down to a lower-hazard level rather than eliminating it entirely."
+notes = "Minimum overpressure 25-50 Pa (0.25-0.5 mbar); 5 volume exchanges pre-purge typical. Specify protective gas type and minimum overpressure (bar) when quoting."
+
+[protection_types.pz]
+name = "Pressurization 'pz'"
+standard = "IEC/EN 60079-2"
+epl = "Gc"
+family = "gas"
+description = "Interior of the enclosure is reduced to a non-hazardous, Zone 2-suitable installation by pressurization."
+plain = "The 'pressurized bubble' idea, applied to equipment already destined for a lower-risk area."
+notes = "Minimum overpressure 25-50 Pa (0.25-0.5 mbar); pre-purge required. Specify protective gas type and minimum overpressure (bar) when quoting."
+
+[protection_types.pzc]
+name = "Pressurization 'pzc'"
+standard = "IEC/EN 60079-2"
+epl = "Gc"
+family = "gas"
+description = "Interior of the enclosure is reduced to a non-hazardous, Zone 2-suitable installation by pressurization."
+plain = "The 'pressurized bubble' idea, applied to equipment already destined for a lower-risk area."
+notes = "Minimum overpressure 25-50 Pa (0.25-0.5 mbar); pre-purge required. Specify protective gas type and minimum overpressure (bar) when quoting."
+
+[protection_types.m]
+name = "Encapsulation 'm' (legacy marking, no EPL suffix)"
+standard = "IEC/EN 60079-18"
+epl = "Gb"
+family = "gas"
+description = "Ignition-capable parts are embedded in a casting compound. Bare 'm' is an older-style marking; treat as equivalent to 'mb'."
+plain = "Anything that could spark is sealed solid inside a block of resin or potting compound — like being encased in plastic — so it can never touch the surrounding gas."
+notes = "Compound must not detach from the enclosure wall across the rated temperature range."
+
+[protection_types.ma]
+name = "Encapsulation 'ma'"
+standard = "IEC/EN 60079-18"
+epl = "Ga"
+family = "gas"
+description = "Ignition-capable parts embedded in a casting compound, rated for Zone 0."
+plain = "Anything that could spark is sealed solid inside a block of resin or potting compound, built to the highest standard for the most hazardous areas."
+notes = "Compound must not detach from the enclosure wall across the rated temperature range."
+
+[protection_types.mb]
+name = "Encapsulation 'mb'"
+standard = "IEC/EN 60079-18"
+epl = "Gb"
+family = "gas"
+description = "Ignition-capable parts embedded in a casting compound, rated for Zone 1."
+plain = "Anything that could spark is sealed solid inside a block of resin or potting compound — like being encased in plastic — so it can never touch the surrounding gas."
+notes = "Compound must not detach from the enclosure wall across the rated temperature range."
+
+[protection_types.mc]
+name = "Encapsulation 'mc'"
+standard = "IEC/EN 60079-18"
+epl = "Gc"
+family = "gas"
+description = "Ignition-capable parts embedded in a casting compound, rated for Zone 2."
+plain = "Same 'sealed inside resin' idea as 'mb', but for areas where gas is much less likely to be present."
+notes = ""
+
+[protection_types.n]
+name = "Type 'n' — non-incendive (Zone 2 only, legacy marking)"
+standard = "IEC/EN 60079-15"
+epl = "Gc"
+family = "gas"
+description = "Constructive measures preventing ignition in normal operation only. Zone 2 use only — no fault-tolerant variant exists for type 'n'."
+plain = "Built with simple, sensible precautions against sparking — no special fault-tolerance testing behind it — so it's only suitable for areas where gas is very unlikely to be present."
+notes = "'nA' was renamed 'ec' in the 2015/2016 revision and folded into IEC 60079-7. 'nR' = restricted-breathing enclosure; 'nC' = sealed/enclosed sparking device."
+
+[protection_types.na]
+name = "Type 'nA' — non-sparking (old name for 'ec')"
+standard = "IEC/EN 60079-15 (superseded — folded into IEC 60079-7)"
+epl = "Gc"
+family = "gas"
+description = "Older marking still seen on existing/legacy equipment. Renamed 'ec' in the 2015/2016 revision of the standard; treat as equivalent to 'ec'."
+plain = "Older name for the same 'built with simple precautions against sparking' idea now usually labeled 'ec'."
+notes = "If quoting a replacement part, check whether the current certificate uses 'ec' instead — the underlying protection concept is the same."
+
+[protection_types.o]
+name = "Liquid immersion 'o' (legacy marking, no EPL suffix)"
+standard = "IEC/EN 60079-6"
+epl = "Gb"
+family = "gas"
+description = "Ignition sources are immersed below a monitored liquid (oil) fill level. Bare 'o' is an older-style marking; treat as equivalent to 'ob'."
+plain = "Anything that could spark is kept permanently submerged under a layer of oil, so it never contacts the surrounding gas or air."
+notes = "No 'oa' (Zone 0) level exists."
+
+[protection_types.ob]
+name = "Liquid immersion 'ob'"
+standard = "IEC/EN 60079-6"
+epl = "Gb"
+family = "gas"
+description = "Ignition sources are immersed below a monitored liquid (oil) fill level."
+plain = "Anything that could spark is kept permanently submerged under a layer of oil, so it never contacts the surrounding gas or air."
+notes = "No 'oa' (Zone 0) level exists."
+
+[protection_types.oc]
+name = "Liquid immersion 'oc'"
+standard = "IEC/EN 60079-6"
+epl = "Gc"
+family = "gas"
+description = "Liquid-immersion concept at Zone 2 (enhanced) level."
+plain = "Same 'submerged under oil' idea as 'ob', but for areas where gas is much less likely to be present."
+notes = ""
+
+[protection_types.q]
+name = "Powder/sand filling 'q'"
+standard = "IEC/EN 60079-5"
+epl = "Gb"
+family = "gas"
+description = "Fine glass/silica granules fill the enclosure void; the thermal mass of the filling extinguishes any internal ignition before it can propagate."
+plain = "The equipment enclosure is packed solid with fine sand or glass powder. If something sparks inside, the powder smothers it before it can reach the gas outside."
+notes = ""
+
+[protection_types.qb]
+name = "Powder/sand filling 'qb'"
+standard = "IEC/EN 60079-5"
+epl = "Gb"
+family = "gas"
+description = "Fine glass/silica granules fill the enclosure void; the thermal mass of the filling extinguishes any internal ignition before it can propagate."
+plain = "The equipment enclosure is packed solid with fine sand or glass powder. If something sparks inside, the powder smothers it before it can reach the gas outside."
+notes = ""
+
+[protection_types.ta]
+name = "Protection by enclosure 'ta' (dust)"
+standard = "IEC/EN 60079-31"
+epl = "Da"
+family = "dust"
+description = "Dust-tight enclosure combined with surface-temperature limitation, rated for Zone 20."
+plain = "For areas with combustible dust instead of gas — the enclosure is sealed tight enough to keep dust out, and stays cool enough that dust settling on it won't ignite. Built to the highest standard for the most hazardous dust areas."
+notes = "Always requires IP6X regardless of dust group. Requires a 200 mm dust-layer thermal test and marking of max short-circuit current."
+
+[protection_types.tb]
+name = "Protection by enclosure 'tb' (dust)"
+standard = "IEC/EN 60079-31"
+epl = "Db"
+family = "dust"
+description = "Dust-tight enclosure combined with surface-temperature limitation, rated for Zone 21."
+plain = "For areas with combustible dust instead of gas — the enclosure is sealed tight enough to keep dust out, and stays cool enough that dust settling on it won't ignite."
+notes = "Required IP rating varies by dust group."
+
+[protection_types.tc]
+name = "Protection by enclosure 'tc' (dust)"
+standard = "IEC/EN 60079-31"
+epl = "Dc"
+family = "dust"
+description = "Dust-tight enclosure combined with surface-temperature limitation, rated for Zone 22."
+plain = "Same 'dust-tight and stays cool' idea as 'tb', but for areas where combustible dust is much less likely to be present."
+notes = "Only needs IP5X for dust groups IIIA/IIIB. Formerly marked 'tD' under the now-superseded IEC 61241-1."
+
+[protection_types.t]
+name = "Protection by enclosure 't' (dust, legacy marking)"
+standard = "IEC/EN 60079-31"
+epl = "Db"
+family = "dust"
+description = "Dust-tight enclosure combined with surface-temperature limitation. Bare 't' is an older-style marking; treat as equivalent to 'tb'."
+plain = "For areas with combustible dust instead of gas — the enclosure is sealed tight enough to keep dust out, and stays cool enough that dust settling on it won't ignite."
+notes = "Required IP rating varies by dust group."
+
+[protection_types.opis]
+name = "Optical radiation protection 'op is'"
+display = "op is"
+standard = "IEC/EN 60079-28"
+epl = "Gc"
+family = "gas"
+description = "Optical radiation (e.g. from a fibre-optic link or laser) is energy-limited, inherently-safe style, similar in concept to intrinsic safety but for light instead of electrical circuits."
+plain = "Like intrinsic safety, but for a beam of light instead of electricity — the light itself is kept too weak/limited to ignite the surrounding gas or dust."
+notes = "Baseline is Gc; can support higher EPLs (Gb/Ga, Db/Da) if the certificate includes the additional fault analysis for that level — check the certificate rather than assuming."
+
+[protection_types.oppr]
+name = "Optical radiation protection 'op pr'"
+display = "op pr"
+standard = "IEC/EN 60079-28"
+epl = "Gc"
+family = "gas"
+description = "The optical radiation source is protected/encapsulated so that no radiation capable of ignition can escape to the surrounding atmosphere at all."
+plain = "The light source is fully enclosed/sealed so none of it ever reaches the surrounding gas or dust — nothing to protect against escapes in the first place."
+notes = "Baseline is Gc; check the certificate for the actual EPL rating."
+
+[protection_types.opsh]
+name = "Optical radiation protection 'op sh'"
+display = "op sh"
+standard = "IEC/EN 60079-28"
+epl = "Gc"
+family = "gas"
+description = "An interlock (mechanical or electronic) automatically cuts the radiation source if the enclosure is opened or the beam path is otherwise interrupted."
+plain = "A safety interlock — like an automatic cutoff switch — kills the light source the moment the enclosure is opened or the beam is interrupted."
+notes = "Baseline is Gc; check the certificate for the actual EPL rating."
+
+# ---------------------------------------------------------------------------
+# Gas groups
+# ---------------------------------------------------------------------------
+
+[gas_groups.IIA]
+name = "Group IIA"
+example_gas = "Propane"
+nec_equivalent = "D"
+plain = "Covers gases that are relatively hard to ignite, like propane — the most common industrial gas-group rating."
+note = "Least stringent gas group (highest minimum ignition energy)."
+
+[gas_groups.IIB]
+name = "Group IIB"
+example_gas = "Ethylene"
+nec_equivalent = "C"
+plain = "Covers gases that are somewhat easier to ignite than IIA, like ethylene."
+note = "Mid-stringency gas group."
+
+[gas_groups.IIC]
+name = "Group IIC"
+example_gas = "Hydrogen / Acetylene"
+nec_equivalent = "B (hydrogen) / A (acetylene)"
+plain = "Covers the easiest-to-ignite gases, like hydrogen and acetylene. Equipment rated IIC automatically covers IIA and IIB gases too, so it's the 'safe for everything' rating."
+note = "Most stringent gas group (lowest minimum ignition energy). IIC-rated equipment satisfies IIB and IIA requirements too — the nesting only runs one way (IIC covers IIB/IIA, not the reverse)."
+
+# ---------------------------------------------------------------------------
+# Dust groups
+# ---------------------------------------------------------------------------
+
+[dust_groups.IIIA]
+name = "Group IIIA"
+description = "Combustible flyings/fibres, nominal particle size > 500 um"
+plain = "Covers combustible fibres and flyings — think sawdust or textile fluff."
+nec_equivalent = "Class III (no distinct group letter)"
+
+[dust_groups.IIIB]
+name = "Group IIIB"
+description = "Non-conductive dust"
+plain = "Covers fine dust that doesn't conduct electricity."
+nec_equivalent = "G"
+
+[dust_groups.IIIC]
+name = "Group IIIC"
+description = "Conductive dust"
+plain = "Covers fine dust that DOES conduct electricity, which is harder to protect against — the strictest dust-group rating."
+nec_equivalent = "F (carbonaceous) / E (combustible metal dust)"
+note = "Most stringent dust group. Exact resistivity threshold vs IIIB not hard-coded here — secondary sources disagreed by orders of magnitude; verify against IEC 60079-0 directly if the exact figure is needed."
+
+# ---------------------------------------------------------------------------
+# Temperature classes (gas). T1 = least restrictive (hottest surface
+# allowed), T6 = most restrictive (coolest surface required).
+# ---------------------------------------------------------------------------
+
+[temp_classes.T1]
+max_surface_c = 450
+
+[temp_classes.T2]
+max_surface_c = 300
+
+[temp_classes.T3]
+max_surface_c = 200
+
+[temp_classes.T4]
+max_surface_c = 135
+
+[temp_classes.T5]
+max_surface_c = 100
+
+[temp_classes.T6]
+max_surface_c = 85
+
+# ---------------------------------------------------------------------------
+# Equipment Protection Levels. EPL is a strict hierarchy: Ga-rated equipment
+# may be used in Zones 0, 1, or 2; Gb-rated only in Zones 1 or 2; Gc-rated
+# only in Zone 2. Same logic for Da/Db/Dc against Zones 20/21/22.
+# ---------------------------------------------------------------------------
+
+[epl.Ga]
+zone = "0"
+description = "Very high protection — remains safe with two simultaneous faults"
+plain = "Safe to use even in the most hazardous areas, where explosive gas is present all the time or for long periods."
+
+[epl.Gb]
+zone = "1"
+description = "High protection — remains safe with one fault"
+plain = "Safe to use in areas where explosive gas shows up sometimes during normal work, but NOT in areas where it's present constantly."
+
+[epl.Gc]
+zone = "2"
+description = "Enhanced protection — safe in normal operation only"
+plain = "Safe only in areas where explosive gas is very unlikely to appear, and even then only briefly."
+
+[epl.Da]
+zone = "20"
+description = "Very high protection — remains safe with two simultaneous faults"
+plain = "Safe to use even in the most hazardous dust areas, where a combustible dust cloud is present all the time or for long periods."
+
+[epl.Db]
+zone = "21"
+description = "High protection — remains safe with one fault"
+plain = "Safe to use in areas where a combustible dust cloud shows up sometimes during normal work, but NOT in areas where it's present constantly."
+
+[epl.Dc]
+zone = "22"
+description = "Enhanced protection — safe in normal operation only"
+plain = "Safe only in areas where combustible dust is very unlikely to appear, and even then only briefly."
+
+[epl.Ma]
+zone = "Group I (underground mining)"
+description = "Very high protection for mining equipment — remains energized safely even during a gas outburst"
+plain = "For underground mining — stays safely powered on even if there's a sudden gas outburst."
+
+[epl.Mb]
+zone = "Group I (underground mining)"
+description = "High protection for mining equipment — de-energized in the event of a gas outburst"
+plain = "For underground mining — automatically shuts off power if there's a sudden gas outburst."
+
+# ---------------------------------------------------------------------------
+# Zones — physical/regulatory definition of how often an explosive
+# atmosphere is expected to be present (per IEC 60079-10-1).
+# ---------------------------------------------------------------------------
+
+[zones."0"]
+medium = "gas"
+description = "Explosive atmosphere present continuously, or for long periods"
+occurrence = "> 10% of time / > 1000 h per year"
+
+[zones."1"]
+medium = "gas"
+description = "Explosive atmosphere likely to occur in normal operation, occasionally"
+occurrence = "0.1%-10% of time / 10-1000 h per year"
+
+[zones."2"]
+medium = "gas"
+description = "Explosive atmosphere not likely to occur in normal operation, and if it does, only briefly"
+occurrence = "< 0.1% of time / < 10 h per year"
+
+[zones."20"]
+medium = "dust"
+description = "Combustible dust cloud present continuously, or for long periods"
+occurrence = "> 10% of time / > 1000 h per year"
+
+[zones."21"]
+medium = "dust"
+description = "Combustible dust cloud likely to occur in normal operation, occasionally"
+occurrence = "0.1%-10% of time / 10-1000 h per year"
+
+[zones."22"]
+medium = "dust"
+description = "Combustible dust cloud not likely to occur in normal operation, and if it does, only briefly"
+occurrence = "< 0.1% of time / < 10 h per year"
+
+# ---------------------------------------------------------------------------
+# North American (NEC/CEC) gas/dust groups. Correspondence to IEC groups is
+# a widely-used APPROXIMATE mapping, not a strict legal equivalence — always
+# flag this when cross-referencing.
+# ---------------------------------------------------------------------------
+
+[na_groups.A]
+medium = "gas"
+example_gas = "Acetylene"
+iec_equivalent_approx = "IIC"
+
+[na_groups.B]
+medium = "gas"
+example_gas = "Hydrogen"
+iec_equivalent_approx = "IIC"
+
+[na_groups.C]
+medium = "gas"
+example_gas = "Ethylene"
+iec_equivalent_approx = "IIB"
+
+[na_groups.D]
+medium = "gas"
+example_gas = "Propane"
+iec_equivalent_approx = "IIA"
+
+[na_groups.E]
+medium = "dust"
+example_gas = "Combustible metal dust"
+iec_equivalent_approx = "IIIC (metal)"
+
+[na_groups.F]
+medium = "dust"
+example_gas = "Carbonaceous dust"
+iec_equivalent_approx = "IIIC"
+
+[na_groups.G]
+medium = "dust"
+example_gas = "Non-conductive dust"
+iec_equivalent_approx = "IIIB"
+
+# ---------------------------------------------------------------------------
+# ATEX Group/Category — the prefix that appears before "Ex ..." on genuine
+# ATEX markings, e.g. "II 2G" or "II 2(1)G". The "(1)" form means the main
+# equipment is Category 2, paired with/incorporating Category 1 associated
+# apparatus (very common for intrinsically-safe systems with a barrier).
+# ---------------------------------------------------------------------------
+
+[atex_groups.I]
+name = "Group I"
+plain = "Underground mining equipment (not surface industry)."
+
+[atex_groups.II]
+name = "Group II"
+plain = "Surface industries (the group used for almost all non-mining equipment)."
+
+[atex_categories."1"]
+zone_gas = "0"
+zone_dust = "20"
+plain = "Very high protection — suitable for the most hazardous areas (Zone 0/20)."
+
+[atex_categories."2"]
+zone_gas = "1"
+zone_dust = "21"
+plain = "High protection — suitable for areas where a hazard is likely during normal operation (Zone 1/21)."
+
+[atex_categories."3"]
+zone_gas = "2"
+zone_dust = "22"
+plain = "Normal protection — suitable for areas where a hazard is unlikely, and brief if it occurs (Zone 2/22)."
+
+# ---------------------------------------------------------------------------
+# IP (Ingress Protection) rating, IEC 60529 — often shown alongside dust ("t")
+# markings since e.g. "ta" requires IP6X. First digit = solids/dust
+# protection, second digit = liquid/water protection.
+# ---------------------------------------------------------------------------
+
+[ip_solids."0"]
+plain = "No protection against solid objects."
+
+[ip_solids."1"]
+plain = "Protected against solid objects larger than 50 mm."
+
+[ip_solids."2"]
+plain = "Protected against solid objects larger than 12.5 mm."
+
+[ip_solids."3"]
+plain = "Protected against solid objects larger than 2.5 mm."
+
+[ip_solids."4"]
+plain = "Protected against solid objects larger than 1 mm."
+
+[ip_solids."5"]
+plain = "Dust protected — limited dust ingress, not enough to cause harm."
+
+[ip_solids."6"]
+plain = "Dust tight — no ingress of dust at all."
+
+[ip_solids.X]
+plain = "Solids/dust protection not specified/rated."
+
+[ip_liquids."0"]
+plain = "No protection against water."
+
+[ip_liquids."1"]
+plain = "Protected against vertically dripping water."
+
+[ip_liquids."2"]
+plain = "Protected against dripping water when tilted up to 15 degrees."
+
+[ip_liquids."3"]
+plain = "Protected against spraying water."
+
+[ip_liquids."4"]
+plain = "Protected against splashing water from any direction."
+
+[ip_liquids."5"]
+plain = "Protected against low-pressure water jets."
+
+[ip_liquids."6"]
+plain = "Protected against powerful water jets."
+
+[ip_liquids."7"]
+plain = "Protected against temporary immersion in water (up to 1 m)."
+
+[ip_liquids."8"]
+plain = "Protected against continuous immersion in water beyond 1 m."
+
+[ip_liquids."9K"]
+plain = "Protected against high-pressure, high-temperature water/steam-jet cleaning."
+
+[ip_liquids.X]
+plain = "Liquid/water protection not specified/rated."

@@ -1062,6 +1062,30 @@ def beautify(xl_file: str, width: bool, font_only: bool) -> None:
 
 
 @click.command()
+@click.argument("marking", default="")
+def haz(marking: str) -> None:
+    """
+    Explain a hazardous area equipment marking (ATEX/IECEx/Inmetro/NEC-CEC).
+
+    Paste the marking as-is, in any order (e.g. "Ex ib IIC T4 Gb") — it's
+    tokenized and re-ordered into canonical form regardless of input order.
+    Certification scheme (ATEX/IECEx/Inmetro/NEC-CEC) is inferred from
+    certificate numbers, ATEX category prefixes, or NEC/CEC markers found in
+    the input; the bare "Ex ..." string is identical across ATEX/IECEx/Inmetro,
+    so if none of those markers are present, all three are reported as valid.
+    """
+    from util.haz import explain, parse
+
+    if not marking:
+        marking = click.prompt(
+            "Enter the hazardous area marking (e.g. 'Ex ib IIC T4 Gb')"
+        )
+
+    result = parse(marking)
+    click.echo(explain(result))
+
+
+@click.command()
 @click.option("-o", "--outline", is_flag=True, help="Add outline to file from filename")
 @click.option("-y", "--yes", is_flag=True, help="Answer yes to the current directory")
 @click.option(
@@ -2517,6 +2541,7 @@ bid_group.add_command(init)
 bid_group.add_command(setup)
 bid_group.add_command(clean)
 bid_group.add_command(beautify)
+bid_group.add_command(haz)
 bid_group.add_command(combine_pdf)
 # Hidden alias for combine-pdf
 cpdf_alias = click.Command(
