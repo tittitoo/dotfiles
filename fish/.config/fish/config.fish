@@ -157,15 +157,10 @@ fish_add_path -P $HOME/.config/scripts
 # relative entries (e.g. "Fusion.app/..." caused by old space-splitting bug)
 set -gx PATH (printf '%s\n' $PATH | awk '!seen[$0]++ && /^\//')
 
-# Auto-attach to or start ai_general tmuxinator session
+# Auto-attach to or start "main" tmux session
 # Skip when Atuin Desktop opens a terminal (ATUIN_TMUX_POPUP is set in that context)
-# Also re-attach if TMUX is set but the server is dead (e.g. after tmux kill-server)
 if status is-interactive; and not set -q ATUIN_TMUX_POPUP
-    if not set -q TMUX; or not tmux info &>/dev/null
-        if tmux has-session -t ai_general 2>/dev/null
-            exec tmux attach-session -t ai_general
-        else
-            exec tmuxinator start ai_general
-        end
+    if not set -q TMUX
+        tmux attach -t main; or tmux new -s main
     end
 end
