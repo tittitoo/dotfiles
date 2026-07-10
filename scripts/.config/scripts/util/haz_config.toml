@@ -234,6 +234,24 @@ description = "Older marking still seen on existing/legacy equipment. Renamed 'e
 plain = "Older name for the same 'built with simple precautions against sparking' idea now usually labeled 'ec'."
 notes = "If quoting a replacement part, check whether the current certificate uses 'ec' instead — the underlying protection concept is the same."
 
+[protection_types.nr]
+name = "Type 'nR' — restricted-breathing enclosure"
+standard = "IEC/EN 60079-15"
+epl = "Gc"
+family = "gas"
+description = "Enclosure restricts the rate at which the surrounding atmosphere can breathe in and out through its seams/joints, slowing gas ingress enough to be treated as protection in Zone 2 only."
+plain = "The enclosure is built tight enough that gas from outside only seeps in very slowly — not sealed completely, but slow enough to count as protection for the least hazardous areas."
+notes = "Zone 2 use only, same as other type 'n' variants."
+
+[protection_types.nc]
+name = "Type 'nC' — sealed/enclosed sparking device"
+standard = "IEC/EN 60079-15"
+epl = "Gc"
+family = "gas"
+description = "Any sparking contacts/components (e.g. switches, connectors) are individually sealed or enclosed so sparks can't reach the surrounding atmosphere."
+plain = "Any part that could spark (like a switch contact) is individually sealed inside its own small enclosure, rather than protecting the whole device."
+notes = "Zone 2 use only, same as other type 'n' variants."
+
 [protection_types.o]
 name = "Liquid immersion 'o' (legacy marking, no EPL suffix)"
 standard = "IEC/EN 60079-6"

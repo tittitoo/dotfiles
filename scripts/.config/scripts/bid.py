@@ -1061,9 +1061,18 @@ def beautify(xl_file: str, width: bool, font_only: bool) -> None:
     ctx.invoke(_beautify, xl_file=xl_file, width=width, font_only=font_only)
 
 
+HAZ_REFERENCE_URL = "https://en.wikipedia.org/wiki/Electrical_equipment_in_hazardous_areas"
+
+
 @click.command()
 @click.argument("marking", default="")
-def haz(marking: str) -> None:
+@click.option(
+    "-r",
+    "--reference",
+    is_flag=True,
+    help="Also open a plain-English reference article in the browser",
+)
+def haz(marking: str, reference: bool) -> None:
     """
     Explain a hazardous area equipment marking (ATEX/IECEx/Inmetro/NEC-CEC).
 
@@ -1073,8 +1082,14 @@ def haz(marking: str) -> None:
     certificate numbers, ATEX category prefixes, or NEC/CEC markers found in
     the input; the bare "Ex ..." string is identical across ATEX/IECEx/Inmetro,
     so if none of those markers are present, all three are reported as valid.
+    Use -r to also open a plain-English background reference in the browser.
     """
     from util.haz import explain, parse
+
+    if reference:
+        click.launch(HAZ_REFERENCE_URL)
+        if not marking:
+            return
 
     if not marking:
         marking = click.prompt(
@@ -1083,6 +1098,7 @@ def haz(marking: str) -> None:
 
     result = parse(marking)
     click.echo(explain(result))
+    click.echo(f"\nReference: {HAZ_REFERENCE_URL}")
 
 
 @click.command()
