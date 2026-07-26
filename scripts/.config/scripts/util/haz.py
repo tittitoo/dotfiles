@@ -19,6 +19,23 @@ _MAX_WRAP_WIDTH = 96
 def _wrap_width() -> int:
     return min(shutil.get_terminal_size(fallback=(_MAX_WRAP_WIDTH, 24)).columns, _MAX_WRAP_WIDTH)
 
+# Printed once above the protection-type list so a first-time reader
+# understands the a/b/c suffix before hitting the per-type notes (which give
+# the specific legacy-equivalent letter, e.g. bare 'd' == 'db').
+_SUFFIX_LEGEND = (
+    "About the a/b/c suffix: for most protection types, the trailing letter "
+    "states the Equipment Protection Level (EPL) that type alone qualifies "
+    "for — 'a' = Ga/Zone 0 (safe with two independent faults, most "
+    "stringent), 'b' = Gb/Zone 1 (safe with one fault), 'c' = Gc/Zone 2 "
+    "(safe in normal operation only, least stringent). This a/b/c system was "
+    "added in later IEC 60079 editions; older certificates for some types "
+    "(d, e, m, o, t) show the bare code with no suffix at all — that's "
+    "equivalent to today's 'b' variant of the same type (see the notes below "
+    "for exceptions). Two types don't fit this pattern: pressurization 'p' "
+    "uses a different x/y/z purge-type letter instead of a/b/c, and 'ec' "
+    "isn't 'e' gaining a suffix — it's a renamed separate type ('nA')."
+)
+
 CONFIG_PATH = Path(__file__).parent / "haz_config.toml"
 
 with open(CONFIG_PATH, "rb") as _f:
@@ -426,6 +443,7 @@ def explain(r: ParseResult, indent: str = "") -> str:
     if r.protection_types:
         lines.append(f"{indent}")
         lines.append(f"{indent}Type(s) of protection:")
+        lines.append(_wrap(_SUFFIX_LEGEND, indent + "  "))
         for code in r.protection_types:
             if code.startswith("NEC-group-"):
                 letter = code.removeprefix("NEC-group-")
