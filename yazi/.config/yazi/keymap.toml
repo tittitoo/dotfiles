@@ -1,8 +1,8 @@
 [[mgr.prepend_keymap]]
 on = "!"
 for = "unix"
-run = 'shell "$SHELL" --block'
-desc = "Open $SHELL here"
+run = "shell --interactive"
+desc = "Run a shell command here"
 
 [[mgr.prepend_keymap]]
 on = "<C-p>"
