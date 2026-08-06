@@ -2092,6 +2092,10 @@ def _load_mob_config() -> dict:
               type=click.Choice(["standard", "premium", "super"], case_sensitive=False),
               default=None,
               help="Specialist mob by tier")
+@click.option("--name", "specialist_name", default=None, metavar="NAME",
+              help='Specialist system designation for --md row (e.g. "PAGA Specialist", "POB Specialist"); '
+                   'defaults to "<Tier> Specialist" when omitted. Keeps specialist rows separate from '
+                   '"JEN Engineer" rows at the same location.')
 @click.option("--day-rate", "spec_day_rate", type=float, default=None, metavar="RATE",
               help="Supplier day rate for tier classification — use onshore rate; for offshore-only suppliers (e.g. Kongsberg) use their offshore/accommodated rate (use with --currency)")
 @click.option("--currency", "spec_currency",
@@ -2111,6 +2115,7 @@ def mob_cmd(
     days_override: int | None,
     buffers: tuple,
     specialist_tier: str | None,
+    specialist_name: str | None,
     spec_day_rate: float | None,
     spec_currency: str,
     write_md: bool,
@@ -2197,6 +2202,53 @@ def mob_cmd(
                 for lbl, sgd, usd in [("Mob", mob_sgd, mob_usd), ("Demob", mob_sgd, mob_usd), ("Mob/Demob", mob_sgd * 2, mob_usd * 2)]:
                     click.echo(f"    {lbl:<{w}}  {_fmt_rate(sgd):>8}   {_fmt_rate(usd):>8}")
                 click.echo()
+
+        if write_md:
+            if not country:
+                raise click.UsageError("Provide COUNTRY when using --specialist ... --md.")
+            designation = specialist_name or f"{specialist_tier.title()} Specialist"
+            row_loc = code
+            outfile = Path(_MD_FILE)
+            text    = outfile.read_text(encoding="utf-8") if outfile.exists() else ""
+            for sid in ("onshore", "offshore"):
+                meta = _read_section_meta(sid)
+                if meta is None:
+                    continue
+                cur     = mob_md_currency.upper() if mob_md_currency else meta["currency"]
+                mob_val = mob_usd if cur == "USD" else mob
+                # Read base rates from the SG row for this same designation
+                open_tag  = f"<!-- section:{sid} -->"
+                close_tag = f"<!-- /section:{sid} -->"
+                sec_start = text.find(open_tag)
+                sec_end   = text.find(close_tag)
+                day = ot = standby = sun_ph = "—"
+                if sec_start != -1 and sec_end != -1:
+                    for line in text[sec_start:sec_end].splitlines():
+                        if line.startswith(f"| SG | {designation} |"):
+                            cells = [c.strip() for c in line.split("|")]
+                            # cells: ['','SG','desig','day','ot','standby','mob','demob','mob/demob',<sun_ph if onshore>,'']
+                            day, ot, standby = cells[3], cells[4], cells[5]
+                            if sid == "onshore":
+                                sun_ph = cells[9]
+                            break
+                if sid == "onshore":
+                    row = (f"| {row_loc} | {designation} |"
+                           f" {day} | {ot} | {standby} |"
+                           f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                           f" {_fmt_rate(mob_val * 2)} | {sun_ph} |")
+                else:
+                    row = (f"| {row_loc} | {designation} |"
+                           f" {day} | {ot} | {standby} |"
+                           f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                           f" {_fmt_rate(mob_val * 2)} |")
+                if _upsert_mob_row(sid, row_loc, designation, row):
+                    click.echo(f"  → {_MD_FILE}  [{sid}: {row_loc} / {designation}]")
+                else:
+                    click.echo(
+                        f"  ↓ {_MD_FILE}  [{sid}] not found — run"
+                        f' bid rate --specialist {specialist_tier} --name "{designation}" --md first',
+                        err=True,
+                    )
 
         click.echo()
         click.echo(f"  → Rate card: bid rate --specialist {specialist_tier}")
@@ -2363,7 +2415,7 @@ def mob_cmd(
             day = ot = standby = sun_ph = "—"
             if sec_start != -1 and sec_end != -1:
                 for line in text[sec_start:sec_end].splitlines():
-                    if line.startswith("| SG |"):
+                    if line.startswith("| SG | JEN Engineer |"):
                         cells = [c.strip() for c in line.split("|")]
                         # cells: ['','SG','desig','day','ot','standby','mob','demob','mob/demob',<sun_ph if onshore>,'']
                         day, ot, standby = cells[3], cells[4], cells[5]
