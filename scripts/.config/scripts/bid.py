@@ -1767,8 +1767,8 @@ def _read_section_meta(section_id: str) -> "dict | None":
     return json.loads(m.group(1)) if m else None
 
 
-def _upsert_mob_row(section_id: str, loc: str, row: str) -> bool:
-    """Add or replace a row (keyed by first column = loc) inside a section table."""
+def _upsert_mob_row(section_id: str, loc: str, designation: str, row: str) -> bool:
+    """Add or replace a row (keyed by Location + Designation) inside a section table."""
     import re
     outfile = Path(_MD_FILE)
     if not outfile.exists():
@@ -1781,7 +1781,7 @@ def _upsert_mob_row(section_id: str, loc: str, row: str) -> bool:
     if start == -1 or end == -1:
         return False
     body    = text[start : end + len(close_tag)]
-    row_pat = re.compile(rf"^\| {re.escape(loc)} \|.*\n?", re.MULTILINE)
+    row_pat = re.compile(rf"^\| {re.escape(loc)} \| {re.escape(designation)} \|.*\n?", re.MULTILINE)
     if row_pat.search(body):
         new_body = row_pat.sub(row + "\n", body)
     else:
@@ -1851,6 +1851,9 @@ def _md_offshore(rates: dict, designation: str, currency: str, usd_rate: float, 
               type=click.Choice(["standard", "premium", "super"], case_sensitive=False),
               default=None,
               help="Specialist tier rate card (standard|premium|super)")
+@click.option("--name", "specialist_name", default=None, metavar="NAME",
+              help='Specialist system designation for --md row (e.g. "PAGA Specialist", "POB Specialist"); '
+                   'defaults to "<Tier> Specialist" when omitted')
 @click.option("--tiers", "show_tiers", is_flag=True, default=False,
               help="Show specialist tier definitions in SGD/USD/EUR/GBP")
 @click.option("--special", is_flag=True,
@@ -1873,6 +1876,7 @@ def rate_cmd(
     onshore_rate: float | None,
     offshore_rate: float | None,
     specialist_tier: str | None,
+    specialist_name: str | None,
     show_tiers: bool,
     special: bool,
     write_md: bool,
@@ -1908,6 +1912,11 @@ def rate_cmd(
     \b
     Specialist with custom selling rate:
       bid rate --onshore 3500 --specialist super
+
+    \b
+    Specialist system row in man-day-rates.md (designation defaults to "<Tier> Specialist"):
+      bid rate --specialist premium --name "PAGA Specialist" --md
+      bid rate --specialist super --name "POB Specialist" --md
     """
     if show_tiers:
         cfg = _load_mob_config()
@@ -1973,9 +1982,40 @@ def rate_cmd(
         offshore_sgd = offshore_rate if offshore_rate is not None else _ceil_to(tier["offshore_sell"] * usd_rate, 100)
         click.echo("SELLING PRICE  (SGD / USD)")
         click.echo()
+        rates_by_mode: dict[str, dict] = {}
         for mode, sell in [("onshore", onshore_sgd), ("offshore", offshore_sgd)]:
-            _print_seatrium_section(mode, _calc_seatrium(sell, mode), label, usd_rate=usd_rate)
+            rates_by_mode[mode] = _calc_seatrium(sell, mode)
+            _print_seatrium_section(mode, rates_by_mode[mode], label, usd_rate=usd_rate)
         _print_spec_mob(specialist_tier, tier)
+
+        if write_md:
+            from datetime import date as _date
+            designation = specialist_name or f"{specialist_tier.title()} Specialist"
+            usd_round  = cfg["defaults"]["usd_round"]
+            loc        = md_loc.upper()
+            currency   = md_currency.upper()
+            publish_dt = _date.fromisoformat(md_date) if md_date else _date.today()
+            valid_dt   = _calc_valid_date(md_valid, publish_dt) if md_valid else None
+            _write_md_section("header", _md_header(publish_dt, valid_dt, md_caveat))
+            for mode, rates in rates_by_mode.items():
+                outfile = Path(_MD_FILE)
+                has_sec = outfile.exists() and f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
+                if not has_sec:
+                    fn = _md_onshore if mode == "onshore" else _md_offshore
+                    _write_md_section(mode, fn(rates, designation, currency, usd_rate, usd_round, loc))
+                else:
+                    if mode == "onshore":
+                        sun_ph = rates.get("sun_ph", "—")
+                        row = (f"| {loc} | {designation} |"
+                               f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
+                               f" {_fmt_rate(rates['standby'])} | — | — | — | {_fmt_rate(sun_ph)} |")
+                    else:
+                        row = (f"| {loc} | {designation} |"
+                               f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
+                               f" {_fmt_rate(rates['standby'])} | — | — | — |")
+                    if _upsert_mob_row(mode, loc, designation, row):
+                        click.echo(f"  → {_MD_FILE}  [{mode}: {loc} / {designation}]")
+            _write_md_section("legend", _md_legend())
         return
 
     has_rates = onshore_rate is not None or offshore_rate is not None
@@ -2019,7 +2059,7 @@ def rate_cmd(
                     row = (f"| {loc} | JEN Engineer |"
                            f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
                            f" {_fmt_rate(rates['standby'])} | — | — | — |")
-                _upsert_mob_row(mode, loc, row)
+                _upsert_mob_row(mode, loc, "JEN Engineer", row)
                 click.echo(f"  → {_MD_FILE}  [{mode}: {loc}]")
 
     # Legend always at the end
@@ -2340,7 +2380,7 @@ def mob_cmd(
                        f" {day} | {ot} | {standby} |"
                        f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
                        f" {_fmt_rate(mob_val * 2)} |")
-            if _upsert_mob_row(sid, row_loc, row):
+            if _upsert_mob_row(sid, row_loc, "JEN Engineer", row):
                 click.echo(f"  → {_MD_FILE}  [{sid}: {row_loc}]")
             else:
                 click.echo(f"  ↓ {_MD_FILE}  [{sid}] not found — run bid rate --{sid} --md first", err=True)
