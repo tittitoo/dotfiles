@@ -1717,18 +1717,16 @@ def _md_header(publish: "date", valid_until: "date | None", caveat: bool) -> str
     lines = [
         "# COMMISSIONING RATES",
         "",
-        f"*Date: {_fmt_date(publish)}*",
-        "",
-        "*All prices quoted are exclusive of applicable taxes.*",
+        f"- *Date: {_fmt_date(publish)}*",
+        "- *All prices quoted are exclusive of applicable taxes.*",
     ]
     if valid_until:
-        lines += ["", f"*Rates are valid until {_fmt_date(valid_until)}.*"]
+        lines.append(f"- *Rates are valid until {_fmt_date(valid_until)}.*")
         if caveat:
-            lines += [
-                "",
-                f"*Rates are subject to review should project commencement be delayed "
-                f"beyond {_fmt_date(valid_until)}.*",
-            ]
+            lines.append(
+                f"- *Rates are subject to review should project commencement be delayed "
+                f"beyond {_fmt_date(valid_until)}.*"
+            )
     return "\n".join(lines)
 
 
