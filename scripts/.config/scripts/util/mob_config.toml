@@ -53,6 +53,15 @@ hotel_per_night      = 150
 travel_days_one_way  = 1
 visa_note            = "Work Z-visa required"
 
+[countries.ID]
+name                 = "Indonesia"
+airfare_roundtrip    = 400
+visa                 = 0
+transport_one_way    = 20     # same as Batam local transport
+hotel_per_night      = 120    # same as Batam hotel rate
+travel_days_one_way  = 0      # same-day flight, no overnight
+visa_note            = "Visa-free short-stay entry for SG passport"
+
 [countries.GY]
 name                 = "Guyana"
 airfare_roundtrip    = 4500
