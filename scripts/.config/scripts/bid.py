@@ -2729,6 +2729,12 @@ WARRANTY_TIERS = [
     ("Y5+", 36, None, 0.03),
 ]
 
+# GM% applied margin-on-selling-price (price = cost / (1 - gm)), matching the
+# convention already used by `bid mob` (buc_gm_pct / selling_gm_pct in
+# mob_config.toml). Two stages: cost -> Base Unit Cost -> Selling Price.
+WARRANTY_BUC_GM_PCT = 5.0
+WARRANTY_SELL_GM_PCT = 20.0
+
 
 def _warranty_cumulative_cost(price: float, months: float) -> float:
     "Extended warranty cost for `months` beyond the end of the base included warranty."
@@ -2749,13 +2755,25 @@ def _warranty_tier_at(months: float) -> tuple[str, float]:
     return WARRANTY_TIERS[-1][0], WARRANTY_TIERS[-1][3]
 
 
-def _warranty_table_rows(price: float, checkpoints: list) -> list:
+def _warranty_price_at(
+    price: float, months: float, buc_gm_pct: float, sell_gm_pct: float
+) -> dict:
+    "Cost / BUC / GM$ / Sell at cumulative `months` of extension."
+    cost = _warranty_cumulative_cost(price, months)
+    buc = cost / (1 - buc_gm_pct / 100)
+    sell = buc / (1 - sell_gm_pct / 100)
+    return {"cost": cost, "buc": buc, "gm_dollar": sell - buc, "sell": sell}
+
+
+def _warranty_table_rows(
+    price: float, checkpoints: list, buc_gm_pct: float, sell_gm_pct: float
+) -> list:
     "Cumulative warranty rows (dicts) for the given month checkpoints."
     rows = []
-    prev_cost = 0.0
+    prev = {"cost": 0.0, "buc": 0.0, "gm_dollar": 0.0, "sell": 0.0}
     for m in checkpoints:
         label, rate = _warranty_tier_at(m)
-        cost = _warranty_cumulative_cost(price, m)
+        cur = _warranty_price_at(price, m, buc_gm_pct, sell_gm_pct)
         rows.append(
             {
                 "months": m,
@@ -2763,26 +2781,46 @@ def _warranty_table_rows(price: float, checkpoints: list) -> list:
                 "years_from_delivery": (WARRANTY_BASE_MONTHS + m) / 12,
                 "year": label,
                 "rate": rate,
-                "cumulative": cost,
-                "delta": cost - prev_cost,
+                "cost": cur["cost"],
+                "cost_delta": cur["cost"] - prev["cost"],
+                "buc": cur["buc"],
+                "gm_dollar": cur["gm_dollar"],
+                "sell": cur["sell"],
+                "sell_delta": cur["sell"] - prev["sell"],
             }
         )
-        prev_cost = cost
+        prev = cur
     return rows
 
 
 def _warranty_incremental_line(
-    price: float, from_months: int, to_months: "int | None", max_months: int
-) -> tuple[int, float]:
-    "Return (target_months, incremental_cost) from `from_months` to the target."
+    price: float,
+    from_months: int,
+    to_months: "int | None",
+    max_months: int,
+    buc_gm_pct: float,
+    sell_gm_pct: float,
+) -> dict:
+    "Return target months plus cost/sell increments from `from_months` to the target."
     target = to_months if to_months is not None else max_months
-    base_cost = _warranty_cumulative_cost(price, from_months)
-    target_cost = _warranty_cumulative_cost(price, target)
-    return target, target_cost - base_cost
+    base = _warranty_price_at(price, from_months, buc_gm_pct, sell_gm_pct)
+    tgt = _warranty_price_at(price, target, buc_gm_pct, sell_gm_pct)
+    return {
+        "target": target,
+        "cost_inc": tgt["cost"] - base["cost"],
+        "sell_inc": tgt["sell"] - base["sell"],
+    }
 
 
 def _warranty_write_md(
-    path: "Path", price: float, rows: list, from_months: int, to_months, max_months: int
+    path: "Path",
+    price: float,
+    rows: list,
+    from_months: int,
+    to_months,
+    max_months: int,
+    buc_gm_pct: float,
+    sell_gm_pct: float,
 ) -> None:
     "Write the warranty table as a standalone Markdown file."
     lines = [
@@ -2792,25 +2830,32 @@ def _warranty_write_md(
         "",
         f"Material cost (equipment/material only, excl. labour & services): **{price:,.2f}**",
         "",
+        f"Cost → Base Unit Cost at {buc_gm_pct:g}% GM → Selling Price at "
+        f"{sell_gm_pct:g}% GM on BUC.",
+        "",
         "Cumulative extension beyond base warranty (18 months from delivery or "
         "12 months from commissioning, whichever occurs earlier). \"Yr from "
         "Delivery\" assumes the worst-case 18-month (delivery-triggered) base "
         "warranty, for readers unfamiliar with the tier scheme:",
         "",
-        "| Ext. Duration | Yr from Delivery | Tier | Rate | Cumulative | Δ vs prior |",
-        "| --- | --- | --- | --- | ---: | ---: |",
+        "| Ext. Duration | Yr from Delivery | Tier | Rate | Cost | BUC | GM$ | Sell | Δ Sell |",
+        "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for r in rows:
         lines.append(
             f"| {r['duration']} | {r['years_from_delivery']:.1f} | {r['year']} | "
-            f"{r['rate'] * 100:.1f}% | {r['cumulative']:,.2f} | {r['delta']:,.2f} |"
+            f"{r['rate'] * 100:.1f}% | {r['cost']:,.2f} | {r['buc']:,.2f} | "
+            f"{r['gm_dollar']:,.2f} | {r['sell']:,.2f} | {r['sell_delta']:,.2f} |"
         )
     if from_months:
-        target, inc = _warranty_incremental_line(price, from_months, to_months, max_months)
+        inc = _warranty_incremental_line(
+            price, from_months, to_months, max_months, buc_gm_pct, sell_gm_pct
+        )
         lines += [
             "",
             f"**Incremental** — already quoted to {from_months / 12:g} yr, "
-            f"extend to {target / 12:g} yr: **{inc:,.2f}**",
+            f"extend to {inc['target'] / 12:g} yr: "
+            f"Cost **{inc['cost_inc']:,.2f}**, Sell **{inc['sell_inc']:,.2f}**",
         ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -2828,8 +2873,11 @@ def _warranty_write_csv(path: "Path", rows: list) -> None:
                 "Yr from Delivery",
                 "Tier",
                 "Rate (%)",
-                "Cumulative",
-                "Delta vs Prior",
+                "Cost",
+                "BUC",
+                "GM $",
+                "Sell",
+                "Delta Sell vs Prior",
             ]
         )
         for r in rows:
@@ -2840,13 +2888,18 @@ def _warranty_write_csv(path: "Path", rows: list) -> None:
                     f"{r['years_from_delivery']:.1f}",
                     r["year"],
                     f"{r['rate'] * 100:.1f}",
-                    f"{r['cumulative']:.2f}",
-                    f"{r['delta']:.2f}",
+                    f"{r['cost']:.2f}",
+                    f"{r['buc']:.2f}",
+                    f"{r['gm_dollar']:.2f}",
+                    f"{r['sell']:.2f}",
+                    f"{r['sell_delta']:.2f}",
                 ]
             )
 
 
-def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
+def _warranty_write_xlsx(
+    path: "Path", price: float, rows: list, buc_gm_pct: float, sell_gm_pct: float
+) -> None:
     "Write the warranty table as a formatted Excel workbook."
     import openpyxl
     from openpyxl.styles import Alignment, Font, PatternFill
@@ -2858,9 +2911,13 @@ def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
 
     ws.append(["Extended Warranty — Parts & Support only (site visits billed separately, T&M)"])
     ws.append([f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}"])
+    ws.append([f"Cost → BUC at {buc_gm_pct:g}% GM → Selling Price at {sell_gm_pct:g}% GM on BUC"])
     ws.append([])
     ws.append(
-        ["Ext. Duration", "Months", "Yr from Delivery", "Tier", "Rate", "Cumulative", "Delta vs Prior"]
+        [
+            "Ext. Duration", "Months", "Yr from Delivery", "Tier", "Rate",
+            "Cost", "BUC", "GM $", "Sell", "Delta Sell vs Prior",
+        ]
     )
     # max_row only reflects rows holding actual cell data, so it's read AFTER
     # this append rather than derived from the preceding blank spacer row —
@@ -2879,8 +2936,11 @@ def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
                 r["years_from_delivery"],
                 r["year"],
                 r["rate"],
-                r["cumulative"],
-                r["delta"],
+                r["cost"],
+                r["buc"],
+                r["gm_dollar"],
+                r["sell"],
+                r["sell_delta"],
             ]
         )
 
@@ -2890,14 +2950,14 @@ def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
     for row in ws.iter_rows(min_row=header_row + 1, min_col=5, max_col=5):
         for cell in row:
             cell.number_format = "0.0%"
-    for row in ws.iter_rows(min_row=header_row + 1, min_col=6, max_col=7):
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=6, max_col=10):
         for cell in row:
             cell.number_format = "#,##0.00"
 
-    # Autofit from the header row down only — the two title rows above it are
+    # Autofit from the header row down only — the title rows above it are
     # long free-text strings confined to column A, and would otherwise blow
     # out column A's width to fit them instead of its actual table content.
-    for col_idx in range(1, 8):
+    for col_idx in range(1, 11):
         max_len = max(
             (
                 len(str(ws.cell(row=r, column=col_idx).value or ""))
@@ -2933,6 +2993,14 @@ def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
     "-o", "--output", "output_file", type=click.Path(), default=None, metavar="FILE",
     help="Write output as CSV or Excel — format is inferred from the .csv/.xlsx extension",
 )
+@click.option(
+    "-b", "--buc-gm", "buc_gm_pct", type=float, default=WARRANTY_BUC_GM_PCT, show_default=True,
+    metavar="PCT", help="GM%% applied to cost to form Base Unit Cost (BUC)",
+)
+@click.option(
+    "-g", "--gm", "sell_gm_pct", type=float, default=WARRANTY_SELL_GM_PCT, show_default=True,
+    metavar="PCT", help="GM%% applied to BUC to form the customer Selling Price",
+)
 def warranty(
     price: float | None,
     from_months: int,
@@ -2940,6 +3008,8 @@ def warranty(
     max_months: int,
     md_file: str | None,
     output_file: str | None,
+    buc_gm_pct: float,
+    sell_gm_pct: float,
 ) -> None:
     """
     Compute extended warranty cost beyond the included base warranty.
@@ -2965,10 +3035,18 @@ def warranty(
       Y5+ (month 37+):   3.0% p.a. (flat — does not climb further)
 
     \b
+    That tiered rate is COST, not sell price. Cost is marked up in two
+    stages, matching the convention used by `bid mob`
+    (price = cost / (1 - GM%)):
+      Cost -> Base Unit Cost:  +buc-gm%  (default 5%)
+      BUC  -> Selling Price:   +gm%      (default 20%)
+
+    \b
     Examples:
       bid warranty 3119488                  # full cumulative table
       bid warranty 3119488 -t 42            # highlight the 3.5-year point
       bid warranty 3119488 -f 36 -t 48      # cost to extend from 3yr to 4yr
+      bid warranty 3119488 -b 5 -g 25       # override BUC/selling GM%
       bid warranty 3119488 --md             # also write warranty.md
       bid warranty 3119488 -o warranty.xlsx # also write an Excel workbook
       bid warranty 3119488 -o warranty.csv  # also write CSV
@@ -2980,10 +3058,11 @@ def warranty(
         )
 
     checkpoints = sorted(set(range(6, max_months + 1, 6)) | ({to_months} if to_months else set()))
-    rows = _warranty_table_rows(price, checkpoints)
+    rows = _warranty_table_rows(price, checkpoints, buc_gm_pct, sell_gm_pct)
 
     click.echo("Extended Warranty — Parts & Support only (site visits billed separately, T&M)")
     click.echo(f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}")
+    click.echo(f"Cost → BUC at {buc_gm_pct:g}% GM → Selling Price at {sell_gm_pct:g}% GM on BUC")
     click.echo()
     click.echo(
         "Cumulative extension beyond base warranty "
@@ -2993,27 +3072,36 @@ def warranty(
     )
     click.echo()
     click.echo(
-        f"  {'Ext.':<8} {'Yr from':<9} {'Tier':<5} {'Rate':>7} "
-        f"{'Cumulative':>15} {'Δ vs prior':>15}"
+        f"  {'Ext.':<8} {'Yr from':<9} {'Tier':<5} {'Rate':>6} "
+        f"{'Cost':>13} {'BUC':>13} {'GM $':>11} {'Sell':>13} {'Δ Sell':>13}"
     )
-    click.echo(f"  {'Duration':<8} {'Delivery':<9} {'':<5} {'':>7} {'':>15} {'':>15}")
+    click.echo(
+        f"  {'Duration':<8} {'Delivery':<9} {'':<5} {'':>6} "
+        f"{'':>13} {'':>13} {'':>11} {'':>13} {'':>13}"
+    )
     for r in rows:
         click.echo(
             f"  {r['duration']:<8} {r['years_from_delivery']:<9.1f} {r['year']:<5} "
-            f"{r['rate'] * 100:>6.1f}% {r['cumulative']:>15,.2f} {r['delta']:>15,.2f}"
+            f"{r['rate'] * 100:>5.1f}% {r['cost']:>13,.2f} {r['buc']:>13,.2f} "
+            f"{r['gm_dollar']:>11,.2f} {r['sell']:>13,.2f} {r['sell_delta']:>13,.2f}"
         )
 
     if from_months:
-        target, inc = _warranty_incremental_line(price, from_months, to_months, max_months)
+        inc = _warranty_incremental_line(
+            price, from_months, to_months, max_months, buc_gm_pct, sell_gm_pct
+        )
         click.echo()
         click.echo(
             f"Incremental — already quoted to {from_months / 12:g} yr, "
-            f"extend to {target / 12:g} yr: {inc:,.2f}"
+            f"extend to {inc['target'] / 12:g} yr:"
         )
+        click.echo(f"  Cost: {inc['cost_inc']:,.2f}   Sell: {inc['sell_inc']:,.2f}")
 
     if md_file:
         path = Path(md_file)
-        _warranty_write_md(path, price, rows, from_months, to_months, max_months)
+        _warranty_write_md(
+            path, price, rows, from_months, to_months, max_months, buc_gm_pct, sell_gm_pct
+        )
         click.echo(f"\n→ {path}")
 
     if output_file:
@@ -3021,7 +3109,7 @@ def warranty(
         if path.suffix.lower() == ".csv":
             _warranty_write_csv(path, rows)
         elif path.suffix.lower() == ".xlsx":
-            _warranty_write_xlsx(path, price, rows)
+            _warranty_write_xlsx(path, price, rows, buc_gm_pct, sell_gm_pct)
         else:
             raise click.UsageError(
                 f"Unsupported --output extension '{path.suffix}' — use .csv or .xlsx"
