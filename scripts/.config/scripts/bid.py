@@ -2707,6 +2707,319 @@ def bond(
 # ── End bond ──────────────────────────────────────────────────────────────────
 
 
+# ── Warranty extension ──────────────────────────────────────────────────────
+
+# Worst-case anchor for the included base warranty (18 months from delivery,
+# vs. 12 months from commissioning — 18mo is the longer/worst case if
+# commissioning drags). Used only to translate extension months into an
+# actual "years from delivery" figure for readers unfamiliar with the tier
+# scheme; it does not affect the tier/rate calculation itself.
+WARRANTY_BASE_MONTHS = 18
+
+# (year label, start month exclusive, end month exclusive or None, annual rate)
+# Extension clock starts at 0 the moment the included base warranty (18mo
+# delivery / 12mo commissioning, whichever earlier) ends — manufacturer
+# coverage is assumed already expired by then, so every month here is fully
+# self-insured. Rates apply to material cost only; site visits during the
+# extension are billed separately as T&M, not priced into this rate.
+WARRANTY_TIERS = [
+    ("Y2", 0, 12, 0.015),
+    ("Y3", 12, 24, 0.02),
+    ("Y4", 24, 36, 0.025),
+    ("Y5+", 36, None, 0.03),
+]
+
+
+def _warranty_cumulative_cost(price: float, months: float) -> float:
+    "Extended warranty cost for `months` beyond the end of the base included warranty."
+    cost = 0.0
+    for _, start, end, rate in WARRANTY_TIERS:
+        if months <= start:
+            break
+        span = (months if end is None else min(months, end)) - start
+        cost += price * rate / 12 * span
+    return cost
+
+
+def _warranty_tier_at(months: float) -> tuple[str, float]:
+    "Tier label and annual rate applicable at the given month of the extension."
+    for label, start, end, rate in WARRANTY_TIERS:
+        if end is None or months <= end:
+            return label, rate
+    return WARRANTY_TIERS[-1][0], WARRANTY_TIERS[-1][3]
+
+
+def _warranty_table_rows(price: float, checkpoints: list) -> list:
+    "Cumulative warranty rows (dicts) for the given month checkpoints."
+    rows = []
+    prev_cost = 0.0
+    for m in checkpoints:
+        label, rate = _warranty_tier_at(m)
+        cost = _warranty_cumulative_cost(price, m)
+        rows.append(
+            {
+                "months": m,
+                "duration": f"{m / 12:g} yr",
+                "years_from_delivery": (WARRANTY_BASE_MONTHS + m) / 12,
+                "year": label,
+                "rate": rate,
+                "cumulative": cost,
+                "delta": cost - prev_cost,
+            }
+        )
+        prev_cost = cost
+    return rows
+
+
+def _warranty_incremental_line(
+    price: float, from_months: int, to_months: "int | None", max_months: int
+) -> tuple[int, float]:
+    "Return (target_months, incremental_cost) from `from_months` to the target."
+    target = to_months if to_months is not None else max_months
+    base_cost = _warranty_cumulative_cost(price, from_months)
+    target_cost = _warranty_cumulative_cost(price, target)
+    return target, target_cost - base_cost
+
+
+def _warranty_write_md(
+    path: "Path", price: float, rows: list, from_months: int, to_months, max_months: int
+) -> None:
+    "Write the warranty table as a standalone Markdown file."
+    lines = [
+        "# Extended Warranty",
+        "",
+        "Parts & Support only — site visits billed separately as T&M.",
+        "",
+        f"Material cost (equipment/material only, excl. labour & services): **{price:,.2f}**",
+        "",
+        "Cumulative extension beyond base warranty (18 months from delivery or "
+        "12 months from commissioning, whichever occurs earlier). \"Yr from "
+        "Delivery\" assumes the worst-case 18-month (delivery-triggered) base "
+        "warranty, for readers unfamiliar with the tier scheme:",
+        "",
+        "| Ext. Duration | Yr from Delivery | Tier | Rate | Cumulative | Δ vs prior |",
+        "| --- | --- | --- | --- | ---: | ---: |",
+    ]
+    for r in rows:
+        lines.append(
+            f"| {r['duration']} | {r['years_from_delivery']:.1f} | {r['year']} | "
+            f"{r['rate'] * 100:.1f}% | {r['cumulative']:,.2f} | {r['delta']:,.2f} |"
+        )
+    if from_months:
+        target, inc = _warranty_incremental_line(price, from_months, to_months, max_months)
+        lines += [
+            "",
+            f"**Incremental** — already quoted to {from_months / 12:g} yr, "
+            f"extend to {target / 12:g} yr: **{inc:,.2f}**",
+        ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _warranty_write_csv(path: "Path", rows: list) -> None:
+    "Write the warranty table as CSV."
+    import csv
+
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(
+            [
+                "Ext. Duration",
+                "Months",
+                "Yr from Delivery",
+                "Tier",
+                "Rate (%)",
+                "Cumulative",
+                "Delta vs Prior",
+            ]
+        )
+        for r in rows:
+            writer.writerow(
+                [
+                    r["duration"],
+                    r["months"],
+                    f"{r['years_from_delivery']:.1f}",
+                    r["year"],
+                    f"{r['rate'] * 100:.1f}",
+                    f"{r['cumulative']:.2f}",
+                    f"{r['delta']:.2f}",
+                ]
+            )
+
+
+def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
+    "Write the warranty table as a formatted Excel workbook."
+    import openpyxl
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Warranty"
+
+    ws.append(["Extended Warranty — Parts & Support only (site visits billed separately, T&M)"])
+    ws.append([f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}"])
+    ws.append([])
+    header_row = ws.max_row + 1
+    ws.append(
+        ["Ext. Duration", "Months", "Yr from Delivery", "Tier", "Rate", "Cumulative", "Delta vs Prior"]
+    )
+    for cell in ws[header_row]:
+        cell.font = Font(bold=True, color="FFFFFF", size=11)
+        cell.fill = PatternFill("solid", fgColor="1F4E79")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    for r in rows:
+        ws.append(
+            [
+                r["duration"],
+                r["months"],
+                r["years_from_delivery"],
+                r["year"],
+                r["rate"],
+                r["cumulative"],
+                r["delta"],
+            ]
+        )
+
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=3, max_col=3):
+        for cell in row:
+            cell.number_format = "0.0"
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=5, max_col=5):
+        for cell in row:
+            cell.number_format = "0.0%"
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=6, max_col=7):
+        for cell in row:
+            cell.number_format = "#,##0.00"
+
+    for col in ws.columns:
+        max_len = max((len(str(c.value or "")) for c in col), default=8)
+        ws.column_dimensions[get_column_letter(col[0].column)].width = min(max_len + 4, 45)
+
+    wb.save(path)
+
+
+@click.command("warranty")
+@click.argument("price", required=False, default=None, type=float)
+@click.option(
+    "-f", "--from", "from_months", type=int, default=0, show_default=True, metavar="MONTHS",
+    help="Extension months already quoted/committed (baseline for the incremental figure)",
+)
+@click.option(
+    "-t", "--to", "to_months", type=int, default=None, metavar="MONTHS",
+    help="Target extension months to highlight and/or compute incrementally from --from",
+)
+@click.option(
+    "-m", "--max-months", "max_months", type=int, default=60, show_default=True, metavar="MONTHS",
+    help="Table range: max extension months to show (6-month steps)",
+)
+@click.option(
+    "--md", "md_file", is_flag=False, flag_value="warranty.md", default=None,
+    type=click.Path(), metavar="[FILE]",
+    help="Write output as Markdown (bare --md defaults to warranty.md)",
+)
+@click.option(
+    "-o", "--output", "output_file", type=click.Path(), default=None, metavar="FILE",
+    help="Write output as CSV or Excel — format is inferred from the .csv/.xlsx extension",
+)
+def warranty(
+    price: float | None,
+    from_months: int,
+    to_months: int | None,
+    max_months: int,
+    md_file: str | None,
+    output_file: str | None,
+) -> None:
+    """
+    Compute extended warranty cost beyond the included base warranty.
+
+    \b
+    The included warranty (18 months from delivery or 12 months from
+    commissioning, whichever occurs earlier) is free and not calculated
+    here — this prices EXTENSIONS beyond that point only. Manufacturer
+    coverage is assumed already expired by then, so every extension month
+    is fully self-insured risk from month 1.
+
+    \b
+    Covers parts replacement + no-manufacturer-backstop risk + admin
+    support ONLY. Site visits during the extension are billed separately
+    as T&M — not included in this price.
+
+    \b
+    Tiered annual rate (of material cost — equipment only, excl. labour
+    and services), escalating by extension year:
+      Y2 (months 1-12):  1.5% p.a.
+      Y3 (months 13-24): 2.0% p.a.
+      Y4 (months 25-36): 2.5% p.a.
+      Y5+ (month 37+):   3.0% p.a. (flat — does not climb further)
+
+    \b
+    Examples:
+      bid warranty 3119488                  # full cumulative table
+      bid warranty 3119488 -t 42            # highlight the 3.5-year point
+      bid warranty 3119488 -f 36 -t 48      # cost to extend from 3yr to 4yr
+      bid warranty 3119488 --md             # also write warranty.md
+      bid warranty 3119488 -o warranty.xlsx # also write an Excel workbook
+      bid warranty 3119488 -o warranty.csv  # also write CSV
+    """
+    if price is None:
+        price = click.prompt(
+            "Enter material cost (equipment/material only, excl. labour & services)",
+            type=float,
+        )
+
+    checkpoints = sorted(set(range(6, max_months + 1, 6)) | ({to_months} if to_months else set()))
+    rows = _warranty_table_rows(price, checkpoints)
+
+    click.echo("Extended Warranty — Parts & Support only (site visits billed separately, T&M)")
+    click.echo(f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}")
+    click.echo()
+    click.echo(
+        "Cumulative extension beyond base warranty "
+        "(18mo delivery / 12mo commissioning, whichever earlier). "
+        "'Yr from Delivery' assumes the worst-case 18-month (delivery-triggered) "
+        "base warranty:"
+    )
+    click.echo()
+    click.echo(
+        f"  {'Ext.':<8} {'Yr from':<9} {'Tier':<5} {'Rate':>7} "
+        f"{'Cumulative':>15} {'Δ vs prior':>15}"
+    )
+    click.echo(f"  {'Duration':<8} {'Delivery':<9} {'':<5} {'':>7} {'':>15} {'':>15}")
+    for r in rows:
+        click.echo(
+            f"  {r['duration']:<8} {r['years_from_delivery']:<9.1f} {r['year']:<5} "
+            f"{r['rate'] * 100:>6.1f}% {r['cumulative']:>15,.2f} {r['delta']:>15,.2f}"
+        )
+
+    if from_months:
+        target, inc = _warranty_incremental_line(price, from_months, to_months, max_months)
+        click.echo()
+        click.echo(
+            f"Incremental — already quoted to {from_months / 12:g} yr, "
+            f"extend to {target / 12:g} yr: {inc:,.2f}"
+        )
+
+    if md_file:
+        path = Path(md_file)
+        _warranty_write_md(path, price, rows, from_months, to_months, max_months)
+        click.echo(f"\n→ {path}")
+
+    if output_file:
+        path = Path(output_file)
+        if path.suffix.lower() == ".csv":
+            _warranty_write_csv(path, rows)
+        elif path.suffix.lower() == ".xlsx":
+            _warranty_write_xlsx(path, price, rows)
+        else:
+            raise click.UsageError(
+                f"Unsupported --output extension '{path.suffix}' — use .csv or .xlsx"
+            )
+        click.echo(f"→ {path}")
+
+
+# ── End warranty ─────────────────────────────────────────────────────────────
+
+
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
@@ -2742,6 +3055,7 @@ bid_group.add_command(mob_cmd)
 bid_group.add_command(mob_config_cmd)
 bid_group.add_command(schedule_cmd)
 bid_group.add_command(bond)
+bid_group.add_command(warranty)
 
 if __name__ == "__main__":
     bid()
