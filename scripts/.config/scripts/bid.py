@@ -2921,8 +2921,8 @@ def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
     help="Target extension months to highlight and/or compute incrementally from --from",
 )
 @click.option(
-    "-m", "--max-months", "max_months", type=int, default=60, show_default=True, metavar="MONTHS",
-    help="Table range: max extension months to show (6-month steps)",
+    "-m", "--max-months", "max_months", type=int, default=66, show_default=True, metavar="MONTHS",
+    help="Table range: max extension months to show (6-month steps; default reaches 7yr from delivery)",
 )
 @click.option(
     "--md", "md_file", is_flag=False, flag_value="warranty.md", default=None,
