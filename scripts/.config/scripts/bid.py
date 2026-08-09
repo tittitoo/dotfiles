@@ -2859,10 +2859,13 @@ def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
     ws.append(["Extended Warranty — Parts & Support only (site visits billed separately, T&M)"])
     ws.append([f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}"])
     ws.append([])
-    header_row = ws.max_row + 1
     ws.append(
         ["Ext. Duration", "Months", "Yr from Delivery", "Tier", "Rate", "Cumulative", "Delta vs Prior"]
     )
+    # max_row only reflects rows holding actual cell data, so it's read AFTER
+    # this append rather than derived from the preceding blank spacer row —
+    # doing it beforehand landed the header style one row too early.
+    header_row = ws.max_row
     for cell in ws[header_row]:
         cell.font = Font(bold=True, color="FFFFFF", size=11)
         cell.fill = PatternFill("solid", fgColor="005BBF")  # Jason Blue
@@ -2891,9 +2894,18 @@ def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
         for cell in row:
             cell.number_format = "#,##0.00"
 
-    for col in ws.columns:
-        max_len = max((len(str(c.value or "")) for c in col), default=8)
-        ws.column_dimensions[get_column_letter(col[0].column)].width = min(max_len + 4, 45)
+    # Autofit from the header row down only — the two title rows above it are
+    # long free-text strings confined to column A, and would otherwise blow
+    # out column A's width to fit them instead of its actual table content.
+    for col_idx in range(1, 8):
+        max_len = max(
+            (
+                len(str(ws.cell(row=r, column=col_idx).value or ""))
+                for r in range(header_row, ws.max_row + 1)
+            ),
+            default=8,
+        )
+        ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 4, 45)
 
     wb.save(path)
 
