@@ -2761,7 +2761,7 @@ def _warranty_price_at(
     "Cost / BUC / GM$ / Sell at cumulative `months` of extension."
     cost = _warranty_cumulative_cost(price, months)
     buc = cost / (1 - buc_gm_pct / 100)
-    sell = buc / (1 - sell_gm_pct / 100)
+    sell = _round_to(buc / (1 - sell_gm_pct / 100), 1)
     return {"cost": cost, "buc": buc, "gm_dollar": sell - buc, "sell": sell}
 
 
@@ -2845,7 +2845,7 @@ def _warranty_write_md(
         lines.append(
             f"| {r['duration']} | {r['years_from_delivery']:.1f} | {r['year']} | "
             f"{r['rate'] * 100:.1f}% | {r['cost']:,.2f} | {r['buc']:,.2f} | "
-            f"{r['gm_dollar']:,.2f} | {r['sell']:,.2f} | {r['sell_delta']:,.2f} |"
+            f"{r['gm_dollar']:,.2f} | {r['sell']:,.0f} | {r['sell_delta']:,.0f} |"
         )
     if from_months:
         inc = _warranty_incremental_line(
@@ -2855,7 +2855,7 @@ def _warranty_write_md(
             "",
             f"**Incremental** — already quoted to {from_months / 12:g} yr, "
             f"extend to {inc['target'] / 12:g} yr: "
-            f"Cost **{inc['cost_inc']:,.2f}**, Sell **{inc['sell_inc']:,.2f}**",
+            f"Cost **{inc['cost_inc']:,.2f}**, Sell **{inc['sell_inc']:,.0f}**",
         ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -2891,8 +2891,8 @@ def _warranty_write_csv(path: "Path", rows: list) -> None:
                     f"{r['cost']:.2f}",
                     f"{r['buc']:.2f}",
                     f"{r['gm_dollar']:.2f}",
-                    f"{r['sell']:.2f}",
-                    f"{r['sell_delta']:.2f}",
+                    f"{r['sell']:.0f}",
+                    f"{r['sell_delta']:.0f}",
                 ]
             )
 
@@ -2950,9 +2950,12 @@ def _warranty_write_xlsx(
     for row in ws.iter_rows(min_row=header_row + 1, min_col=5, max_col=5):
         for cell in row:
             cell.number_format = "0.0%"
-    for row in ws.iter_rows(min_row=header_row + 1, min_col=6, max_col=10):
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=6, max_col=8):
         for cell in row:
             cell.number_format = "#,##0.00"
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=9, max_col=10):
+        for cell in row:
+            cell.number_format = "#,##0"
 
     # Autofit from the header row down only — the title rows above it are
     # long free-text strings confined to column A, and would otherwise blow
@@ -3083,7 +3086,7 @@ def warranty(
         click.echo(
             f"  {r['duration']:<8} {r['years_from_delivery']:<9.1f} {r['year']:<5} "
             f"{r['rate'] * 100:>5.1f}% {r['cost']:>13,.2f} {r['buc']:>13,.2f} "
-            f"{r['gm_dollar']:>11,.2f} {r['sell']:>13,.2f} {r['sell_delta']:>13,.2f}"
+            f"{r['gm_dollar']:>11,.2f} {r['sell']:>13,.0f} {r['sell_delta']:>13,.0f}"
         )
 
     if from_months:
@@ -3095,7 +3098,7 @@ def warranty(
             f"Incremental — already quoted to {from_months / 12:g} yr, "
             f"extend to {inc['target'] / 12:g} yr:"
         )
-        click.echo(f"  Cost: {inc['cost_inc']:,.2f}   Sell: {inc['sell_inc']:,.2f}")
+        click.echo(f"  Cost: {inc['cost_inc']:,.2f}   Sell: {inc['sell_inc']:,.0f}")
 
     if md_file:
         path = Path(md_file)
