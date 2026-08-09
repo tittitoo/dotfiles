@@ -2865,7 +2865,7 @@ def _warranty_write_xlsx(path: "Path", price: float, rows: list) -> None:
     )
     for cell in ws[header_row]:
         cell.font = Font(bold=True, color="FFFFFF", size=11)
-        cell.fill = PatternFill("solid", fgColor="1F4E79")
+        cell.fill = PatternFill("solid", fgColor="005BBF")  # Jason Blue
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
     for r in rows:
