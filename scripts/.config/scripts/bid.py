@@ -2830,7 +2830,7 @@ def _warranty_write_md(
         "",
         f"Material cost (equipment/material only, excl. labour & services): **{price:,.2f}**",
         "",
-        f"Cost → Base Unit Cost at {buc_gm_pct:g}% GM → Selling Price at "
+        f"Material Cost → Base Unit Cost at {buc_gm_pct:g}% GM → Selling Price at "
         f"{sell_gm_pct:g}% GM on BUC.",
         "",
         "Cumulative extension beyond base warranty (18 months from delivery or "
@@ -2838,7 +2838,7 @@ def _warranty_write_md(
         "Delivery\" assumes the worst-case 18-month (delivery-triggered) base "
         "warranty, for readers unfamiliar with the tier scheme:",
         "",
-        "| Ext. Duration | Yr from Delivery | Tier | Rate | Cost | BUC | GM$ | Sell | Δ Sell |",
+        "| Ext. Duration | Yr from Delivery | Tier | Rate | Material Cost | BUC | GM$ | Sell | Δ Sell |",
         "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for r in rows:
@@ -2855,7 +2855,7 @@ def _warranty_write_md(
             "",
             f"**Incremental** — already quoted to {from_months / 12:g} yr, "
             f"extend to {inc['target'] / 12:g} yr: "
-            f"Cost **{inc['cost_inc']:,.2f}**, Sell **{inc['sell_inc']:,.0f}**",
+            f"Material Cost **{inc['cost_inc']:,.2f}**, Sell **{inc['sell_inc']:,.0f}**",
         ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -2873,7 +2873,7 @@ def _warranty_write_csv(path: "Path", rows: list) -> None:
                 "Yr from Delivery",
                 "Tier",
                 "Rate (%)",
-                "Cost",
+                "Material Cost",
                 "BUC",
                 "GM $",
                 "Sell",
@@ -2911,12 +2911,14 @@ def _warranty_write_xlsx(
 
     ws.append(["Extended Warranty — Parts & Support only (site visits billed separately, T&M)"])
     ws.append([f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}"])
-    ws.append([f"Cost → BUC at {buc_gm_pct:g}% GM → Selling Price at {sell_gm_pct:g}% GM on BUC"])
+    ws.append(
+        [f"Material Cost → BUC at {buc_gm_pct:g}% GM → Selling Price at {sell_gm_pct:g}% GM on BUC"]
+    )
     ws.append([])
     ws.append(
         [
             "Ext. Duration", "Months", "Yr from Delivery", "Tier", "Rate",
-            "Cost", "BUC", "GM $", "Sell", "Delta Sell vs Prior",
+            "Material Cost", "BUC", "GM $", "Sell", "Delta Sell vs Prior",
         ]
     )
     # max_row only reflects rows holding actual cell data, so it's read AFTER
@@ -3038,11 +3040,11 @@ def warranty(
       Y5+ (month 37+):   3.0% p.a. (flat — does not climb further)
 
     \b
-    That tiered rate is COST, not sell price. Cost is marked up in two
-    stages, matching the convention used by `bid mob`
-    (price = cost / (1 - GM%)):
-      Cost -> Base Unit Cost:  +buc-gm%  (default 5%)
-      BUC  -> Selling Price:   +gm%      (default 20%)
+    That tiered rate is MATERIAL COST, not sell price — it excludes
+    labour/services. Material cost is marked up in two stages, matching
+    the convention used by `bid mob` (price = cost / (1 - GM%)):
+      Material Cost -> Base Unit Cost:  +buc-gm%  (default 5%)
+      BUC            -> Selling Price:   +gm%      (default 20%)
 
     \b
     Examples:
@@ -3065,7 +3067,9 @@ def warranty(
 
     click.echo("Extended Warranty — Parts & Support only (site visits billed separately, T&M)")
     click.echo(f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}")
-    click.echo(f"Cost → BUC at {buc_gm_pct:g}% GM → Selling Price at {sell_gm_pct:g}% GM on BUC")
+    click.echo(
+        f"Material Cost → BUC at {buc_gm_pct:g}% GM → Selling Price at {sell_gm_pct:g}% GM on BUC"
+    )
     click.echo()
     click.echo(
         "Cumulative extension beyond base warranty "
@@ -3076,16 +3080,16 @@ def warranty(
     click.echo()
     click.echo(
         f"  {'Ext.':<8} {'Yr from':<9} {'Tier':<5} {'Rate':>6} "
-        f"{'Cost':>13} {'BUC':>13} {'GM $':>11} {'Sell':>13} {'Δ Sell':>13}"
+        f"{'Material':>14} {'BUC':>13} {'GM $':>11} {'Sell':>13} {'Δ Sell':>13}"
     )
     click.echo(
         f"  {'Duration':<8} {'Delivery':<9} {'':<5} {'':>6} "
-        f"{'':>13} {'':>13} {'':>11} {'':>13} {'':>13}"
+        f"{'Cost':>14} {'':>13} {'':>11} {'':>13} {'':>13}"
     )
     for r in rows:
         click.echo(
             f"  {r['duration']:<8} {r['years_from_delivery']:<9.1f} {r['year']:<5} "
-            f"{r['rate'] * 100:>5.1f}% {r['cost']:>13,.2f} {r['buc']:>13,.2f} "
+            f"{r['rate'] * 100:>5.1f}% {r['cost']:>14,.2f} {r['buc']:>13,.2f} "
             f"{r['gm_dollar']:>11,.2f} {r['sell']:>13,.0f} {r['sell_delta']:>13,.0f}"
         )
 
@@ -3098,7 +3102,7 @@ def warranty(
             f"Incremental — already quoted to {from_months / 12:g} yr, "
             f"extend to {inc['target'] / 12:g} yr:"
         )
-        click.echo(f"  Cost: {inc['cost_inc']:,.2f}   Sell: {inc['sell_inc']:,.0f}")
+        click.echo(f"  Material Cost: {inc['cost_inc']:,.2f}   Sell: {inc['sell_inc']:,.0f}")
 
     if md_file:
         path = Path(md_file)
