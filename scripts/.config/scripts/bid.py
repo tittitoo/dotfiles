@@ -2633,6 +2633,80 @@ def schedule_cmd(input_file: Path, start_date_str: str | None, open_after: bool)
 # ── End schedule ──────────────────────────────────────────────────────────────
 
 
+@click.command("bond")
+@click.argument("price", required=False, default=None, type=float)
+@click.option(
+    "-p", "--percent", "bond_percent", type=float, default=10.0, show_default=True,
+    help="Performance bond percentage of project price",
+)
+@click.option(
+    "-d", "--duration", "project_months", type=float, default=None, metavar="MONTHS",
+    help="Project execution duration in months (contract start to completion)",
+)
+@click.option(
+    "-w", "--warranty", "warranty_months", type=float, default=None, metavar="MONTHS",
+    help="Warranty period in months",
+)
+@click.option(
+    "-r", "--rate", "premium_rate", type=float, default=1.0, show_default=True,
+    help="Bond issuance premium rate, %% per annum",
+)
+def bond(
+    price: float | None,
+    bond_percent: float,
+    project_months: float | None,
+    warranty_months: float | None,
+    premium_rate: float,
+) -> None:
+    """
+    Compute performance bond amount and its issuance cost.
+
+    \b
+    Bond amount = project price x bond percentage (default 10%, the
+    typical rate requested in tenders).
+    Bond is held from contract start until 30 days after the Warranty
+    Period expires, so its total duration = project duration + warranty
+    period + 30 days. Issuance cost (the premium charged by the bank/
+    insurer to issue the bond) = bond amount x premium rate p.a. x
+    (total duration / 12), to be costed into the project.
+
+    \b
+    Examples:
+      bid bond 500000
+      bid bond 500000 -d 6 -w 12
+      bid bond 500000 -p 5 -d 6 -w 18 -r 1.5
+    """
+    if price is None:
+        price = click.prompt("Enter project price", type=float)
+    if project_months is None:
+        project_months = click.prompt(
+            "Enter project execution duration in months", type=float, default=0.0
+        )
+    if warranty_months is None:
+        warranty_months = click.prompt(
+            "Enter warranty period in months", type=float, default=12.0
+        )
+
+    bond_amount = price * bond_percent / 100
+    # 30-day grace period after warranty expiry, approximated as 1 month
+    total_months = project_months + warranty_months + 1
+    premium = bond_amount * premium_rate / 100 * (total_months / 12)
+
+    click.echo(f"Project price:      {price:,.2f}")
+    click.echo(f"Bond percentage:    {bond_percent:g}%")
+    click.echo(f"Performance bond:   {bond_amount:,.2f}")
+    click.echo(
+        f"Bond validity:      {project_months:g}mo project "
+        f"+ {warranty_months:g}mo warranty + 30 days "
+        f"(~{total_months:g} months total)"
+    )
+    click.echo(f"Premium rate:       {premium_rate:g}% p.a.")
+    click.echo(f"Bond issuance cost: {premium:,.2f}")
+
+
+# ── End bond ──────────────────────────────────────────────────────────────────
+
+
 @click.group()
 @click.help_option("-h", "--help")
 @click.version_option(__version__, "-v", "--version", prog_name="bid")
@@ -2667,6 +2741,7 @@ bid_group.add_command(rate_cmd)
 bid_group.add_command(mob_cmd)
 bid_group.add_command(mob_config_cmd)
 bid_group.add_command(schedule_cmd)
+bid_group.add_command(bond)
 
 if __name__ == "__main__":
     bid()
