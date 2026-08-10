@@ -1974,7 +1974,7 @@ def _upsert_specialist_mob_row(
 
 def _md_onshore(
     rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int,
-    seed_mob_sg: bool = False,
+    seed_mob_sg: bool = False, include_hotel_note: bool = True,
 ) -> str:
     import json
     day     = rates["day"]
@@ -2001,20 +2001,25 @@ def _md_onshore(
     ]
     if seed_mob_sg:
         lines.append(f"| SG | {designation} | — | — | — |")
-    lines += [
-        "",
-        "Onshore working hours: 10 hours per day (Mon–Sat)",
-        "",
-        f"*Mob/demob rates are based on a minimum 10-working-day deployment per engineer. "
-        f"Hotel and daily allowance of {currency} 250 per day applies for each day exceeding 10 working days.*",
-    ]
+    lines += ["", "Onshore working hours: 10 hours per day (Mon–Sat)"]
+    if include_hotel_note:
+        excess_allowance = 250 if currency != "USD" else _ceil_to(250 / usd_rate, usd_round)
+        lines += [
+            "",
+            f"*Mob/demob rates are based on a minimum 10-working-day deployment per engineer. "
+            f"Hotel and daily allowance of {currency} {_fmt_rate(excess_allowance)} per day "
+            f"applies for each day exceeding 10 working days.*",
+        ]
     return "\n".join(lines)
 
 
 def _md_offshore(
     rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int,
-    seed_mob_sg: bool = False,
+    seed_mob_sg: bool = False, include_hotel_note: bool = True,
 ) -> str:
+    # include_hotel_note accepted (unused) for call-site symmetry with
+    # _md_onshore, which is where the footnote actually lives.
+    del include_hotel_note
     import json
     day     = rates["day"]
     ot      = rates["ot"]
@@ -2080,6 +2085,10 @@ def _md_offshore(
 @click.option("--date", "md_date", default=None, metavar="YYYY-MM-DD",
               help="Publish date for --md output (default: today on first write; inherits the "
                    "already-stored date on later calls if omitted)")
+@click.option("--hotel-note/--no-hotel-note", "include_hotel_note", default=True,
+              help="Include/exclude the excess-day hotel & allowance footnote in the Onshore "
+                   "section (default: include). Only takes effect when the section is first "
+                   "created — has no effect on a later call adding another designation.")
 def rate_cmd(
     onshore_rate: float | None,
     offshore_rate: float | None,
@@ -2092,6 +2101,7 @@ def rate_cmd(
     md_valid: str | None,
     md_caveat: bool,
     md_date: str | None,
+    include_hotel_note: bool,
 ) -> None:
     """Calculate OT, Sun/PH, and Standby from a man-day rate.
 
@@ -2207,7 +2217,13 @@ def rate_cmd(
                 has_sec = outfile.exists() and f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
                 if not has_sec:
                     fn = _md_onshore if mode == "onshore" else _md_offshore
-                    _write_md_section(mode, fn(md_rates, designation, currency, usd_rate, usd_round))
+                    _write_md_section(
+                        mode,
+                        fn(
+                            md_rates, designation, currency, usd_rate, usd_round,
+                            include_hotel_note=include_hotel_note,
+                        ),
+                    )
                 else:
                     if mode == "onshore":
                         sun_ph = md_rates.get("sun_ph", "—")
@@ -2250,7 +2266,13 @@ def rate_cmd(
             has_sec = f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
             if not has_sec:
                 fn = _md_onshore if mode == "onshore" else _md_offshore
-                _write_md_section(mode, fn(rates, "JEN Engineer", currency, usd_rate, usd_round, seed_mob_sg=True))
+                _write_md_section(
+                    mode,
+                    fn(
+                        rates, "JEN Engineer", currency, usd_rate, usd_round,
+                        seed_mob_sg=True, include_hotel_note=include_hotel_note,
+                    ),
+                )
             else:
                 if mode == "onshore":
                     sun_ph = rates.get("sun_ph", "—")
