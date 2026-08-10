@@ -2445,6 +2445,13 @@ def mob_cmd(
         click.echo(f"{label.upper()}  ·  Onshore  ·  SGD")
         click.echo()
         click.echo("  Mob/demob not applicable — cost absorbed in engineer day rates.")
+        if write_md:
+            row = f"| {code} | JEN Engineer | — | — | — |"
+            for sid in ("onshore", "offshore"):
+                if _read_section_meta(sid) is None:
+                    continue
+                if _upsert_mob_row(sid, code, "JEN Engineer", row):
+                    click.echo(f"  → {_MD_FILE}  [{sid}: {code}]")
         return
 
     if offshore:
