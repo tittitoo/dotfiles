@@ -2263,7 +2263,36 @@ def mob_cmd(
       bid mob --specialist standard
       bid mob --specialist super NA
       bid mob --day-rate 5101 --currency SGD NA
+
+    \b
+    Multiple countries in one call (comma-separated, no spaces):
+      bid mob NL,DE,SG --md
+      bid mob --specialist premium --name "PAGA Specialist" NL,DE,SG --md
     """
+    codes = [c.strip().upper() for c in country.split(",") if c.strip()] if country else [None]
+    for i, code in enumerate(codes):
+        if i > 0:
+            click.echo()
+        _mob_cmd_one(
+            code, batam, offshore, days_override, buffers, specialist_tier,
+            specialist_name, spec_day_rate, spec_currency, write_md, mob_md_currency,
+        )
+
+
+def _mob_cmd_one(
+    country: str | None,
+    batam: bool,
+    offshore: bool,
+    days_override: int | None,
+    buffers: tuple,
+    specialist_tier: str | None,
+    specialist_name: str | None,
+    spec_day_rate: float | None,
+    spec_currency: str,
+    write_md: bool,
+    mob_md_currency: str | None,
+) -> None:
+    "Single-country worker behind mob_cmd — see mob_cmd for the comma-separated loop."
     # ── Specialist path ───────────────────────────────────────────────────────
     if specialist_tier or spec_day_rate is not None:
         cfg = _load_mob_config()
