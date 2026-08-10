@@ -1838,6 +1838,67 @@ def _upsert_mob_row(section_id: str, loc: str, designation: str, row: str) -> bo
     )
 
 
+def _upsert_specialist_mob_row(
+    section_id: str, designation: str, country_code: str, is_long: bool,
+    short_haul: list, mob_val: float,
+) -> bool:
+    """Merge `country_code` into the existing same-haul-tier row for
+    `designation` (Location shown as the actual accumulated country codes,
+    alphabetical — e.g. "DE, NL" — rather than a "Long-haul"/"Short-haul"
+    label the client has no context for), or insert a new row if no
+    same-tier row exists yet for this designation."""
+    import re
+    outfile = Path(_MD_FILE)
+    if not outfile.exists():
+        return False
+    text      = outfile.read_text(encoding="utf-8")
+    open_tag  = f"<!-- section:{section_id} -->"
+    close_tag = f"<!-- /section:{section_id} -->"
+    sec_start = text.find(open_tag)
+    sec_end   = text.find(close_tag)
+    if sec_start == -1 or sec_end == -1:
+        return False
+    section_body = text[sec_start : sec_end + len(close_tag)]
+    span = _find_subtable_span(section_body, _MD_MOB_HEADING)
+    if span is None:
+        return False
+    sub_start, sub_end = span
+    sub = section_body[sub_start:sub_end]
+
+    def _row_text(locs: list) -> str:
+        loc_str = ", ".join(sorted(locs))
+        return (f"| {loc_str} | {designation} |"
+                f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                f" {_fmt_rate(mob_val * 2)} |")
+
+    row_pat = re.compile(rf"^\| ([^|]+) \| {re.escape(designation)} \|.*\n?", re.MULTILINE)
+    new_sub = sub
+    merged  = False
+    for m in row_pat.finditer(sub):
+        existing = [c.strip() for c in m.group(1).split(",")]
+        existing_is_long = existing[0].upper() not in short_haul
+        if existing_is_long == is_long:
+            if country_code not in existing:
+                existing.append(country_code)
+            new_sub = new_sub[: m.start()] + _row_text(existing) + "\n" + new_sub[m.end() :]
+            merged = True
+            break
+    if not merged:
+        new_row = _row_text([country_code])
+        matches = list(re.finditer(r"^\|.*\n?", new_sub, re.MULTILINE))
+        if matches:
+            insert_at = matches[-1].end()
+            new_sub   = new_sub[:insert_at] + new_row + "\n" + new_sub[insert_at:]
+        else:
+            new_sub = new_sub.rstrip("\n") + "\n" + new_row + "\n"
+
+    new_section_body = section_body[:sub_start] + new_sub + section_body[sub_end:]
+    outfile.write_text(
+        text[:sec_start] + new_section_body + text[sec_end + len(close_tag) :], encoding="utf-8"
+    )
+    return True
+
+
 def _md_onshore(
     rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int,
     seed_mob_sg: bool = False,
@@ -2275,21 +2336,19 @@ def mob_cmd(
                 raise click.UsageError("Provide COUNTRY when using --specialist ... --md.")
             designation = specialist_name or f"{specialist_tier.title()} Specialist"
             # Specialists have no fixed home base (unlike JEN Engineer, always
-            # ex-Singapore) and mob/demob is tier-based only — so rows are keyed
-            # by haul tier, not literal country, so e.g. NL and DE (both
-            # Long-haul) land on the same row instead of duplicating it.
-            row_loc = haul
+            # ex-Singapore) and mob/demob is tier-based only — so same-haul-tier
+            # countries merge onto one row (e.g. NL then DE -> "DE, NL"),
+            # avoiding duplicate identical rows. The Location cell shows the
+            # actual country codes, not a "Long-haul"/"Short-haul" label the
+            # client has no context for.
             for sid in ("onshore", "offshore"):
                 meta = _read_section_meta(sid)
                 if meta is None:
                     continue
                 cur     = mob_md_currency.upper() if mob_md_currency else meta["currency"]
                 mob_val = mob_usd if cur == "USD" else mob
-                row = (f"| {row_loc} | {designation} |"
-                       f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
-                       f" {_fmt_rate(mob_val * 2)} |")
-                if _upsert_mob_row(sid, row_loc, designation, row):
-                    click.echo(f"  → {_MD_FILE}  [{sid}: {row_loc} / {designation}]")
+                if _upsert_specialist_mob_row(sid, designation, code, is_long, short_haul, mob_val):
+                    click.echo(f"  → {_MD_FILE}  [{sid}: {code} / {designation}]")
                 else:
                     click.echo(
                         f"  ↓ {_MD_FILE}  [{sid}] not found — run"
