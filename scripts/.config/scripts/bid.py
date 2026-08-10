@@ -2918,7 +2918,7 @@ def _warranty_write_xlsx(
     ws.append(
         [
             "Ext. Duration", "Months", "Yr from Delivery", "Tier", "Rate",
-            "Material Cost", "BUC", "GM $", "Sell", "Delta Sell vs Prior",
+            "Material Cost", "BUC", "GM %", "Profit $", "Sell", "Delta Sell vs Prior",
         ]
     )
     # max_row only reflects rows holding actual cell data, so it's read AFTER
@@ -2940,6 +2940,7 @@ def _warranty_write_xlsx(
                 r["rate"],
                 r["cost"],
                 r["buc"],
+                r["gm_dollar"] / r["sell"],
                 r["gm_dollar"],
                 r["sell"],
                 r["sell_delta"],
@@ -2952,17 +2953,23 @@ def _warranty_write_xlsx(
     for row in ws.iter_rows(min_row=header_row + 1, min_col=5, max_col=5):
         for cell in row:
             cell.number_format = "0.0%"
-    for row in ws.iter_rows(min_row=header_row + 1, min_col=6, max_col=8):
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=6, max_col=7):
         for cell in row:
             cell.number_format = "#,##0.00"
-    for row in ws.iter_rows(min_row=header_row + 1, min_col=9, max_col=10):
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=8, max_col=8):
+        for cell in row:
+            cell.number_format = "0.0%"
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=9, max_col=9):
+        for cell in row:
+            cell.number_format = "#,##0.00"
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=10, max_col=11):
         for cell in row:
             cell.number_format = "#,##0"
 
     # Autofit from the header row down only — the title rows above it are
     # long free-text strings confined to column A, and would otherwise blow
     # out column A's width to fit them instead of its actual table content.
-    for col_idx in range(1, 11):
+    for col_idx in range(1, 12):
         max_len = max(
             (
                 len(str(ws.cell(row=r, column=col_idx).value or ""))
