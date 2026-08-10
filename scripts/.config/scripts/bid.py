@@ -1730,7 +1730,14 @@ def _md_legend() -> str:
 
 
 def _md_header(publish: "date", valid_until: "date | None", caveat: bool) -> str:
+    import json
+    meta = {
+        "date": publish.isoformat(),
+        "valid_until": valid_until.isoformat() if valid_until else None,
+        "caveat": caveat,
+    }
     lines = [
+        f"<!-- meta:header {json.dumps(meta, separators=(',', ':'))} -->",
         "# COMMISSIONING RATES",
         "",
         f"- *Date: {_fmt_date(publish)}*",
@@ -1779,6 +1786,55 @@ def _read_section_meta(section_id: str) -> "dict | None":
         text, re.DOTALL,
     )
     return json.loads(m.group(1)) if m else None
+
+
+def _resolve_header_args(
+    md_valid: "str | None", md_caveat: bool, md_date: "str | None"
+) -> "tuple[date, date | None, bool]":
+    """Resolve (publish_date, valid_until, caveat) for the header.
+
+    bid rate --md rewrites the ENTIRE header on every call, so a later call
+    that omits --valid/--date would otherwise silently wipe out whatever an
+    earlier call had set (e.g. running `bid rate --specialist ... --md` to
+    add a designation, without repeating --valid, used to erase the
+    validity line the first `bid rate --md` call had written). Inherit from
+    the header's own stored meta when this call doesn't explicitly override.
+    """
+    from datetime import date
+    existing = _read_section_meta("header")
+
+    if md_date:
+        publish_dt = date.fromisoformat(md_date)
+    elif existing and existing.get("date"):
+        publish_dt = date.fromisoformat(existing["date"])
+    else:
+        publish_dt = date.today()
+
+    if md_valid:
+        valid_dt = _calc_valid_date(md_valid, publish_dt)
+        caveat = md_caveat
+    elif existing and existing.get("valid_until"):
+        valid_dt = date.fromisoformat(existing["valid_until"])
+        caveat = existing.get("caveat", False)
+    else:
+        valid_dt = None
+        caveat = False
+
+    return publish_dt, valid_dt, caveat
+
+
+def _resolve_md_currency(mode: str, md_currency: "str | None") -> str:
+    """Resolve --md output currency for a section (onshore/offshore).
+
+    bid rate --specialist ... --md defaulted to SGD whenever --currency was
+    omitted, even when the section already existed with USD stored — unlike
+    bid mob --md, which already inherits correctly. Inherit from the
+    section's own stored meta when this call doesn't explicitly override.
+    """
+    if md_currency:
+        return md_currency.upper()
+    existing = _read_section_meta(mode)
+    return existing["currency"] if existing else "SGD"
 
 
 _MD_RATE_HEADING = "### Rates"
@@ -2012,14 +2068,18 @@ def _md_offshore(
               help="Write selling rates to man-day-rates.md in current directory")
 @click.option("--currency", "md_currency",
               type=click.Choice(["SGD", "USD"], case_sensitive=False),
-              default="SGD", show_default=True,
-              help="Currency for --md output")
+              default=None,
+              help="Currency for --md output (default: SGD on first write; inherits the "
+                   "already-stored currency on later calls to the same section if omitted)")
 @click.option("--valid", "md_valid", default=None, metavar="YEARS|DATE",
-              help="Validity period: years from publish date (e.g. 2) or fixed date (YYYY-MM-DD). Years snap to last day of publish month.")
+              help="Validity period: years from publish date (e.g. 2) or fixed date (YYYY-MM-DD). "
+                   "Years snap to last day of publish month. If omitted, inherits whatever "
+                   "validity/caveat is already stored in the header from an earlier --md call.")
 @click.option("--caveat", "md_caveat", is_flag=True,
               help="Add caveat that rates are subject to review if commencement is delayed (requires --valid)")
 @click.option("--date", "md_date", default=None, metavar="YYYY-MM-DD",
-              help="Publish date for --md output (default: today)")
+              help="Publish date for --md output (default: today on first write; inherits the "
+                   "already-stored date on later calls if omitted)")
 def rate_cmd(
     onshore_rate: float | None,
     offshore_rate: float | None,
@@ -2028,7 +2088,7 @@ def rate_cmd(
     show_tiers: bool,
     special: bool,
     write_md: bool,
-    md_currency: str,
+    md_currency: str | None,
     md_valid: str | None,
     md_caveat: bool,
     md_date: str | None,
@@ -2136,14 +2196,12 @@ def rate_cmd(
         _print_spec_mob(specialist_tier, tier)
 
         if write_md:
-            from datetime import date as _date
             designation = specialist_name or f"{specialist_tier.title()} Specialist"
             usd_round  = cfg["defaults"]["usd_round"]
-            currency   = md_currency.upper()
-            publish_dt = _date.fromisoformat(md_date) if md_date else _date.today()
-            valid_dt   = _calc_valid_date(md_valid, publish_dt) if md_valid else None
-            _write_md_section("header", _md_header(publish_dt, valid_dt, md_caveat))
+            publish_dt, valid_dt, resolved_caveat = _resolve_header_args(md_valid, md_caveat, md_date)
+            _write_md_section("header", _md_header(publish_dt, valid_dt, resolved_caveat))
             for mode, rates in rates_by_mode.items():
+                currency = _resolve_md_currency(mode, md_currency)
                 md_rates = _rates_for_currency(rates, currency, usd_rate, usd_round)
                 outfile = Path(_MD_FILE)
                 has_sec = outfile.exists() and f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
@@ -2171,14 +2229,11 @@ def rate_cmd(
 
     # ── Prepare --md context once before the loop ─────────────────────────────
     if write_md:
-        from datetime import date as _date
         cfg        = _load_mob_config()
         usd_rate   = cfg["defaults"]["usd_exchange_rate"]
         usd_round  = cfg["defaults"]["usd_round"]
-        currency   = md_currency.upper()
-        publish_dt = _date.fromisoformat(md_date) if md_date else _date.today()
-        valid_dt   = _calc_valid_date(md_valid, publish_dt) if md_valid else None
-        _write_md_section("header", _md_header(publish_dt, valid_dt, md_caveat))
+        publish_dt, valid_dt, resolved_caveat = _resolve_header_args(md_valid, md_caveat, md_date)
+        _write_md_section("header", _md_header(publish_dt, valid_dt, resolved_caveat))
 
     for mode, day in [("onshore", onshore_rate), ("offshore", offshore_rate)]:
         if day is None:
@@ -2190,6 +2245,7 @@ def rate_cmd(
             rates = _calc_seatrium(day, mode)
             _print_seatrium_section(mode, rates, "JEN Engineer")
         if write_md:
+            currency = _resolve_md_currency(mode, md_currency)
             outfile = Path(_MD_FILE)
             has_sec = f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
             if not has_sec:
