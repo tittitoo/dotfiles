@@ -1844,9 +1844,10 @@ def _upsert_specialist_mob_row(
 ) -> bool:
     """Merge `country_code` into the existing same-haul-tier row for
     `designation` (Location shown as the actual accumulated country codes,
-    alphabetical — e.g. "DE, NL" — rather than a "Long-haul"/"Short-haul"
-    label the client has no context for), or insert a new row if no
-    same-tier row exists yet for this designation."""
+    in the order they were added — e.g. "NL, DE" if NL was run first —
+    rather than a "Long-haul"/"Short-haul" label the client has no context
+    for), or insert a new row if no same-tier row exists yet for this
+    designation."""
     import re
     outfile = Path(_MD_FILE)
     if not outfile.exists():
@@ -1866,7 +1867,7 @@ def _upsert_specialist_mob_row(
     sub = section_body[sub_start:sub_end]
 
     def _row_text(locs: list) -> str:
-        loc_str = ", ".join(sorted(locs))
+        loc_str = ", ".join(locs)
         return (f"| {loc_str} | {designation} |"
                 f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
                 f" {_fmt_rate(mob_val * 2)} |")
