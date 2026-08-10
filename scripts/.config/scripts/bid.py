@@ -1700,6 +1700,22 @@ def _fmt_date(d: "date") -> str:
     return f"{d.day} {d.strftime('%B %Y')}"
 
 
+def _rates_for_currency(rates: dict, currency: str, usd_rate: float, usd_round: int) -> dict:
+    """Convert a specialist rates dict (always SGD-denominated — computed from
+    the tier's USD base rate x usd_rate) to USD if requested, using the same
+    formula _print_seatrium_section already uses for its SGD/USD display
+    columns. No-op for SGD (the native currency) or for JEN Engineer rates,
+    which are whatever the caller typed and have no separate SGD source to
+    convert from."""
+    if currency != "USD":
+        return rates
+    converted = dict(rates)
+    for key in ("day", "ot", "standby", "sun_ph", "sun_ph_day"):
+        if key in converted:
+            converted[key] = _ceil_to(converted[key] / usd_rate, usd_round)
+    return converted
+
+
 def _md_legend() -> str:
     return "\n".join([
         "## Legend",
@@ -2128,21 +2144,22 @@ def rate_cmd(
             valid_dt   = _calc_valid_date(md_valid, publish_dt) if md_valid else None
             _write_md_section("header", _md_header(publish_dt, valid_dt, md_caveat))
             for mode, rates in rates_by_mode.items():
+                md_rates = _rates_for_currency(rates, currency, usd_rate, usd_round)
                 outfile = Path(_MD_FILE)
                 has_sec = outfile.exists() and f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
                 if not has_sec:
                     fn = _md_onshore if mode == "onshore" else _md_offshore
-                    _write_md_section(mode, fn(rates, designation, currency, usd_rate, usd_round))
+                    _write_md_section(mode, fn(md_rates, designation, currency, usd_rate, usd_round))
                 else:
                     if mode == "onshore":
-                        sun_ph = rates.get("sun_ph", "—")
+                        sun_ph = md_rates.get("sun_ph", "—")
                         row = (f"| {designation} |"
-                               f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
-                               f" {_fmt_rate(rates['standby'])} | {_fmt_rate(sun_ph)} |")
+                               f" {_fmt_rate(md_rates['day'])} | {_fmt_rate(md_rates['ot'])} |"
+                               f" {_fmt_rate(md_rates['standby'])} | {_fmt_rate(sun_ph)} |")
                     else:
                         row = (f"| {designation} |"
-                               f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
-                               f" {_fmt_rate(rates['standby'])} |")
+                               f" {_fmt_rate(md_rates['day'])} | {_fmt_rate(md_rates['ot'])} |"
+                               f" {_fmt_rate(md_rates['standby'])} |")
                     if _upsert_rate_row(mode, designation, row):
                         click.echo(f"  → {_MD_FILE}  [{mode}: {designation}]")
             _write_md_section("legend", _md_legend())
