@@ -1765,8 +1765,26 @@ def _read_section_meta(section_id: str) -> "dict | None":
     return json.loads(m.group(1)) if m else None
 
 
-def _upsert_mob_row(section_id: str, loc: str, designation: str, row: str) -> bool:
-    """Add or replace a row (keyed by Location + Designation) inside a section table."""
+_MD_RATE_HEADING = "### Rates"
+_MD_MOB_HEADING = "### Mobilisation / Demobilisation"
+
+
+def _find_subtable_span(body: str, subheading: str) -> "tuple[int, int] | None":
+    """Byte span of the table area under `subheading` within `body`: from just
+    after the heading line to the next '### ' heading or end of body."""
+    idx = body.find(subheading)
+    if idx == -1:
+        return None
+    start = idx + len(subheading)
+    next_heading = body.find("\n### ", start)
+    end = next_heading if next_heading != -1 else len(body)
+    return start, end
+
+
+def _upsert_subtable_row(section_id: str, subheading: str, key_regex: str, row: str) -> bool:
+    """Add or replace a row (matched by `key_regex`, e.g. an escaped leading
+    `\\| SG \\| JEN Engineer \\|`) inside the sub-table under `subheading`
+    within a section."""
     import re
     outfile = Path(_MD_FILE)
     if not outfile.exists():
@@ -1774,27 +1792,56 @@ def _upsert_mob_row(section_id: str, loc: str, designation: str, row: str) -> bo
     text      = outfile.read_text(encoding="utf-8")
     open_tag  = f"<!-- section:{section_id} -->"
     close_tag = f"<!-- /section:{section_id} -->"
-    start = text.find(open_tag)
-    end   = text.find(close_tag)
-    if start == -1 or end == -1:
+    sec_start = text.find(open_tag)
+    sec_end   = text.find(close_tag)
+    if sec_start == -1 or sec_end == -1:
         return False
-    body    = text[start : end + len(close_tag)]
-    row_pat = re.compile(rf"^\| {re.escape(loc)} \| {re.escape(designation)} \|.*\n?", re.MULTILINE)
-    if row_pat.search(body):
-        new_body = row_pat.sub(row + "\n", body)
+    section_body = text[sec_start : sec_end + len(close_tag)]
+    span = _find_subtable_span(section_body, subheading)
+    if span is None:
+        return False
+    sub_start, sub_end = span
+    sub     = section_body[sub_start:sub_end]
+    row_pat = re.compile(rf"^{key_regex}.*\n?", re.MULTILINE)
+    if row_pat.search(sub):
+        new_sub = row_pat.sub(row + "\n", sub)
     else:
         # Insert after the last table row (line starting with |)
-        matches = list(re.finditer(r"^\|.*\n?", body, re.MULTILINE))
+        matches = list(re.finditer(r"^\|.*\n?", sub, re.MULTILINE))
         if matches:
             insert_at = matches[-1].end()
-            new_body  = body[:insert_at] + row + "\n" + body[insert_at:]
+            new_sub   = sub[:insert_at] + row + "\n" + sub[insert_at:]
         else:
-            new_body = body[:body.rfind(close_tag)].rstrip("\n") + "\n" + row + "\n" + close_tag
-    outfile.write_text(text[:start] + new_body + text[end + len(close_tag):], encoding="utf-8")
+            new_sub = sub.rstrip("\n") + "\n" + row + "\n"
+    new_section_body = section_body[:sub_start] + new_sub + section_body[sub_end:]
+    outfile.write_text(
+        text[:sec_start] + new_section_body + text[sec_end + len(close_tag) :], encoding="utf-8"
+    )
     return True
 
 
-def _md_onshore(rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int, loc: str = "SG") -> str:
+def _upsert_rate_row(section_id: str, designation: str, row: str) -> bool:
+    """Add or replace a row (keyed by Designation only — rate never varies by
+    location) inside a section's Rates sub-table."""
+    import re
+    return _upsert_subtable_row(
+        section_id, _MD_RATE_HEADING, rf"\| {re.escape(designation)} \|", row
+    )
+
+
+def _upsert_mob_row(section_id: str, loc: str, designation: str, row: str) -> bool:
+    """Add or replace a row (keyed by Location-or-haul-tier + Designation)
+    inside a section's Mobilisation / Demobilisation sub-table."""
+    import re
+    return _upsert_subtable_row(
+        section_id, _MD_MOB_HEADING, rf"\| {re.escape(loc)} \| {re.escape(designation)} \|", row
+    )
+
+
+def _md_onshore(
+    rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int,
+    seed_mob_sg: bool = False,
+) -> str:
     import json
     day     = rates["day"]
     ot      = rates["ot"]
@@ -1803,22 +1850,37 @@ def _md_onshore(rates: dict, designation: str, currency: str, usd_rate: float, u
     meta = {
         "currency": currency, "usd_rate": usd_rate, "usd_round": usd_round,
     }
-    return "\n".join([
+    lines = [
         f"<!-- meta:onshore {json.dumps(meta, separators=(',', ':'))} -->",
         f"## Onshore Rates ({currency})",
         "",
-        "| Location | Designation | Day Rate | OT/hr | Standby | Mob | Demob | Mob/Demob | Sun/PH hr |",
-        "|:---|:---|---:|---:|---:|---:|---:|---:|---:|",
-        f"| {loc} | {designation} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | — | — | — | {_fmt_rate(sun_ph)} |",
+        _MD_RATE_HEADING,
+        "",
+        "| Designation | Day Rate | OT/hr | Standby | Sun/PH hr |",
+        "|:---|---:|---:|---:|---:|",
+        f"| {designation} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | {_fmt_rate(sun_ph)} |",
+        "",
+        _MD_MOB_HEADING,
+        "",
+        "| Location | Designation | Mob | Demob | Mob/Demob |",
+        "|:---|:---|---:|---:|---:|",
+    ]
+    if seed_mob_sg:
+        lines.append(f"| SG | {designation} | — | — | — |")
+    lines += [
         "",
         "Onshore working hours: 10 hours per day (Mon–Sat)",
         "",
         f"*Mob/demob rates are based on a minimum 10-working-day deployment per engineer. "
         f"Hotel and daily allowance of {currency} 250 per day applies for each day exceeding 10 working days.*",
-    ])
+    ]
+    return "\n".join(lines)
 
 
-def _md_offshore(rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int, loc: str = "SG") -> str:
+def _md_offshore(
+    rates: dict, designation: str, currency: str, usd_rate: float, usd_round: int,
+    seed_mob_sg: bool = False,
+) -> str:
     import json
     day     = rates["day"]
     ot      = rates["ot"]
@@ -1826,16 +1888,28 @@ def _md_offshore(rates: dict, designation: str, currency: str, usd_rate: float, 
     meta = {
         "currency": currency, "usd_rate": usd_rate, "usd_round": usd_round,
     }
-    return "\n".join([
+    lines = [
         f"<!-- meta:offshore {json.dumps(meta, separators=(',', ':'))} -->",
         f"## Offshore Rates ({currency})",
         "",
-        "| Location | Designation | Day Rate | OT/hr | Standby | Mob | Demob | Mob/Demob |",
-        "|:---|:---|---:|---:|---:|---:|---:|---:|",
-        f"| {loc} | {designation} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} | — | — | — |",
+        _MD_RATE_HEADING,
+        "",
+        "| Designation | Day Rate | OT/hr | Standby |",
+        "|:---|---:|---:|---:|",
+        f"| {designation} | {_fmt_rate(day)} | {_fmt_rate(ot)} | {_fmt_rate(standby)} |",
+        "",
+        _MD_MOB_HEADING,
+        "",
+        "| Location | Designation | Mob | Demob | Mob/Demob |",
+        "|:---|:---|---:|---:|---:|",
+    ]
+    if seed_mob_sg:
+        lines.append(f"| SG | {designation} | — | — | — |")
+    lines += [
         "",
         "Offshore working hours: 12 hours per day (Mon–Sun, all days same rate)",
-    ])
+    ]
+    return "\n".join(lines)
 
 # ── End markdown export helpers ───────────────────────────────────────────────
 
@@ -1862,8 +1936,6 @@ def _md_offshore(rates: dict, designation: str, currency: str, usd_rate: float, 
               type=click.Choice(["SGD", "USD"], case_sensitive=False),
               default="SGD", show_default=True,
               help="Currency for --md output")
-@click.option("--loc", "md_loc", default="SG", show_default=True, metavar="LOC",
-              help="Location code for the rate row in --md output (e.g. NL, DE, SG)")
 @click.option("--valid", "md_valid", default=None, metavar="YEARS|DATE",
               help="Validity period: years from publish date (e.g. 2) or fixed date (YYYY-MM-DD). Years snap to last day of publish month.")
 @click.option("--caveat", "md_caveat", is_flag=True,
@@ -1879,7 +1951,6 @@ def rate_cmd(
     special: bool,
     write_md: bool,
     md_currency: str,
-    md_loc: str,
     md_valid: str | None,
     md_caveat: bool,
     md_date: str | None,
@@ -1990,7 +2061,6 @@ def rate_cmd(
             from datetime import date as _date
             designation = specialist_name or f"{specialist_tier.title()} Specialist"
             usd_round  = cfg["defaults"]["usd_round"]
-            loc        = md_loc.upper()
             currency   = md_currency.upper()
             publish_dt = _date.fromisoformat(md_date) if md_date else _date.today()
             valid_dt   = _calc_valid_date(md_valid, publish_dt) if md_valid else None
@@ -2000,19 +2070,19 @@ def rate_cmd(
                 has_sec = outfile.exists() and f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
                 if not has_sec:
                     fn = _md_onshore if mode == "onshore" else _md_offshore
-                    _write_md_section(mode, fn(rates, designation, currency, usd_rate, usd_round, loc))
+                    _write_md_section(mode, fn(rates, designation, currency, usd_rate, usd_round))
                 else:
                     if mode == "onshore":
                         sun_ph = rates.get("sun_ph", "—")
-                        row = (f"| {loc} | {designation} |"
+                        row = (f"| {designation} |"
                                f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
-                               f" {_fmt_rate(rates['standby'])} | — | — | — | {_fmt_rate(sun_ph)} |")
+                               f" {_fmt_rate(rates['standby'])} | {_fmt_rate(sun_ph)} |")
                     else:
-                        row = (f"| {loc} | {designation} |"
+                        row = (f"| {designation} |"
                                f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
-                               f" {_fmt_rate(rates['standby'])} | — | — | — |")
-                    if _upsert_mob_row(mode, loc, designation, row):
-                        click.echo(f"  → {_MD_FILE}  [{mode}: {loc} / {designation}]")
+                               f" {_fmt_rate(rates['standby'])} |")
+                    if _upsert_rate_row(mode, designation, row):
+                        click.echo(f"  → {_MD_FILE}  [{mode}: {designation}]")
             _write_md_section("legend", _md_legend())
         return
 
@@ -2026,7 +2096,6 @@ def rate_cmd(
         cfg        = _load_mob_config()
         usd_rate   = cfg["defaults"]["usd_exchange_rate"]
         usd_round  = cfg["defaults"]["usd_round"]
-        loc        = md_loc.upper()
         currency   = md_currency.upper()
         publish_dt = _date.fromisoformat(md_date) if md_date else _date.today()
         valid_dt   = _calc_valid_date(md_valid, publish_dt) if md_valid else None
@@ -2046,19 +2115,19 @@ def rate_cmd(
             has_sec = f"<!-- section:{mode} -->" in outfile.read_text(encoding="utf-8")
             if not has_sec:
                 fn = _md_onshore if mode == "onshore" else _md_offshore
-                _write_md_section(mode, fn(rates, "JEN Engineer", currency, usd_rate, usd_round, loc))
+                _write_md_section(mode, fn(rates, "JEN Engineer", currency, usd_rate, usd_round, seed_mob_sg=True))
             else:
                 if mode == "onshore":
                     sun_ph = rates.get("sun_ph", "—")
-                    row = (f"| {loc} | JEN Engineer |"
+                    row = (f"| JEN Engineer |"
                            f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
-                           f" {_fmt_rate(rates['standby'])} | — | — | — | {_fmt_rate(sun_ph)} |")
+                           f" {_fmt_rate(rates['standby'])} | {_fmt_rate(sun_ph)} |")
                 else:
-                    row = (f"| {loc} | JEN Engineer |"
+                    row = (f"| JEN Engineer |"
                            f" {_fmt_rate(rates['day'])} | {_fmt_rate(rates['ot'])} |"
-                           f" {_fmt_rate(rates['standby'])} | — | — | — |")
-                _upsert_mob_row(mode, loc, "JEN Engineer", row)
-                click.echo(f"  → {_MD_FILE}  [{mode}: {loc}]")
+                           f" {_fmt_rate(rates['standby'])} |")
+                _upsert_rate_row(mode, "JEN Engineer", row)
+                click.echo(f"  → {_MD_FILE}  [{mode}: JEN Engineer]")
 
     # Legend always at the end
     if write_md:
@@ -2205,40 +2274,20 @@ def mob_cmd(
             if not country:
                 raise click.UsageError("Provide COUNTRY when using --specialist ... --md.")
             designation = specialist_name or f"{specialist_tier.title()} Specialist"
-            row_loc = code
-            outfile = Path(_MD_FILE)
-            text    = outfile.read_text(encoding="utf-8") if outfile.exists() else ""
+            # Specialists have no fixed home base (unlike JEN Engineer, always
+            # ex-Singapore) and mob/demob is tier-based only — so rows are keyed
+            # by haul tier, not literal country, so e.g. NL and DE (both
+            # Long-haul) land on the same row instead of duplicating it.
+            row_loc = haul
             for sid in ("onshore", "offshore"):
                 meta = _read_section_meta(sid)
                 if meta is None:
                     continue
                 cur     = mob_md_currency.upper() if mob_md_currency else meta["currency"]
                 mob_val = mob_usd if cur == "USD" else mob
-                # Read base rates from the SG row for this same designation
-                open_tag  = f"<!-- section:{sid} -->"
-                close_tag = f"<!-- /section:{sid} -->"
-                sec_start = text.find(open_tag)
-                sec_end   = text.find(close_tag)
-                day = ot = standby = sun_ph = "—"
-                if sec_start != -1 and sec_end != -1:
-                    for line in text[sec_start:sec_end].splitlines():
-                        if line.startswith(f"| SG | {designation} |"):
-                            cells = [c.strip() for c in line.split("|")]
-                            # cells: ['','SG','desig','day','ot','standby','mob','demob','mob/demob',<sun_ph if onshore>,'']
-                            day, ot, standby = cells[3], cells[4], cells[5]
-                            if sid == "onshore":
-                                sun_ph = cells[9]
-                            break
-                if sid == "onshore":
-                    row = (f"| {row_loc} | {designation} |"
-                           f" {day} | {ot} | {standby} |"
-                           f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
-                           f" {_fmt_rate(mob_val * 2)} | {sun_ph} |")
-                else:
-                    row = (f"| {row_loc} | {designation} |"
-                           f" {day} | {ot} | {standby} |"
-                           f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
-                           f" {_fmt_rate(mob_val * 2)} |")
+                row = (f"| {row_loc} | {designation} |"
+                       f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                       f" {_fmt_rate(mob_val * 2)} |")
                 if _upsert_mob_row(sid, row_loc, designation, row):
                     click.echo(f"  → {_MD_FILE}  [{sid}: {row_loc} / {designation}]")
                 else:
@@ -2397,39 +2446,15 @@ def mob_cmd(
 
     if write_md:
         row_loc = "Batam" if batam else code
-        outfile = Path(_MD_FILE)
-        text    = outfile.read_text(encoding="utf-8") if outfile.exists() else ""
         for sid in ("onshore", "offshore"):
             meta = _read_section_meta(sid)
             if meta is None:
                 continue
             cur     = mob_md_currency.upper() if mob_md_currency else meta["currency"]
             mob_val = mob_usd if cur == "USD" else mob_sgd
-            # Read base rates from the SG row
-            open_tag  = f"<!-- section:{sid} -->"
-            close_tag = f"<!-- /section:{sid} -->"
-            sec_start = text.find(open_tag)
-            sec_end   = text.find(close_tag)
-            day = ot = standby = sun_ph = "—"
-            if sec_start != -1 and sec_end != -1:
-                for line in text[sec_start:sec_end].splitlines():
-                    if line.startswith("| SG | JEN Engineer |"):
-                        cells = [c.strip() for c in line.split("|")]
-                        # cells: ['','SG','desig','day','ot','standby','mob','demob','mob/demob',<sun_ph if onshore>,'']
-                        day, ot, standby = cells[3], cells[4], cells[5]
-                        if sid == "onshore":
-                            sun_ph = cells[9]
-                        break
-            if sid == "onshore":
-                row = (f"| {row_loc} | JEN Engineer |"
-                       f" {day} | {ot} | {standby} |"
-                       f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
-                       f" {_fmt_rate(mob_val * 2)} | {sun_ph} |")
-            else:
-                row = (f"| {row_loc} | JEN Engineer |"
-                       f" {day} | {ot} | {standby} |"
-                       f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
-                       f" {_fmt_rate(mob_val * 2)} |")
+            row = (f"| {row_loc} | JEN Engineer |"
+                   f" {_fmt_rate(mob_val)} | {_fmt_rate(mob_val)} |"
+                   f" {_fmt_rate(mob_val * 2)} |")
             if _upsert_mob_row(sid, row_loc, "JEN Engineer", row):
                 click.echo(f"  → {_MD_FILE}  [{sid}: {row_loc}]")
             else:
