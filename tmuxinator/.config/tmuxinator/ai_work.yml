@@ -1,0 +1,19 @@
+name: ai_work
+root: "~/Documents/Working"
+
+windows:
+  - ai_work:
+      root:
+      panes:
+  - files1:
+      root:
+      panes:
+  - files2:
+      root:
+      panes:
+  - command:
+      root:
+      panes:
+  - playground:
+      root:
+      panes:
