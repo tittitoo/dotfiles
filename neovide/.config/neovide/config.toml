@@ -1,0 +1,22 @@
+# Match Ghostty's font (see ../../ghostty/.config/ghostty/config)
+[font]
+size = 21.0
+
+[[font.normal]]
+family = "VictorMono Nerd Font Mono"
+
+# Fallback for Myanmar script (U+1000-U+109F), same intent as the
+# commented-out attempt in the Ghostty config.
+[[font.normal]]
+family = "Noto Sans Myanmar"
+
+# Sync Neovide's own chrome (background shown before Nvim finishes
+# loading) with system light/dark, matching Ghostty's
+# theme = light:catppuccin-latte, dark:catppuccin-mocha
+# and nvim's auto-dark-mode.nvim colorscheme switch.
+theme = "auto"
+
+padding-top = 0
+padding-bottom = 0
+padding-right = 0
+padding-left = 0

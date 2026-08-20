@@ -1,5 +1,8 @@
 return {
   "3rd/image.nvim",
+  -- image.nvim only works over terminal graphics protocols (kitty/sixel/ueberzug),
+  -- which Neovide doesn't implement since it isn't a terminal at all.
+  enabled = not vim.g.neovide,
   opts = {
     integrations = {
       markdown = {
