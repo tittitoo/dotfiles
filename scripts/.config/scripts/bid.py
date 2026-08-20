@@ -375,19 +375,22 @@ def sync_folder(source: Path, dest: Path) -> bool:
     return True
 
 
-def perform_handover_sync(source_root: Path, dest_root: Path, is_vo: bool) -> None:
+def perform_handover_sync(source_root: Path, dest_root: Path) -> None:
     """Perform the handover sync operations.
 
     Args:
         source_root: Source folder (project root or VO folder)
         dest_root: Destination folder in @handover
-        is_vo: True if this is a VO handover (affects PO folder mapping)
     """
     dest_root.mkdir(parents=True, exist_ok=True)
 
     # Define sync mappings: (source_name, dest_name)
-    # PO folder differs: main project has 06-PO, VO has 05-PO
-    po_source = "05-PO" if is_vo else "06-PO"
+    # PO folder differs: a full-structure project (main project, or a VO folder
+    # that was set up with the full structure) has 06-PO; a lightweight VO
+    # folder (as created by `bid vo`, with no 05-Drawing) has 05-PO instead.
+    # Detect from what's actually on disk rather than trusting the VO/main
+    # distinction, since some VO folders are set up with the full structure.
+    po_source = "06-PO" if (source_root / "06-PO").exists() else "05-PO"
 
     sync_mappings = [
         ("00-ITB", "00-ITB"),
@@ -1458,9 +1461,6 @@ def ho(folder_name: str) -> None:
         )
         selected_name, source_path = candidates[choice - 1]
 
-    # Determine if this is a VO handover
-    is_vo = selected_name != "00-MAIN"
-
     # Prepare destination in @handover
     handover_root = Path(HO).expanduser()
     project_dest = handover_root / project_path.name
@@ -1478,7 +1478,7 @@ def ho(folder_name: str) -> None:
     click.echo(f"\nSyncing to: {dest_path}")
 
     # Perform the sync
-    perform_handover_sync(source_path, dest_path, is_vo)
+    perform_handover_sync(source_path, dest_path)
 
     click.echo("\nHandover sync complete.")
     click.echo("NOTE: Please update 05-Cost folder manually.")
