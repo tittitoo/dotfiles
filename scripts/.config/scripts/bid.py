@@ -3028,10 +3028,26 @@ def _warranty_incremental_line(
     }
 
 
+def _warranty_md_table_lines(rows: list) -> list:
+    "Markdown table lines (header + rows) for the given warranty rows."
+    lines = [
+        "| Ext. Duration | Yr from Delivery | Tier | Rate | Material Cost | Δ Cost | BUC | GM$ | Sell | Δ Sell |",
+        "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for r in rows:
+        lines.append(
+            f"| {r['duration']} | {r['years_from_delivery']:.1f} | {r['year']} | "
+            f"{r['rate'] * 100:.1f}% | {r['cost']:,.2f} | {r['cost_delta']:,.2f} | "
+            f"{r['buc']:,.2f} | {r['gm_dollar']:,.2f} | {r['sell']:,.0f} | {r['sell_delta']:,.0f} |"
+        )
+    return lines
+
+
 def _warranty_write_md(
     path: "Path",
     price: float,
     rows: list,
+    interval_label: str,
     from_months: int,
     to_months,
     max_months: int,
@@ -3054,15 +3070,10 @@ def _warranty_write_md(
         "Delivery\" assumes the worst-case 18-month (delivery-triggered) base "
         "warranty, for readers unfamiliar with the tier scheme:",
         "",
-        "| Ext. Duration | Yr from Delivery | Tier | Rate | Material Cost | BUC | GM$ | Sell | Δ Sell |",
-        "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
+        f"## {interval_label}",
+        "",
+        *_warranty_md_table_lines(rows),
     ]
-    for r in rows:
-        lines.append(
-            f"| {r['duration']} | {r['years_from_delivery']:.1f} | {r['year']} | "
-            f"{r['rate'] * 100:.1f}% | {r['cost']:,.2f} | {r['buc']:,.2f} | "
-            f"{r['gm_dollar']:,.2f} | {r['sell']:,.0f} | {r['sell_delta']:,.0f} |"
-        )
     if from_months:
         inc = _warranty_incremental_line(
             price, from_months, to_months, max_months, buc_gm_pct, sell_gm_pct
@@ -3076,70 +3087,59 @@ def _warranty_write_md(
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+_WARRANTY_CSV_HEADER = [
+    "Ext. Duration",
+    "Months",
+    "Yr from Delivery",
+    "Tier",
+    "Rate (%)",
+    "Material Cost",
+    "Delta Cost vs Prior",
+    "BUC",
+    "GM $",
+    "Sell",
+    "Delta Sell vs Prior",
+]
+
+
+def _warranty_csv_row(r: dict) -> list:
+    return [
+        r["duration"],
+        r["months"],
+        f"{r['years_from_delivery']:.1f}",
+        r["year"],
+        f"{r['rate'] * 100:.1f}",
+        f"{r['cost']:.2f}",
+        f"{r['cost_delta']:.2f}",
+        f"{r['buc']:.2f}",
+        f"{r['gm_dollar']:.2f}",
+        f"{r['sell']:.0f}",
+        f"{r['sell_delta']:.0f}",
+    ]
+
+
 def _warranty_write_csv(path: "Path", rows: list) -> None:
     "Write the warranty table as CSV."
     import csv
 
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(
-            [
-                "Ext. Duration",
-                "Months",
-                "Yr from Delivery",
-                "Tier",
-                "Rate (%)",
-                "Material Cost",
-                "BUC",
-                "GM $",
-                "Sell",
-                "Delta Sell vs Prior",
-            ]
-        )
+        writer.writerow(_WARRANTY_CSV_HEADER)
         for r in rows:
-            writer.writerow(
-                [
-                    r["duration"],
-                    r["months"],
-                    f"{r['years_from_delivery']:.1f}",
-                    r["year"],
-                    f"{r['rate'] * 100:.1f}",
-                    f"{r['cost']:.2f}",
-                    f"{r['buc']:.2f}",
-                    f"{r['gm_dollar']:.2f}",
-                    f"{r['sell']:.0f}",
-                    f"{r['sell_delta']:.0f}",
-                ]
-            )
+            writer.writerow(_warranty_csv_row(r))
 
 
-def _warranty_write_xlsx(
-    path: "Path", price: float, rows: list, buc_gm_pct: float, sell_gm_pct: float
-) -> None:
-    "Write the warranty table as a formatted Excel workbook."
-    import openpyxl
+_WARRANTY_XLSX_HEADER = [
+    "Ext. Duration", "Months", "Yr from Delivery", "Tier", "Rate",
+    "Material Cost", "Delta Cost vs Prior", "BUC", "GM %", "Profit $", "Sell", "Delta Sell vs Prior",
+]
+
+
+def _warranty_xlsx_append_table(ws, rows: list) -> int:
+    "Append a header row + data rows to `ws`; returns the header row index for styling."
     from openpyxl.styles import Alignment, Font, PatternFill
-    from openpyxl.utils import get_column_letter
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Warranty"
-
-    ws.append(["Extended Warranty — Parts & Support only (site visits billed separately, T&M)"])
-    ws.append([f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}"])
-    ws.append(
-        [f"Material Cost → BUC at {buc_gm_pct:g}% GM → Selling Price at {sell_gm_pct:g}% GM on BUC"]
-    )
-    ws.append([])
-    ws.append(
-        [
-            "Ext. Duration", "Months", "Yr from Delivery", "Tier", "Rate",
-            "Material Cost", "BUC", "GM %", "Profit $", "Sell", "Delta Sell vs Prior",
-        ]
-    )
-    # max_row only reflects rows holding actual cell data, so it's read AFTER
-    # this append rather than derived from the preceding blank spacer row —
-    # doing it beforehand landed the header style one row too early.
+    ws.append(_WARRANTY_XLSX_HEADER)
     header_row = ws.max_row
     for cell in ws[header_row]:
         cell.font = Font(bold=True, color="FFFFFF", size=11)
@@ -3155,6 +3155,7 @@ def _warranty_write_xlsx(
                 r["year"],
                 r["rate"],
                 r["cost"],
+                r["cost_delta"],
                 r["buc"],
                 r["gm_dollar"] / r["sell"],
                 r["gm_dollar"],
@@ -3174,18 +3175,51 @@ def _warranty_write_xlsx(
             cell.number_format = "#,##0.00"
     for row in ws.iter_rows(min_row=header_row + 1, min_col=8, max_col=8):
         for cell in row:
-            cell.number_format = "0.0%"
+            cell.number_format = "#,##0.00"
     for row in ws.iter_rows(min_row=header_row + 1, min_col=9, max_col=9):
         for cell in row:
+            cell.number_format = "0.0%"
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=10, max_col=10):
+        for cell in row:
             cell.number_format = "#,##0.00"
-    for row in ws.iter_rows(min_row=header_row + 1, min_col=10, max_col=11):
+    for row in ws.iter_rows(min_row=header_row + 1, min_col=11, max_col=12):
         for cell in row:
             cell.number_format = "#,##0"
+
+    return header_row
+
+
+def _warranty_write_xlsx(
+    path: "Path",
+    price: float,
+    rows: list,
+    interval_label: str,
+    buc_gm_pct: float,
+    sell_gm_pct: float,
+) -> None:
+    "Write the warranty table as a formatted Excel workbook."
+    import openpyxl
+    from openpyxl.styles import Font
+    from openpyxl.utils import get_column_letter
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Warranty"
+
+    ws.append(["Extended Warranty — Parts & Support only (site visits billed separately, T&M)"])
+    ws.append([f"Material cost (equipment/material only, excl. labour & services): {price:,.2f}"])
+    ws.append(
+        [f"Material Cost → BUC at {buc_gm_pct:g}% GM → Selling Price at {sell_gm_pct:g}% GM on BUC"]
+    )
+    ws.append([])
+    ws.append([interval_label])
+    ws["A" + str(ws.max_row)].font = Font(bold=True, size=11)
+    header_row = _warranty_xlsx_append_table(ws, rows)
 
     # Autofit from the header row down only — the title rows above it are
     # long free-text strings confined to column A, and would otherwise blow
     # out column A's width to fit them instead of its actual table content.
-    for col_idx in range(1, 12):
+    for col_idx in range(1, 13):
         max_len = max(
             (
                 len(str(ws.cell(row=r, column=col_idx).value or ""))
@@ -3210,7 +3244,11 @@ def _warranty_write_xlsx(
 )
 @click.option(
     "-m", "--max-months", "max_months", type=int, default=66, show_default=True, metavar="MONTHS",
-    help="Table range: max extension months to show (6-month steps; default reaches 7yr from delivery)",
+    help="Table range: max extension months to show (default reaches 7yr from delivery)",
+)
+@click.option(
+    "-6", "--six-month", "six_month", is_flag=True, default=False,
+    help="Show the 6-month-interval table instead of the default 1-year-interval table",
 )
 @click.option(
     "--md", "md_file", is_flag=False, flag_value="warranty.md", default=None,
@@ -3234,6 +3272,7 @@ def warranty(
     from_months: int,
     to_months: int | None,
     max_months: int,
+    six_month: bool,
     md_file: str | None,
     output_file: str | None,
     buc_gm_pct: float,
@@ -3271,7 +3310,8 @@ def warranty(
 
     \b
     Examples:
-      bid warranty 3119488                  # full cumulative table
+      bid warranty 3119488                  # full cumulative table, 1-year intervals
+      bid warranty 3119488 -6               # same, but 6-month intervals
       bid warranty 3119488 -t 42            # highlight the 3.5-year point
       bid warranty 3119488 -f 36 -t 48      # cost to extend from 3yr to 4yr
       bid warranty 3119488 -b 5 -g 25       # override BUC/selling GM%
@@ -3285,7 +3325,15 @@ def warranty(
             type=float,
         )
 
-    checkpoints = sorted(set(range(6, max_months + 1, 6)) | ({to_months} if to_months else set()))
+    if six_month:
+        checkpoints = set(range(6, max_months + 1, 6))
+        interval_label = "6-Month Interval"
+    else:
+        # First checkpoint at 6mo extension reaches the 2yr-from-delivery mark
+        # (18mo base + 6mo), then step by full years (3yr, 4yr, 5yr, ...).
+        checkpoints = {m for m in [6, *range(18, max_months + 1, 12)] if m <= max_months}
+        interval_label = "1-Year Interval"
+    checkpoints = sorted(checkpoints | ({to_months} if to_months else set()))
     rows = _warranty_table_rows(price, checkpoints, buc_gm_pct, sell_gm_pct)
 
     click.echo("Extended Warranty — Parts & Support only (site visits billed separately, T&M)")
@@ -3300,20 +3348,23 @@ def warranty(
         "'Yr from Delivery' assumes the worst-case 18-month (delivery-triggered) "
         "base warranty:"
     )
+
     click.echo()
+    click.echo(f"{interval_label}:")
     click.echo(
         f"  {'Ext.':<8} {'Yr from':<9} {'Tier':<5} {'Rate':>6} "
-        f"{'Material':>14} {'BUC':>13} {'GM $':>11} {'Sell':>13} {'Δ Sell':>13}"
+        f"{'Material':>14} {'Δ Cost':>13} {'BUC':>13} {'GM $':>11} {'Sell':>13} {'Δ Sell':>13}"
     )
     click.echo(
         f"  {'Duration':<8} {'Delivery':<9} {'':<5} {'':>6} "
-        f"{'Cost':>14} {'':>13} {'':>11} {'':>13} {'':>13}"
+        f"{'Cost':>14} {'':>13} {'':>13} {'':>11} {'':>13} {'':>13}"
     )
     for r in rows:
         click.echo(
             f"  {r['duration']:<8} {r['years_from_delivery']:<9.1f} {r['year']:<5} "
-            f"{r['rate'] * 100:>5.1f}% {r['cost']:>14,.2f} {r['buc']:>13,.2f} "
-            f"{r['gm_dollar']:>11,.2f} {r['sell']:>13,.0f} {r['sell_delta']:>13,.0f}"
+            f"{r['rate'] * 100:>5.1f}% {r['cost']:>14,.2f} {r['cost_delta']:>13,.2f} "
+            f"{r['buc']:>13,.2f} {r['gm_dollar']:>11,.2f} {r['sell']:>13,.0f} "
+            f"{r['sell_delta']:>13,.0f}"
         )
 
     if from_months:
@@ -3330,7 +3381,8 @@ def warranty(
     if md_file:
         path = Path(md_file)
         _warranty_write_md(
-            path, price, rows, from_months, to_months, max_months, buc_gm_pct, sell_gm_pct
+            path, price, rows, interval_label, from_months, to_months, max_months,
+            buc_gm_pct, sell_gm_pct,
         )
         click.echo(f"\n→ {path}")
 
@@ -3339,7 +3391,7 @@ def warranty(
         if path.suffix.lower() == ".csv":
             _warranty_write_csv(path, rows)
         elif path.suffix.lower() == ".xlsx":
-            _warranty_write_xlsx(path, price, rows, buc_gm_pct, sell_gm_pct)
+            _warranty_write_xlsx(path, price, rows, interval_label, buc_gm_pct, sell_gm_pct)
         else:
             raise click.UsageError(
                 f"Unsupported --output extension '{path.suffix}' — use .csv or .xlsx"
