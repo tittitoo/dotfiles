@@ -84,8 +84,19 @@ function set_fzf_theme
   --color=selected-bg:#45475A
   --color=border:#6C7086,label:#CDD6F4'
 
-    # Detect macOS appearance (AppleInterfaceStyle is only set when dark mode is enabled)
-    if defaults read -g AppleInterfaceStyle &>/dev/null
+    # Detect macOS appearance (AppleInterfaceStyle is only set when dark mode is enabled).
+    # `defaults` doesn't exist on Linux, so non-Darwin hosts (e.g. the Debian VPS) just fall
+    # back to the dark theme instead of probing for it.
+    set -l is_dark 0
+    if test (uname -s) = Darwin
+        if defaults read -g AppleInterfaceStyle &>/dev/null
+            set is_dark 1
+        end
+    else
+        set is_dark 1
+    end
+
+    if test $is_dark = 1
         set -gx FZF_DEFAULT_OPTS "$fzf_base_opts $fzf_mocha_colors"
     else
         set -gx FZF_DEFAULT_OPTS "$fzf_base_opts $fzf_latte_colors"
