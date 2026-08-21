@@ -101,4 +101,14 @@ return {
     },
   },
 
+  -- Silence the bottom-right LSP progress toasts (e.g. pyright spinner/checkmark)
+  {
+    "folke/noice.nvim",
+    opts = {
+      lsp = {
+        progress = { enabled = false },
+      },
+    },
+  },
+
 }
