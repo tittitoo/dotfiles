@@ -6,26 +6,26 @@ desc = "Run a shell command here"
 
 [[mgr.prepend_keymap]]
 on = "<C-p>"
-run = 'shell -- qlmanage -p "$@"'
+run = 'shell -- qlmanage -p %s'
 
 [[mgr.prepend_keymap]]
 on = "<C-y>"
-run = 'shell -- copy-file-to-clipboard "$@"'
+run = 'shell -- copy-file-to-clipboard %s'
 desc = "Copy file to clipboard"
 
 [[mgr.prepend_keymap]]
 on = "<C-s>"
-run = 'shell -- get_sharepoint_link.py "$@"'
+run = 'shell -- get_sharepoint_link.py %s'
 desc = "Get SharePoint link"
 
 [[mgr.prepend_keymap]]
 on = "<A-y>"
-run = 'shell -- open -a Yoink "$@"'
+run = 'shell -- open -a Yoink %s'
 desc = "Send to Yoink"
 
 [[mgr.prepend_keymap]]
 on = "<A-r>"
-run = 'shell "uv run $@" --block'
+run = 'shell --block -- uv run %s'
 desc = "Run Python script with uv"
 
 [[mgr.prepend_keymap]]
