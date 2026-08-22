@@ -118,6 +118,25 @@ return {
     opts = {
       disable_inline_completion = true, -- route through blink.cmp; toggled by <leader>uk
     },
+    -- <leader>uk (above) turns off blink.cmp entirely. This instead stops just
+    -- the Supermaven backend process, leaving LSP/buffer/path/snippets/zotcite
+    -- completions on.
+    config = function(_, opts)
+      require("supermaven-nvim").setup(opts)
+
+      local api = require("supermaven-nvim.api")
+      Snacks.toggle({
+        name = "Supermaven",
+        get = api.is_running,
+        set = function(state)
+          if state then
+            api.start()
+          else
+            api.stop()
+          end
+        end,
+      }):map("<leader>us")
+    end,
   },
 
   -- Silence the bottom-right LSP progress toasts (e.g. pyright spinner/checkmark)
