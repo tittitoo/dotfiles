@@ -2,6 +2,10 @@
 -- Default autocmds that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/autocmds.lua
 -- Add any additional autocmds here
 
+-- Note-creation user commands (:Minutes, :Literature, :Dragon) for the
+-- dragon vault. Loaded here since this file is already loaded on VeryLazy.
+require("config.commands")
+
 -- initialize global var to false -> nvim-cmp turned off by default
 -- vim.g.cmptoggle = true
 --
