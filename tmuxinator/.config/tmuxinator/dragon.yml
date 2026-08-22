@@ -16,11 +16,5 @@ windows:
   - dragon:
       root: "~/Repos/github.com/tittitoo/dragon/"
       panes:
-  - ai_briefcase:
-      root: "~/Repos/github.com/tittitoo/briefcase/"
-      panes:
-  - briefcase:
-      root: "~/Repos/github.com/tittitoo/briefcase/"
-      panes:
   - playground:
       panes:
