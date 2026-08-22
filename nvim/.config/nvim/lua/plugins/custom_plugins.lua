@@ -74,10 +74,10 @@ return {
   -- This is for blink
   {
     "saghen/blink.cmp",
-    -- Make blink.cmp toogleable
+    -- Make blink.cmp toogleable. vim.b.completion is left unset (nil) so
+    -- every buffer starts with completion ON by default; opts.enabled below
+    -- treats anything other than `false` as enabled.
     opts = function(_, opts)
-      vim.b.completion = false
-
       Snacks.toggle({
         name = "Completion",
         get = function()
@@ -125,6 +125,11 @@ return {
       require("supermaven-nvim").setup(opts)
 
       local api = require("supermaven-nvim.api")
+      -- setup() unconditionally calls api.start() with no config knob to
+      -- suppress it, so stop it right back off to make "off at startup" the
+      -- default; <leader>us starts it again.
+      api.stop()
+
       Snacks.toggle({
         name = "Supermaven",
         get = api.is_running,
