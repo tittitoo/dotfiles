@@ -51,6 +51,28 @@ return {
           client.server_capabilities.completionProvider = client.server_capabilities.completionProvider
             or {}
           client.server_capabilities.completionProvider.triggerCharacters = { "@" }
+
+          -- zotero_ls's completion handler always replies with isIncomplete =
+          -- false (zotcite/lsp.lua), even for the very first request fired the
+          -- instant "@" is typed — at that point there's no search text yet, so
+          -- it legitimately returns 0 items. blink.cmp reads isIncomplete=false
+          -- as "this answer covers everything you'll type going forward" and
+          -- switches to filtering that (empty) cached list locally instead of
+          -- re-querying, so zotero_ls's real matches for "@word" never surface.
+          -- Force isIncomplete = true so blink re-requests zotero_ls on every
+          -- keystroke, matching how it actually recomputes matches from scratch
+          -- each time.
+          local orig_request = client.request
+          client.request = function(self, method, params, handler, bufnr)
+            if method == "textDocument/completion" and handler then
+              local orig_handler = handler
+              handler = function(err, result, ctx)
+                if result then result.isIncomplete = true end
+                return orig_handler(err, result, ctx)
+              end
+            end
+            return orig_request(self, method, params, handler, bufnr)
+          end
         end
       end,
     })
