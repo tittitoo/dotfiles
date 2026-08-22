@@ -62,12 +62,42 @@ return {
           -- Force isIncomplete = true so blink re-requests zotero_ls on every
           -- keystroke, matching how it actually recomputes matches from scratch
           -- each time.
+          -- zotero_ls's completion handler also always builds a textEdit range
+          -- covering exactly one character (character-1 to character), no
+          -- matter how long the citation search text actually is — a latent
+          -- bug only exposed now that trigger-character-based, multi-keystroke
+          -- completion is enabled. Accepting "Fuller-Nightingale-2017" for
+          -- "@ful" left "@fu" in place and appended the citekey right after it
+          -- instead of replacing the whole "@ful" span. Recompute the same
+          -- "word after @" (or after "{" for tex/rnoweb) that zotcite/lsp.lua
+          -- itself matches on, and correct each item's range to span the whole
+          -- word, not just its last character.
           local orig_request = client.request
           client.request = function(self, method, params, handler, bufnr)
-            if method == "textDocument/completion" and handler then
+            if method == "textDocument/completion" and handler and params.position then
+              local lnum, char = params.position.line, params.position.character
+              local line = vim.api.nvim_buf_get_lines(0, lnum, lnum + 1, true)[1] or ""
+              local byte_idx = vim.fn.byteidx(line, char)
+              if byte_idx < 0 then byte_idx = #line end
+              local subline = line:sub(1, byte_idx)
+              local word
+              if vim.bo.filetype == "rnoweb" or vim.bo.filetype == "tex" then
+                word = subline:match(".*{.-(%S+)$")
+              else
+                word = subline:match(".*@(%S+)$")
+              end
               local orig_handler = handler
               handler = function(err, result, ctx)
-                if result then result.isIncomplete = true end
+                if result then
+                  result.isIncomplete = true
+                  if word then
+                    for _, item in ipairs(result.items or {}) do
+                      if item.textEdit and item.textEdit.range and item.textEdit.range.start then
+                        item.textEdit.range.start.character = char - #word
+                      end
+                    end
+                  end
+                end
                 return orig_handler(err, result, ctx)
               end
             end
