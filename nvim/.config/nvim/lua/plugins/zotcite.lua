@@ -2,6 +2,9 @@ return {
   "jalvesaq/zotcite",
   dependencies = {
     "nvim-treesitter/nvim-treesitter",
+    -- Required for :Zseek, <C-x><C-b>, and the annotation/note pickers —
+    -- without it those fail with "module 'telescope.pickers' not found".
+    "nvim-telescope/telescope.nvim",
   },
   -- Zotcite is a filetype plugin and loads itself for supported filetypes,
   -- but its own default list uses "latex" (not vimtex's "tex"), so "tex" is
