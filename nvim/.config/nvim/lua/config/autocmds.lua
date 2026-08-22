@@ -6,6 +6,19 @@
 -- dragon vault. Loaded here since this file is already loaded on VeryLazy.
 require("config.commands")
 
+-- markdown-oxide's :Daily/:Today commands create new files under
+-- daily_notes_folder (see dragon's .moxide.toml) with no tag of their own.
+-- Stamp #journal into any brand-new file created under a journal/ folder.
+vim.api.nvim_create_autocmd("BufNewFile", {
+  pattern = "*/journal/*.md",
+  callback = function()
+    if vim.api.nvim_buf_line_count(0) <= 1 and vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] == "" then
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, { "#journal", "" })
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+    end
+  end,
+})
+
 -- initialize global var to false -> nvim-cmp turned off by default
 -- vim.g.cmptoggle = true
 --

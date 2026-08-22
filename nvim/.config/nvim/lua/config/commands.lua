@@ -46,3 +46,10 @@ vim.api.nvim_create_user_command("Dragon", function(opts)
   local path = vim.fn.getcwd() .. "/" .. slugify(opts.args) .. ".md"
   new_note(path, { "# " .. opts.args, "", "#dragon", "" })
 end, { nargs = "+", desc = "Create an atomic/permanent note tagged #dragon" })
+
+-- markdown-oxide's daily-note command. Not registered automatically by the
+-- LSP client, per markdown-oxide's own setup docs -- this wires it up.
+-- Usage: :Daily today | :Daily next monday | :Daily 2 days ago
+vim.api.nvim_create_user_command("Daily", function(opts)
+  vim.lsp.buf.execute_command({ command = "jump", arguments = { opts.args } })
+end, { nargs = "*", desc = "Open a daily note (markdown-oxide)" })
