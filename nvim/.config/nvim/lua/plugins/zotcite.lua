@@ -34,5 +34,25 @@ return {
         })
       end,
     })
+
+    -- Zotcite runs its own fake LSP server ("zotero_ls") for completion, but
+    -- deliberately leaves `@` out of its declared triggerCharacters (see
+    -- zotcite/lsp.lua: "-- would work only if we could reset the
+    -- completion" — a limitation the author left unresolved). blink.cmp's
+    -- show_on_trigger_character (on by default) reads triggerCharacters
+    -- live from client.server_capabilities on every keystroke — not a
+    -- one-time snapshot — so injecting "@" here is enough to make typing
+    -- "@" + letters auto-show completion, without touching the zotcite
+    -- plugin's own files (which would be lost on the next update anyway).
+    vim.api.nvim_create_autocmd("LspAttach", {
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client and client.name == "zotero_ls" then
+          client.server_capabilities.completionProvider = client.server_capabilities.completionProvider
+            or {}
+          client.server_capabilities.completionProvider.triggerCharacters = { "@" }
+        end
+      end,
+    })
   end,
 }
