@@ -19,13 +19,15 @@ return {
     -- Zotcite's default insert-mode citation-insert map is <C-X><C-B>, but
     -- tmux's default prefix is Ctrl-b (unchanged in this config — see
     -- tmux.conf), which swallows the <C-B> half before it ever reaches
-    -- Neovim, so the map silently does nothing under tmux. Rebind to <C-g>,
-    -- which is free in tmux, in blink.cmp's default keymap preset, and in
-    -- this config's other insert-mode maps.
+    -- Neovim, so the map silently does nothing under tmux. Ctrl-based
+    -- alternatives collide with tmux, fish's fzf widgets, or blink.cmp's
+    -- default keymap preset, so rebind to Alt-C (mnemonic: Citation)
+    -- instead — Ghostty has macos-option-as-alt on, and no Alt/Meta map
+    -- exists anywhere else in this config.
     vim.api.nvim_create_autocmd("FileType", {
       pattern = filetypes,
       callback = function(args)
-        vim.keymap.set("i", "<C-g>", "<Cmd>lua require('zotcite.get').citation()<CR>", {
+        vim.keymap.set("i", "<M-c>", "<Cmd>lua require('zotcite.get').citation()<CR>", {
           buffer = args.buf,
           silent = true,
           desc = "Zotcite: insert citation",
