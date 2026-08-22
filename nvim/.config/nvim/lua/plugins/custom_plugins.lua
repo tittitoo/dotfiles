@@ -91,6 +91,25 @@ return {
       opts.enabled = function()
         return vim.b.completion ~= false
       end
+
+      -- LazyVim's AI extra (lazyvim.plugins.extras.ai.supermaven) gives
+      -- Supermaven a score_offset of 100 here so its ghost-text suggestion
+      -- always wins the top completion slot — right for normal coding, but
+      -- it drowns out zotcite's citation matches whenever both have a
+      -- candidate (e.g. typing "@full" showed Supermaven's "actually"
+      -- instead of the Fuller reference zotcite's own search correctly
+      -- finds). Override only during citation search — text immediately
+      -- before the cursor matching "@word", the same pattern zotcite's own
+      -- matcher uses — leaving the +100 boost everywhere else untouched.
+      opts.sources = opts.sources or {}
+      opts.sources.providers = opts.sources.providers or {}
+      opts.sources.providers.supermaven = opts.sources.providers.supermaven or {}
+      opts.sources.providers.supermaven.score_offset = function(ctx)
+        local before_cursor = ctx.line:sub(1, ctx.cursor[2])
+        if before_cursor:match("@%S*$") then return -1000 end
+        return 100
+      end
+
       return opts
     end,
   },
