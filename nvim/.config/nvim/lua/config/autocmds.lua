@@ -6,16 +6,31 @@
 -- dragon vault. Loaded here since this file is already loaded on VeryLazy.
 require("config.commands")
 
--- markdown-oxide's :Daily/:Today commands create new files under
--- daily_notes_folder (see dragon's .moxide.toml) with no tag of their own.
--- Stamp #journal into any brand-new file created under a journal/ folder.
-vim.api.nvim_create_autocmd("BufNewFile", {
+-- markdown-oxide's :Daily jump command creates the file itself (via the LSP)
+-- before Neovim opens it, so it's already on disk by the time we see it --
+-- that's BufReadPost, not BufNewFile. Watch both so this works regardless
+-- of whether Neovim or the LSP created the file first. Only touches
+-- completely empty buffers, so re-opening a day you've already written in
+-- is always a no-op here.
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost" }, {
   pattern = "*/journal/*.md",
-  callback = function()
-    if vim.api.nvim_buf_line_count(0) <= 1 and vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] == "" then
-      vim.api.nvim_buf_set_lines(0, 0, -1, false, { "#journal", "" })
-      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  callback = function(args)
+    if vim.api.nvim_buf_line_count(args.buf) > 1 or vim.api.nvim_buf_get_lines(args.buf, 0, 1, false)[1] ~= "" then
+      return
     end
+    -- Filename is the date (dailynote = "%Y-%m-%d" in .moxide.toml). Parse
+    -- it so the heading matches the note's actual day, not necessarily
+    -- today -- :Daily can create entries for other days too.
+    local date_str = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(args.buf), ":t:r")
+    local y, m, d = date_str:match("^(%d%d%d%d)-(%d%d)-(%d%d)$")
+    local weekday = y
+        and os.date("%A", os.time({ year = tonumber(y), month = tonumber(m), day = tonumber(d) }))
+      or os.date("%A")
+    vim.api.nvim_buf_set_lines(args.buf, 0, -1, false, { "# " .. weekday .. " " .. date_str, "", "#journal", "" })
+    vim.api.nvim_buf_call(args.buf, function()
+      vim.cmd.write()
+    end)
+    vim.api.nvim_win_set_cursor(0, { 4, 0 })
   end,
 })
 
