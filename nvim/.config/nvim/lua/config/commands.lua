@@ -29,9 +29,9 @@ vim.api.nvim_create_user_command("Minutes", function(opts)
   new_note(path, { "# Minutes " .. opts.args .. " " .. date, "", "tags:", "#minutes", "" })
 end, { nargs = "+", desc = "Create minutes-<party>-<date>.md tagged #minutes" })
 
-vim.api.nvim_create_user_command("Literature", function(opts)
+vim.api.nvim_create_user_command("Lit", function(opts)
   if opts.args == "" then
-    vim.notify("Usage: :Literature <title>", vim.log.levels.ERROR)
+    vim.notify("Usage: :Lit <title>", vim.log.levels.ERROR)
     return
   end
   local path = vim.fn.getcwd() .. "/" .. slugify(opts.args) .. ".md"
