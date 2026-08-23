@@ -8,8 +8,9 @@ vim.keymap.set("n", "<leader>m", '<cmd>r!open -a "Typora.app" "%"<cr>', { desc =
 -- Preview in Marked 2 App.
 vim.keymap.set("n", "<leader>M", '<cmd>r!open -a "Marked 2.app" "%"<cr>', { desc = "Open in Marked 2 app" })
 
--- Open in Zed.
-vim.keymap.set("n", "<leader>z", '<cmd>r!open -a "Zed.app" "%"<cr>', { desc = "Open in Zed" })
+-- Open in Zed. <leader>z is uppercase because zotcite's own default
+-- keymaps (za/zb/zi/zo/zv) already own the lowercase <leader>z prefix.
+vim.keymap.set("n", "<leader>Z", '<cmd>r!open -a "Zed.app" "%"<cr>', { desc = "Open in Zed" })
 
 -- Toggle nvim-cmp
 vim.keymap.set("n", "<leader>uj", "<cmd>lua vim.g.cmptoggle = not vim.g.cmptoggle<CR>", { desc = "Toggle nvim-cmp" })
