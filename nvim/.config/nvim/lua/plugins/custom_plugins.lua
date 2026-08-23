@@ -145,6 +145,40 @@ return {
         return items
       end
 
+      -- blink's default "label" component renders label..label_detail with
+      -- no separator (config/completion/menu.lua), which is why
+      -- markdown-oxide's "N references" labelDetails.detail runs straight
+      -- into the tag name ("commercial6 references"). Reproduce the default
+      -- component with a space inserted before label_detail, shifting the
+      -- BlinkCmpLabelDetail highlight range to match.
+      opts.completion = opts.completion or {}
+      opts.completion.menu = opts.completion.menu or {}
+      opts.completion.menu.draw = opts.completion.menu.draw or {}
+      opts.completion.menu.draw.components = opts.completion.menu.draw.components or {}
+      opts.completion.menu.draw.components.label = {
+        width = { fill = true, max = 60 },
+        text = function(ctx)
+          return ctx.label .. (ctx.label_detail ~= "" and (" " .. ctx.label_detail) or "")
+        end,
+        highlight = function(ctx)
+          local label = ctx.label
+          local highlights = {
+            { 0, #label, group = ctx.deprecated and "BlinkCmpLabelDeprecated" or "BlinkCmpLabel" },
+          }
+          if ctx.label_detail ~= "" then
+            local start = #label + 1
+            table.insert(highlights, { start, start + #ctx.label_detail, group = "BlinkCmpLabelDetail" })
+          end
+          if vim.list_contains(ctx.self.treesitter, ctx.source_id) and not ctx.deprecated then
+            vim.list_extend(highlights, require("blink.cmp.completion.windows.render.treesitter").highlight(ctx))
+          end
+          for _, idx in ipairs(ctx.label_matched_indices) do
+            table.insert(highlights, { idx, idx + 1, group = "BlinkCmpLabelMatch" })
+          end
+          return highlights
+        end,
+      }
+
       return opts
     end,
   },
