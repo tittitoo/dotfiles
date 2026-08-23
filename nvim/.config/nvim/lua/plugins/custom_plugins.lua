@@ -110,6 +110,31 @@ return {
         return 100
       end
 
+      -- markdown-oxide's tag completions all carry filterText like
+      -- "#commercial" (leading "#" before the real prefix) and an identical
+      -- sortText for every tag, so blink's fuzzy matcher doesn't give them
+      -- the same "exact prefix" bonus a plain buffer word like
+      -- "commercial-review" gets by starting clean at position 0 — tags lose
+      -- to buffer noise instead of being "top priority" while typing "#tag".
+      -- Boost any Keyword-kind item (markdown-oxide's tag kind) heavily, but
+      -- only while the cursor is actually in a "#word" context, so this
+      -- doesn't affect unrelated Keyword-kind completions elsewhere (e.g.
+      -- Python's def/class).
+      opts.sources.providers.lsp = opts.sources.providers.lsp or {}
+      local orig_lsp_transform_items = opts.sources.providers.lsp.transform_items
+      opts.sources.providers.lsp.transform_items = function(ctx, items)
+        items = orig_lsp_transform_items and orig_lsp_transform_items(ctx, items) or items
+        local before_cursor = ctx.line:sub(1, ctx.cursor[2])
+        if before_cursor:match("#%S*$") then
+          for _, item in ipairs(items) do
+            if item.kind == vim.lsp.protocol.CompletionItemKind.Keyword then
+              item.score_offset = (item.score_offset or 0) + 1000
+            end
+          end
+        end
+        return items
+      end
+
       return opts
     end,
   },
