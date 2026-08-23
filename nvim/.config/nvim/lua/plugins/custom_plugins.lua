@@ -128,7 +128,17 @@ return {
         if before_cursor:match("#%S*$") then
           for _, item in ipairs(items) do
             if item.kind == vim.lsp.protocol.CompletionItemKind.Keyword then
-              item.score_offset = (item.score_offset or 0) + 1000
+              -- Flat +1000 alone ties whenever two tags both match (e.g.
+              -- "#c" matching both "commercial" and "scratch"), and blink
+              -- then falls back to markdown-oxide's own sortText, which
+              -- isn't usage-based -- "scratch" (sortText 16) beat
+              -- "commercial" (sortText 36) despite being used once vs. six
+              -- times. Break the tie using markdown-oxide's own "N
+              -- references" labelDetails, so more-used tags rank higher.
+              local refs = 0
+              local detail = item.labelDetails and item.labelDetails.detail
+              if detail then refs = tonumber(detail:match("(%d+) reference")) or 0 end
+              item.score_offset = (item.score_offset or 0) + 1000 + refs
             end
           end
         end
