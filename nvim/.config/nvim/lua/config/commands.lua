@@ -26,7 +26,7 @@ vim.api.nvim_create_user_command("Minutes", function(opts)
   end
   local date = os.date("%Y-%m-%d")
   local path = vim.fn.getcwd() .. "/minutes-" .. slugify(opts.args) .. "-" .. date .. ".md"
-  new_note(path, { "# Minutes " .. opts.args .. " " .. date, "", "#minutes", "" })
+  new_note(path, { "# Minutes " .. opts.args .. " " .. date, "", "tags:", "#minutes", "" })
 end, { nargs = "+", desc = "Create minutes-<party>-<date>.md tagged #minutes" })
 
 vim.api.nvim_create_user_command("Literature", function(opts)
@@ -35,7 +35,7 @@ vim.api.nvim_create_user_command("Literature", function(opts)
     return
   end
   local path = vim.fn.getcwd() .. "/" .. slugify(opts.args) .. ".md"
-  new_note(path, { "# " .. opts.args, "", "#literature", "" })
+  new_note(path, { "# " .. opts.args, "", "tags:", "#literature", "" })
 end, { nargs = "+", desc = "Create a literature note tagged #literature" })
 
 vim.api.nvim_create_user_command("Dragon", function(opts)
@@ -44,7 +44,7 @@ vim.api.nvim_create_user_command("Dragon", function(opts)
     return
   end
   local path = vim.fn.getcwd() .. "/" .. slugify(opts.args) .. ".md"
-  new_note(path, { "# " .. opts.args, "", "#dragon", "" })
+  new_note(path, { "# " .. opts.args, "", "tags:", "#dragon", "" })
 end, { nargs = "+", desc = "Create an atomic/permanent note tagged #dragon" })
 
 -- markdown-oxide's daily-note command. Not registered automatically by the
