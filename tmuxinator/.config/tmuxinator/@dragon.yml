@@ -4,17 +4,17 @@ name: dragon
 root: "~/Repos/github.com/tittitoo/dragon/"
 
 windows:
-  - ai_drafts:
-      root: "~/Repos/github.com/tittitoo/drafts/"
-      panes:
-  - drafts:
-      root: "~/Repos/github.com/tittitoo/drafts/"
-      panes:
   - ai_dragon:
       root: "~/Repos/github.com/tittitoo/dragon/"
       panes:
   - dragon:
       root: "~/Repos/github.com/tittitoo/dragon/"
+      panes:
+  - ai_drafts:
+      root: "~/Repos/github.com/tittitoo/drafts/"
+      panes:
+  - drafts:
+      root: "~/Repos/github.com/tittitoo/drafts/"
       panes:
   - playground:
       panes:
