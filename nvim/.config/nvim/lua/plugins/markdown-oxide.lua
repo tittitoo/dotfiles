@@ -14,15 +14,22 @@ return {
       servers = {
         marksman = false,
         markdown_oxide = {
-          -- Required by markdown-oxide to track file renames/creates for
-          -- its reference/backlink tracking.
-          capabilities = {
+          -- blink.cmp's completion capabilities (resolveSupport,
+          -- labelDetailsSupport, etc.) aren't applied to LSP servers
+          -- globally by LazyVim -- only the java extra opts into them. The
+          -- author's own reference config (github.com/Feel-ix-343/
+          -- Neovim-Config) builds markdown_oxide's capabilities from
+          -- nvim-cmp's equivalent full-capabilities helper, not bare
+          -- defaults; mirror that here. Also required: dynamicRegistration
+          -- for didChangeWatchedFiles, so markdown-oxide can track file
+          -- renames/creates for its reference/backlink tracking.
+          capabilities = vim.tbl_deep_extend("force", require("blink.cmp").get_lsp_capabilities(), {
             workspace = {
               didChangeWatchedFiles = {
                 dynamicRegistration = true,
               },
             },
-          },
+          }),
         },
       },
     },
