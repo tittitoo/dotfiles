@@ -52,4 +52,21 @@ return {
       return opts
     end,
   },
+  {
+    "stevearc/conform.nvim",
+    -- prettier (LazyVim's formatting.prettier extra) unconditionally pads
+    -- every pipe-table column to its widest cell across all rows on every
+    -- save, with no option to turn that off short of not running prettier
+    -- on markdown at all. For a PKM vault of freeform notes, the rest of
+    -- what prettier normalizes (list markers, heading style, blank-line
+    -- collapsing, etc.) isn't worth the tradeoff -- drop markdown from its
+    -- filetypes so notes save exactly as typed; render-markdown.nvim still
+    -- renders whatever's there.
+    opts = function(_, opts)
+      opts.formatters_by_ft = opts.formatters_by_ft or {}
+      opts.formatters_by_ft.markdown = nil
+      opts.formatters_by_ft["markdown.mdx"] = nil
+      return opts
+    end,
+  },
 }
