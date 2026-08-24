@@ -26,11 +26,17 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost" }, {
     local weekday = y
         and os.date("%A", os.time({ year = tonumber(y), month = tonumber(m), day = tonumber(d) }))
       or os.date("%A")
-    vim.api.nvim_buf_set_lines(args.buf, 0, -1, false, { "# " .. weekday .. " " .. date_str, "", "#journal", "" })
+    vim.api.nvim_buf_set_lines(
+      args.buf,
+      0,
+      -1,
+      false,
+      { "# " .. weekday .. " " .. date_str, "", "tags:", "#journal", "" }
+    )
     vim.api.nvim_buf_call(args.buf, function()
       vim.cmd.write()
     end)
-    vim.api.nvim_win_set_cursor(0, { 4, 0 })
+    vim.api.nvim_win_set_cursor(0, { 5, 0 })
   end,
 })
 
