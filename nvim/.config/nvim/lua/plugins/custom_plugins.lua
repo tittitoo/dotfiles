@@ -75,13 +75,13 @@ return {
   {
     "saghen/blink.cmp",
     -- Make blink.cmp toogleable. vim.b.completion is left unset (nil) so
-    -- every buffer starts with completion ON by default; opts.enabled below
-    -- treats anything other than `false` as enabled.
+    -- every buffer starts with completion OFF by default (distracting
+    -- otherwise); opts.enabled below only treats `true` as enabled.
     opts = function(_, opts)
       Snacks.toggle({
         name = "Completion",
         get = function()
-          return vim.b.completion ~= false
+          return vim.b.completion == true
         end,
         set = function(state)
           vim.b.completion = state
@@ -89,7 +89,7 @@ return {
       }):map("<leader>uk")
 
       opts.enabled = function()
-        return vim.b.completion ~= false
+        return vim.b.completion == true
       end
 
       -- LazyVim's AI extra (lazyvim.plugins.extras.ai.supermaven) gives
