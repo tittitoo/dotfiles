@@ -31,12 +31,12 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufReadPost" }, {
       0,
       -1,
       false,
-      { "# " .. weekday .. " " .. date_str, "", "tags:", "#journal", "" }
+      { "# " .. weekday .. " " .. date_str, "", "tags:", "#journal", "", "" }
     )
     vim.api.nvim_buf_call(args.buf, function()
       vim.cmd.write()
     end)
-    vim.api.nvim_win_set_cursor(0, { 5, 0 })
+    vim.api.nvim_win_set_cursor(0, { 6, 0 })
   end,
 })
 
