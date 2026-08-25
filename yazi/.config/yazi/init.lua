@@ -1,3 +1,8 @@
+require("yafg"):setup({
+	editor = "nvim",
+	file_arg_format = "+{row} {file}",
+})
+
 -- Middle-truncate filenames: show "beginning…end" instead of "beginning….ext"
 -- The renderer clips the highlights child and appends whatever ellipsis() returns,
 -- so returning "…FPS R0.pdf" gives middle truncation. Widths come from child.width

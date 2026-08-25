@@ -29,6 +29,11 @@ run = 'shell --block -- uv run %s'
 desc = "Run Python script with uv"
 
 [[mgr.prepend_keymap]]
+on = [ "F", "G" ]
+run = "plugin yafg"
+desc = "Fuzzy grep with rg + fzf"
+
+[[mgr.prepend_keymap]]
 on = "?"
 run = "help"
 desc = "Open help"
