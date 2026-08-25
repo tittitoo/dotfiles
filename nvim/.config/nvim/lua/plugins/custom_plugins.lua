@@ -81,7 +81,7 @@ return {
       Snacks.toggle({
         name = "Completion",
         get = function()
-          return vim.b.completion
+          return vim.b.completion ~= false
         end,
         set = function(state)
           vim.b.completion = state
