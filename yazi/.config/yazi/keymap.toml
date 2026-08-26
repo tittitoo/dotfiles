@@ -35,7 +35,7 @@ desc = "Fuzzy grep with rg + fzf"
 
 [[mgr.prepend_keymap]]
 on = "<A-n>"
-run = 'shell --interactive -- note-rename %s'
+run = 'shell --block -- note-rename %s'
 desc = "Rename note and fix [[links]] to it vault-wide"
 
 [[mgr.prepend_keymap]]
