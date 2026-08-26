@@ -91,6 +91,19 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- Treat "-" as part of a word in markdown, so kebab-case note names
+-- (this vault's naming convention) are one <cword>/<cWORD>, not several.
+-- Without this, vim.lsp.buf.rename() (<leader>cR) prefills only the
+-- fragment up to the first hyphen -- e.g. "architecture-ai-uncle-bob-md"
+-- rename stops at "architecture" -- since it defaults to <cword>, which
+-- follows 'iskeyword'.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown" },
+  callback = function()
+    vim.opt_local.iskeyword:append("-")
+  end,
+})
+
 -- Enable completion by default for markdown files -- this is where
 -- markdown-oxide (wikilinks/tags/backlinks) and zotcite (citation search)
 -- actually operate, so gating them behind the usual off-by-default

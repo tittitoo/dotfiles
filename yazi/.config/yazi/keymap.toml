@@ -34,6 +34,11 @@ run = "plugin yafg"
 desc = "Fuzzy grep with rg + fzf"
 
 [[mgr.prepend_keymap]]
+on = "<A-n>"
+run = 'shell --interactive -- note-rename %s'
+desc = "Rename note and fix [[links]] to it vault-wide"
+
+[[mgr.prepend_keymap]]
 on = "?"
 run = "help"
 desc = "Open help"

@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Rename a markdown note and rewrite every [[wikilink]] reference to it
+# across the vault (git root). This is the sanctioned way to rename a note
+# in a PKM vault that uses kebab-case filenames as link targets -- plain
+# file-manager rename (yazi, mv, Finder) has no idea [[wikilink]] syntax
+# exists, and markdown-oxide's own LSP rename renames the wrong file when
+# triggered from an inbound link instead of from within the target note
+# itself. Only handles [[slug]], [[slug|alias]] and [[slug#heading]] forms
+# -- Markdown reference-style links ([slug]) aren't rewritten.
+#
+# Usage: note-rename <file.md>
+# (bound to a key in yazi's keymap.toml so it runs against the hovered file)
+set -euo pipefail
+
+target="${1:-}"
+if [[ -z "$target" || ! -f "$target" || "$target" != *.md ]]; then
+  echo "usage: note-rename <file.md>" >&2
+  exit 1
+fi
+
+dir=$(dirname "$target")
+old_slug=$(basename "$target" .md)
+
+read -rp "Rename '$old_slug' to: " new_slug
+# Strip a trailing .md the user typed out of file-rename habit (any case) --
+# left in place, it becomes a literal "-md" in the wikilink target once
+# something slugifies it, same bug this script exists to fix.
+new_slug="${new_slug%.[mM][dD]}"
+if [[ -z "$new_slug" ]]; then
+  echo "Aborted: empty name" >&2
+  exit 1
+fi
+if [[ "$new_slug" == "$old_slug" ]]; then
+  echo "Aborted: name unchanged" >&2
+  exit 1
+fi
+
+new_path="$dir/$new_slug.md"
+if [[ -e "$new_path" ]]; then
+  echo "Aborted: '$new_path' already exists" >&2
+  exit 1
+fi
+
+root=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null || echo "$dir")
+
+if git -C "$dir" ls-files --error-unmatch "$target" >/dev/null 2>&1; then
+  git -C "$dir" mv "$target" "$new_path"
+else
+  mv "$target" "$new_path"
+fi
+echo "Renamed: $target -> $new_path"
+
+found=0
+while IFS= read -r -d '' f; do
+  found=1
+  perl -pi -e "s/\[\[\Q$old_slug\E(\||#|\])/[[$new_slug\$1/g" "$f"
+  echo "Updated reference in: $f"
+done < <(rg -l -0 --glob '*.md' -F -- "[[$old_slug" "$root" 2>/dev/null || true)
+
+if [[ "$found" -eq 0 ]]; then
+  echo "No references found."
+fi
