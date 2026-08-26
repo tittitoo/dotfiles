@@ -91,6 +91,21 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- Enable completion by default for markdown files -- this is where
+-- markdown-oxide (wikilinks/tags/backlinks) and zotcite (citation search)
+-- actually operate, so gating them behind the usual off-by-default
+-- <leader>uk toggle (custom_plugins.lua) just adds friction every time a
+-- note is opened. <leader>uk still works from here to turn completion off
+-- for a given buffer; everywhere else (code buffers) stays off by default.
+-- Supermaven's AI ghost-text is unaffected -- it stays separately opt-in
+-- via <leader>us, since it's a global backend process, not per-buffer.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown" },
+  callback = function()
+    vim.b.completion = true
+  end,
+})
+
 -- Re-apply transparent backgrounds after every colorscheme change
 -- (catppuccin sets colors_name to "catppuccin-latte"/"catppuccin-mocha" each time,
 -- so these overrides must be re-applied on every reload)
