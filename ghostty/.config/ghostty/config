@@ -18,6 +18,9 @@ keybind = ctrl+super+j=resize_split:down,50
 keybind = ctrl+super+k=resize_split:up,50
 keybind = ctrl+super+l=resize_split:right,250
 
+# Copy selected text to the system clipboard immediately on select
+copy-on-select = clipboard
+
 # Disable dimming for unfocused splits
 unfocused-split-opacity = 1
 # macos options
