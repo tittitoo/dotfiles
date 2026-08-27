@@ -32,6 +32,35 @@ return {
           silent = true,
           desc = "Zotcite: insert citation",
         })
+
+        -- za/zb/zi/zo/zv are zotcite's own defaults (all fields, abstract,
+        -- quick info, open attachment, view compiled doc) -- none of them
+        -- reveal the item in Zotero's own library pane, which is what a
+        -- Hookmark-style "jump to this reference" shortcut needs (PDF
+        -- Expert, not Zotero's built-in viewer, is the actual PDF reader
+        -- here, so zo's "open attachment" isn't it). get_ref_data's
+        -- zotkey field is items.key from Zotero's DB -- the standard
+        -- 8-char id zotero://select/library/items/<key> expects.
+        vim.keymap.set("n", "<leader>zs", function()
+          local key = require("zotcite.get").citation_key()
+          if key == "" then
+            vim.notify("No citation under cursor", vim.log.levels.WARN, { title = "zotcite" })
+            return
+          end
+          local repl = require("zotcite.zotero").get_ref_data(key)
+          if type(repl) ~= "table" or not repl.zotkey then
+            vim.notify("Citation key not found", vim.log.levels.WARN, { title = "zotcite" })
+            return
+          end
+          vim.fn.jobstart(
+            { "open", "zotero://select/library/items/" .. repl.zotkey },
+            { detach = true }
+          )
+        end, {
+          buffer = args.buf,
+          silent = true,
+          desc = "Zotcite: select item in Zotero",
+        })
       end,
     })
 
