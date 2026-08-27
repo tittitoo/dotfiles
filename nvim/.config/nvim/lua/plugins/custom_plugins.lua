@@ -216,11 +216,27 @@ return {
   -- Silence the bottom-right LSP progress toasts (e.g. pyright spinner/checkmark)
   {
     "folke/noice.nvim",
-    opts = {
-      lsp = {
-        progress = { enabled = false },
-      },
-    },
+    opts = function(_, opts)
+      opts.lsp = opts.lsp or {}
+      opts.lsp.progress = { enabled = false }
+
+      -- zotcite warns "Could not find 'bibliography' field in YAML header"
+      -- on every save of every markdown note (BufWritePre -> bib.update),
+      -- since none of this vault's notes have that frontmatter and none
+      -- are being compiled with Pandoc. Not a config knob in zotcite
+      -- itself -- drop the message here instead. Revisit if a note ever
+      -- does add a bibliography: field on purpose.
+      opts.routes = opts.routes or {}
+      table.insert(opts.routes, {
+        filter = {
+          event = "notify",
+          find = "Could not find 'bibliography' field in YAML header.",
+        },
+        opts = { skip = true },
+      })
+
+      return opts
+    end,
   },
 
 }
