@@ -1,8 +1,8 @@
 [[mgr.prepend_keymap]]
 on = "!"
 for = "unix"
-run = "shell --interactive"
-desc = "Run a shell command here"
+run = 'shell fish --block'
+desc = "Open fish here"
 
 [[mgr.prepend_keymap]]
 on = "<C-p>"

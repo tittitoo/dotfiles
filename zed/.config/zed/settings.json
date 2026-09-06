@@ -7,6 +7,8 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "markdown_preview_font_size": 21.0,
+  "agent_buffer_font_size": 23.0,
   "disable_ai": true,
   "cli_default_open_behavior": "existing_window",
   "terminal": {
@@ -26,8 +28,8 @@
     }
   },
   "vim_mode": true,
-  "ui_font_size": 16,
-  "buffer_font_size": 17.0,
+  "ui_font_size": 17.0,
+  "buffer_font_size": 20.0,
   "theme": {
     "mode": "system",
     "light": "One Light",
