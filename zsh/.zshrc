@@ -66,20 +66,18 @@ export FZF_DEFAULT_OPTS='
   --info=inline
   --preview="echo {}"
   --preview-window=down:3:wrap
-  # --color=bg+:#313244,bg:#1F1F28,spinner:#f5e0dc,hl:#F38BA8
-  # --color=fg:#DCD7BA,header:#6A9589,info:#cba6f7,pointer:#f5e0dc
-  # --color=marker:#b4befe,fg+:#FFA066,prompt:#cba6f7,hl+:#FF5D62
-  --color=fg:#dcd7ba,bg:#1f1f28,hl:#7e9cd8 
-  --color=fg+:#c8c093,bg+:#2d4f67,hl+:#957fb8 
-  --color=info:#a3d4d5,prompt:#dca561,pointer:#e46876,marker:#98bb6c,spinner:#7fb4ca
-  --color=selected-bg:#45475a
-  --border 
+  --color=bg+:#313244,bg:-1,spinner:#F5E0DC,hl:#F38BA8
+  --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC
+  --color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8
+  --color=selected-bg:#45475A
+  --color=border:#6C7086,label:#CDD6F4
+  --border
   --multi
   --bind "ctrl-n:preview-page-up,ctrl-p:preview-page-down"
   --header "CTRL-D: Directories / CTRL-F: Files / CTRL-O: Open File / CTRL-Y: Download / CTRL-/: Change Preview"
   --bind "ctrl-d:change-prompt(Directories> )+reload(fd -t d)"
   --bind "ctrl-f:change-prompt(Files> )+reload(fd -t f)"
-  --bind "ctrl-o:execute(open {})" 
+  --bind "ctrl-o:execute(open {})"
   --bind "ctrl-y:execute(cp {} ~/Downloads/)"
   --bind "ctrl-/:change-preview-window(down|hidden)"'
 # Preview file content using bat (https://github.com/sharkdp/bat)
