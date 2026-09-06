@@ -6,7 +6,7 @@ windows:
       root:
       panes:
   - ai_general:
-      root:
+      root: "~/Downloads/"
       panes:
   - hote:
       root:

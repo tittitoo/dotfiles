@@ -5,6 +5,10 @@ windows:
   - ai_applications:
       root:
       panes:
+        - claude
+  - applications:
+      root:
+      panes:
   - playground:
       root:
       panes:
