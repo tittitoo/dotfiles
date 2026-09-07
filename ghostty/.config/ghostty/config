@@ -1,6 +1,10 @@
 # Font family, default is Jet Brains Mono
 font-family = "VictorMono Nerd Font Mono"
 
+# Per-machine overrides (e.g. smaller font-size on starlite's 12" screen).
+# ~/.config/ghostty/local is untracked by git — set per machine, never synced.
+config-file = ?local
+
 # keymaps
 keybind = global:ctrl+alt+`=toggle_quick_terminal
 
@@ -45,8 +49,8 @@ font-thicken = true
 # font-style = "Medium"
 
 # Theme
-theme = light:catppuccin-latte.conf,dark:catppuccin-mocha.conf
-# theme = catppuccin-latte.conf
+# theme = light:catppuccin-latte.conf,dark:catppuccin-mocha.conf
+theme = catppuccin-latte.conf
 # theme = catppuccin-frappe.conf
 # theme = catppuccin-mocha.conf
 # theme = catppuccin-macchiato.conf
