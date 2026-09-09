@@ -89,12 +89,17 @@ function set_fzf_theme
   --color=selected-bg:#45475A
   --color=border:#6C7086,label:#CDD6F4'
 
-    # Detect macOS appearance (AppleInterfaceStyle is only set when dark mode is enabled).
-    # `defaults` doesn't exist on Linux, so non-Darwin hosts (e.g. the Debian VPS) just fall
-    # back to the dark theme instead of probing for it.
+    # Detect appearance. macOS: AppleInterfaceStyle is only set when dark mode is
+    # enabled. Linux: query the freedesktop appearance portal via gsettings (Omarchy
+    # keeps this in sync with the active theme). Hosts with neither (e.g. the Debian
+    # VPS, which has no desktop portal) fall back to dark.
     set -l is_dark 0
     if test (uname -s) = Darwin
         if defaults read -g AppleInterfaceStyle &>/dev/null
+            set is_dark 1
+        end
+    else if command -q gsettings
+        if string match -q '*dark*' -- (gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null)
             set is_dark 1
         end
     else
