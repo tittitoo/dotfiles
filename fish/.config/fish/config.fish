@@ -8,6 +8,11 @@ fish_add_path -P $HOME/Repos/github.com/tittitoo/mee
 fish_add_path -P $HOME/Repos/github.com/tittitoo/minimalist
 fish_add_path -P $HOME/Repos/github.com/tittitoo/docr
 
+# Ruby gem user install bin dir (e.g. tmuxinator installed via `gem install --user-install`)
+if type -q ruby
+    fish_add_path -P (ruby -e 'print Gem.user_dir')/bin
+end
+
 # Homebrew
 if test (uname -s) = Darwin
     if test (uname -m) = arm64
@@ -147,7 +152,9 @@ starship init fish | source
 zoxide init fish | source
 
 # Added by `rbenv init` on Tue Oct 22 13:11:31 +08 2024
-status --is-interactive; and rbenv init - --no-rehash fish | source
+if status --is-interactive; and command -q rbenv
+    rbenv init - --no-rehash fish | source
+end
 
 # Added by Windsurf
 fish_add_path -P /Users/infowizard/.codeium/windsurf/bin

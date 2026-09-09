@@ -2,7 +2,8 @@
 [font]
 # normal = { family = "VictorMono Nerd Font Mono", style = "Regular" }
 normal = { family = "VictorMono Nerd Font Mono", style = "Light" }
-size = 21
+# size intentionally omitted here — the importing file's own fields always
+# win over imports, so it must be set per machine via local.toml instead.
 
 [window]
 decorations = "none"
@@ -30,4 +31,5 @@ import = [
     # "~/.config/alacritty/themes/kanagawa_wave.toml",
     "~/.config/alacritty/themes/kanagawa_dragon.toml",
     # "~/.config/alacritty/themes/kanagawa_lotus.toml",
+    "~/.config/alacritty/local.toml",
 ]

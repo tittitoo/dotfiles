@@ -49,8 +49,8 @@ font-thicken = true
 # font-style = "Medium"
 
 # Theme
-# theme = light:catppuccin-latte.conf,dark:catppuccin-mocha.conf
-theme = catppuccin-latte.conf
+theme = light:catppuccin-latte.conf,dark:catppuccin-mocha.conf
+# theme = catppuccin-latte.conf
 # theme = catppuccin-frappe.conf
 # theme = catppuccin-mocha.conf
 # theme = catppuccin-macchiato.conf
