@@ -70,7 +70,7 @@ function set_fzf_theme
 
     # Catppuccin Latte (light)
     set -l fzf_latte_colors '
-  --color=bg+:#CCD0DA,bg:-1,spinner:#DC8A78,hl:#D20F39
+  --color=bg+:#CCD0DA,bg:#EFF1F5,spinner:#DC8A78,hl:#D20F39
   --color=fg:#4C4F69,header:#D20F39,info:#8839EF,pointer:#DC8A78
   --color=marker:#7287FD,fg+:#4C4F69,prompt:#8839EF,hl+:#D20F39
   --color=selected-bg:#BCC0CC
@@ -78,7 +78,7 @@ function set_fzf_theme
 
     # Catppuccin Mocha (dark)
     set -l fzf_mocha_colors '
-  --color=bg+:#313244,bg:-1,spinner:#F5E0DC,hl:#F38BA8
+  --color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8
   --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC
   --color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8
   --color=selected-bg:#45475A
