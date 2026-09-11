@@ -1,2 +1,12 @@
 [preview]
 image_quality = 90
+
+[opener]
+skim = [
+	{ run = 'open -a Skim "$@"', desc = "Skim", for = "macos" },
+]
+
+[open]
+prepend_rules = [
+	{ mime = "application/pdf", use = [ "open", "skim", "reveal" ] },
+]
