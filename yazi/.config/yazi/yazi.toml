@@ -3,7 +3,7 @@ image_quality = 90
 
 [opener]
 skim = [
-	{ run = 'open -a Skim "$@"', desc = "Skim", for = "macos" },
+	{ run = "open -a Skim %s", desc = "Skim", for = "macos" },
 ]
 
 [open]
