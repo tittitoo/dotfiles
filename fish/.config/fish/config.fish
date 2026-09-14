@@ -1,5 +1,12 @@
 # fish config
 
+# Locale. fish (unlike bash's login profile here) never set LANG, leaving it
+# unset -> "C" locale. tmux specifically checks the locale of whatever shell
+# invokes `tmux attach` to decide client_utf8; with no LANG, tmux concludes
+# the client can't handle UTF-8 and mangles/strips multi-byte characters
+# (Nerd Font icons, etc.) for every session attached from this shell.
+set -gx LANG en_SG.UTF-8
+
 # PATH — fish_add_path -P: prepends directly to PATH (not universal fish_user_paths),
 # skips silently if already present. Last call wins highest priority.
 fish_add_path -P $HOME/.local/bin
