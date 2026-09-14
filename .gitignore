@@ -19,3 +19,4 @@ scripts/.config/scripts/.markdownlint.yaml
 .claude
 .claude
 *.sync-conflict-*
+dragon/
