@@ -4,3 +4,6 @@ base-size = 11
 [popups]
 # Shared by every bar flyout (dropdowns, OSD, popup cards, network panel).
 border-width = 1
+
+[notifications]
+border-width = 1
