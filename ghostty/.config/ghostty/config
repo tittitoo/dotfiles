@@ -8,6 +8,11 @@ config-file = ?local
 # keymaps
 keybind = global:ctrl+alt+`=toggle_quick_terminal
 
+# Omarchy's clipboard-history picker auto-pastes via a simulated Shift+Insert,
+# which defaults to pasting PRIMARY instead of CLIPBOARD - override so it
+# matches what was actually picked.
+keybind = shift+insert=paste_from_clipboard
+
 
 # keymaps for navigation
 keybind = alt+h=goto_split:left
