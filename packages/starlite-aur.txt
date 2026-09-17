@@ -1,0 +1,9 @@
+cloudflare-warp-bin
+fabric-ai
+google-chrome
+koreader-bin
+miniconda3
+onedrive-abraunegg
+pcloud-drive
+sesh-bin
+zotero-bin
