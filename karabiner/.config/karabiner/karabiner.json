@@ -4,6 +4,33 @@
             "complex_modifications": {
                 "rules": [
                     {
+                        "description": "External keyboard brightness keys -> actual Mac screen brightness",
+                        "manipulators": [
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "consumer_key_code": "display_brightness_decrement"
+                                },
+                                "to": [
+                                    {
+                                        "apple_vendor_top_case_key_code": "brightness_down"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "consumer_key_code": "display_brightness_increment"
+                                },
+                                "to": [
+                                    {
+                                        "apple_vendor_top_case_key_code": "brightness_up"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "description": "(Vim 1/11) right_command -> on, right_command, esc, control+[ or any pointing_button -> off",
                         "manipulators": [
                             {
