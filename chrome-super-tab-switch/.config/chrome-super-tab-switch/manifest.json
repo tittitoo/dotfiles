@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Super+Number Tab Switch",
+  "version": "1.0",
+  "description": "Super+1..8 switches to tab N, Super+9 switches to the last tab (mirrors Chrome's native Ctrl+number behavior).",
+  "permissions": ["tabs"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ]
+}

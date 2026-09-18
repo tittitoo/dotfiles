@@ -23,6 +23,15 @@
 -- Disable a default binding without replacing it.
 -- hl.unbind("SUPER + SHIFT + B")
 
+-- Ctrl+number switches workspaces instead of Super+number (to match macOS
+-- Mission Control, and to free up Super+number for in-app tab switching in
+-- Ghostty/Chrome). Was: SUPER + 1..0 -> "Switch to workspace N".
+for workspace = 1, 10 do
+  local key = "code:" .. tostring(workspace + 9)
+  hl.unbind("SUPER + " .. key)
+  o.bind("CTRL + " .. key, "Switch to workspace " .. workspace, hl.dsp.focus({ workspace = tostring(workspace) }))
+end
+
 -- Logitech MX Keys examples:
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
