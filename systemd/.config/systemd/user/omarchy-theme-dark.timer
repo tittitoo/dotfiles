@@ -1,0 +1,9 @@
+[Unit]
+Description=Switch to Catppuccin (dark) at 19:00 daily
+
+[Timer]
+OnCalendar=*-*-* 19:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
