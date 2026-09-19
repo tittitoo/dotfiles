@@ -13,6 +13,11 @@ if status is-interactive
     end
 
     if not ssh-add -l > /dev/null 2>&1
-        ssh-add ~/.ssh/id_ed25519 2>/dev/null
+        if test (uname) = Darwin
+            # Keychain-backed: passphrase survives reboot without re-prompting.
+            ssh-add --apple-use-keychain ~/.ssh/id_ed25519 2>/dev/null
+        else
+            ssh-add ~/.ssh/id_ed25519 2>/dev/null
+        end
     end
 end
