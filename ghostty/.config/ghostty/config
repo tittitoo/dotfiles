@@ -8,6 +8,16 @@ config-file = ?local
 # keymaps
 keybind = global:ctrl+alt+`=toggle_quick_terminal
 
+# Font size. ctrl+0 (Ghostty's default reset) is intercepted by Hyprland as
+# "switch to workspace 10" on Linux, so reset lives on ctrl+= instead.
+# cmd (super) variants mirror this for macOS, which uses cmd instead of ctrl.
+keybind = ctrl+minus=decrease_font_size:1
+keybind = ctrl+shift+equal=increase_font_size:1
+keybind = ctrl+equal=reset_font_size
+keybind = cmd+minus=decrease_font_size:1
+keybind = cmd+shift+equal=increase_font_size:1
+keybind = cmd+equal=reset_font_size
+
 # Omarchy's clipboard-history picker auto-pastes via a simulated Shift+Insert,
 # which defaults to pasting PRIMARY instead of CLIPBOARD - override so it
 # matches what was actually picked.
