@@ -32,6 +32,14 @@ for workspace = 1, 10 do
   o.bind("CTRL + " .. key, "Switch to workspace " .. workspace, hl.dsp.focus({ workspace = tostring(workspace) }))
 end
 
+-- Manual display tint (color temperature) control via hyprsunset, driven by
+-- the ADJ layer O/P keys on the toucan keyboard. The keys are labeled F13/F14
+-- in the ZMK keymap and send that HID usage, but this system's default
+-- keymap (pc105+inet model) resolves keycodes 191/192 to XF86Tools/
+-- XF86Launch5 instead of F13/F14 - bind on what actually fires.
+o.bind("XF86Tools", "Display tint warmer", "~/.config/hypr/scripts/hyprsunset-step.sh warmer")
+o.bind("XF86Launch5", "Display tint cooler", "~/.config/hypr/scripts/hyprsunset-step.sh cooler")
+
 -- Logitech MX Keys examples:
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
