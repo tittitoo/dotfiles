@@ -40,6 +40,12 @@ end
 o.bind("XF86Tools", "Display tint warmer", "~/.config/hypr/scripts/hyprsunset-step.sh warmer")
 o.bind("XF86Launch5", "Display tint cooler", "~/.config/hypr/scripts/hyprsunset-step.sh cooler")
 
+-- Power button short-press: lock immediately instead of opening the power
+-- menu (default binding). HandlePowerKey=ignore in logind lets this reach
+-- Hyprland at all instead of systemd-logind handling it first.
+hl.unbind("XF86PowerOff")
+o.bind("XF86PowerOff", "Lock screen", "omarchy-system-lock", { locked = true })
+
 -- Logitech MX Keys examples:
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")

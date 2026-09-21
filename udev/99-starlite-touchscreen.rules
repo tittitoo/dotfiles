@@ -1,0 +1,6 @@
+# GXTP7386 touchscreen digitizer is misclassified by the stock hwdb as a
+# touchpad (ID_INPUT_TOUCHPAD=1) despite reporting INPUT_PROP_DIRECT +
+# BTN_TOUCH + a full multitouch ABS axis set, and a physical size matching
+# the screen panel. Retag it as a touchscreen so libinput/Hyprland
+# recognize it as direct touch input instead of an indirect pointer device.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="GXTP7386:00 27C6:0111", ENV{ID_INPUT_TOUCHPAD}="", ENV{ID_INPUT_TOUCHSCREEN}="1"
