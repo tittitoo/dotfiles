@@ -27,3 +27,20 @@ by the same chip, which are already tagged correctly.
 **Note:** after installing or changing this rule, a running Hyprland session
 won't pick it up until it's restarted (logout/login, or exit and relaunch
 Hyprland) — libinput only classifies a device once, at compositor startup.
+
+## 99-starlite-bluetooth-no-autosuspend.rules
+
+StarLite laptop, Intel AX200/201-class Bluetooth controller (USB
+`8087:0aaa`).
+
+On resume from suspend, this controller's firmware intermittently crashes
+(`kernel: Bluetooth: hci0: Hardware error 0x0c`), forcing a full reset of
+the Bluetooth stack and dropping any connected devices — most visibly the
+Toucan keyboard, which shows up as a flaky/intermittent Bluetooth
+reconnect right after waking the laptop. This is triggered by USB
+autosuspend on the controller kicking in while a BLE peripheral is
+actively reconnecting and hammering it with GATT traffic right after
+wake.
+
+This rule sets the USB power control policy to `on` (i.e. disables
+autosuspend) for just this device, which avoids the crash.

@@ -5,9 +5,11 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 sudo cp "$script_dir/99-starlite-touchscreen.rules" /etc/udev/rules.d/99-starlite-touchscreen.rules
+sudo cp "$script_dir/99-starlite-bluetooth-no-autosuspend.rules" /etc/udev/rules.d/99-starlite-bluetooth-no-autosuspend.rules
 
 sudo udevadm control --reload-rules
 sudo udevadm trigger --settle --subsystem-match=input
+sudo udevadm trigger --settle --subsystem-match=usb
 
 echo
 echo "Done. Rules installed and reloaded."

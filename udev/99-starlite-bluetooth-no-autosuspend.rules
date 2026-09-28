@@ -1,0 +1,13 @@
+# Intel AX200/201-class Bluetooth controller (8087:0aaa) on the StarLite.
+# USB autosuspend on this device is a known trigger for the controller's
+# firmware crashing on resume from suspend ("Bluetooth: hci0: Hardware
+# error 0x0c"), especially while a BLE peripheral is actively reconnecting
+# right after wake. Force the USB power control policy to "on" (no
+# autosuspend) for just this device.
+#
+# No ACTION filter: /usr/lib/udev/rules.d/60-autosuspend.rules sets
+# power/control=auto on every "add" AND "change" event for USB devices with
+# PM enabled, and `udevadm trigger` (used to apply this rule without a
+# reboot, and by other tools) emits "change" events - restricting this rule
+# to ACTION=="add" would let 60-autosuspend win on any later "change".
+SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0aaa", TEST=="power/control", ATTR{power/control}="on"
