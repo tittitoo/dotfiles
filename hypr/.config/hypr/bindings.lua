@@ -46,6 +46,10 @@ o.bind("XF86Launch5", "Display tint cooler", "~/.config/hypr/scripts/hyprsunset-
 hl.unbind("XF86PowerOff")
 o.bind("XF86PowerOff", "Lock screen", "omarchy-system-lock", { locked = true })
 
+-- Show Me The Key: toggle the on-screen keystroke overlay for learning
+-- shortcuts (see the float rule for it in looknfeel.lua).
+o.bind("SUPER + SHIFT + K", "Show keystrokes", { launch = "showmethekey-gtk -A" })
+
 -- Logitech MX Keys examples:
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
