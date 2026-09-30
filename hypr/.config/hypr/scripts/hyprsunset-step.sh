@@ -7,7 +7,7 @@
 set -euo pipefail
 
 MIN_TEMP=3000
-MAX_TEMP=6500
+MAX_TEMP=7000
 STEP=150
 
 direction="${1:?usage: hyprsunset-step.sh [warmer|cooler]}"
