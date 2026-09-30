@@ -15,7 +15,18 @@ if status is-interactive
     if not ssh-add -l > /dev/null 2>&1
         if test (uname) = Darwin
             # Keychain-backed: passphrase survives reboot without re-prompting.
-            ssh-add --apple-use-keychain ~/.ssh/id_ed25519 2>/dev/null
+            #
+            # SSH_ASKPASS_REQUIRE=force keeps this from ever blocking a login:
+            # without it ssh-add reads the passphrase straight off /dev/tty when
+            # the keychain has no entry, freezing the first shell after a reboot
+            # on "Enter passphrase for ...". Forcing the askpass path with
+            # /usr/bin/false as the helper makes that case fail instantly instead.
+            # Store the passphrase once with:
+            #   ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+            if not env SSH_ASKPASS=/usr/bin/false SSH_ASKPASS_REQUIRE=force \
+                    ssh-add --apple-use-keychain ~/.ssh/id_ed25519 2>/dev/null
+                echo "ssh key not loaded (no keychain entry) — run: ssh-add --apple-use-keychain ~/.ssh/id_ed25519"
+            end
         else
             ssh-add ~/.ssh/id_ed25519 2>/dev/null
         end
