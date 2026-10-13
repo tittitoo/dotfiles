@@ -146,7 +146,11 @@ keymap_mode = "auto"
 ## Cursor style in each keymap mode.  If specified, the cursor style is changed
 ## in entering the cursor shape.  Available values are "default" and
 ## "{blink,steady}-{block,underline,bar}".
-keymap_cursor = { emacs = "blink-block", vim_insert = "blink-block", vim_normal = "steady-block" }
+# Set to "default" everywhere so atuin's search popup never overrides the
+# terminal's own cursor style (Ghostty's steady bar) - these per-mode styles
+# don't get reset reliably on exit and were leaving the cursor stuck on
+# blink-block for the rest of the session, even outside the search popup.
+keymap_cursor = { emacs = "default", vim_insert = "default", vim_normal = "default" }
 
 # network_connect_timeout = 5
 # network_timeout = 5
