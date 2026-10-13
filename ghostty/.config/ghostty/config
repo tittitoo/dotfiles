@@ -50,6 +50,11 @@ macos-option-as-alt = true
 # Adjust cursor color
 cursor-invert-fg-bg = true
 
+# Thin, steady cursor instead of the default blinking block - less distracting,
+# especially inside herdr panes where host_cursor just uses this outer cursor.
+cursor-style = bar
+cursor-style-blink = false
+
 # Try for Myanmar Font
 # U+1000-U+109F="Noto Sans Myanmar"
 
