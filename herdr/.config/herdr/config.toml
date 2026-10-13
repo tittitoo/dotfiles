@@ -14,7 +14,7 @@ light_name = "catppuccin-latte"
 new_cwd = "follow"
 
 [keys]
-prefix = "ctrl+space"
+prefix = "ctrl+b"
 
 # Config and help
 reload_config = "prefix+q"
