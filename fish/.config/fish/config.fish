@@ -75,8 +75,8 @@ function set_fzf_theme
   --bind "ctrl-o:execute-silent(open {})"
   --bind "ctrl-y:execute-silent(copy-file-to-clipboard {})"
   # --bind "alt-y:execute-silent(cp -r {} ~/Downloads/)"
-  --bind "ctrl-u:execute-silent(echo {} | clean-text | pbcopy)"
-  --bind "ctrl-r:execute-silent(echo {} | clean-text-outlook | pbcopy)"
+  --bind "ctrl-u:execute-silent(echo {} | clean-text.py | pbcopy)"
+  --bind "ctrl-r:execute-silent(echo {} | clean-text-outlook.py | pbcopy)"
   --bind "ctrl-s:execute-silent(get_sharepoint_link.py {})"
   --bind "ctrl-/:change-preview-window(down|hidden)"'
 

@@ -19,6 +19,11 @@ run = 'shell -- get_sharepoint_link.py %s'
 desc = "Get SharePoint link"
 
 [[mgr.prepend_keymap]]
+on = "<C-r>"
+run = 'shell -- clean-text-outlook.py %s | pbcopy'
+desc = "Copy reformatted Outlook folder name"
+
+[[mgr.prepend_keymap]]
 on = "<A-y>"
 run = 'shell -- open -a Yoink %s'
 desc = "Send to Yoink"
