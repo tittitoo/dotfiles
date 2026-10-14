@@ -1,6 +1,0 @@
-[Unit]
-Description=Switch Omarchy theme to Catppuccin (dark)
-
-[Service]
-Type=oneshot
-ExecStart=/usr/share/omarchy/bin/omarchy theme set catppuccin

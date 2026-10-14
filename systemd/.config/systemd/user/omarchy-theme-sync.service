@@ -1,0 +1,6 @@
+[Unit]
+Description=Sync Omarchy theme (light/dark) to the current time of day
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/systemd/user/scripts/omarchy-theme-sync-time-of-day.sh

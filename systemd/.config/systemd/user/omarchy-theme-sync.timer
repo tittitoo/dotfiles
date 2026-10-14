@@ -1,0 +1,14 @@
+[Unit]
+Description=Trigger Omarchy light/dark theme sync at 07:00 and 19:00 daily
+
+[Timer]
+OnCalendar=*-*-* 07:00:00
+OnCalendar=*-*-* 19:00:00
+# Also catch up on boot/wake if a trigger was missed - safe now because the
+# synced script computes the answer from the clock instead of blindly
+# applying whichever fixed theme this particular unit used to hardcode, so
+# a missed-trigger catch-up can no longer race another unit's catch-up.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
