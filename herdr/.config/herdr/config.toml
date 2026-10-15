@@ -9,6 +9,14 @@ auto_switch = true
 dark_name = "catppuccin"
 light_name = "catppuccin-latte"
 
+# The default active-row shade (surface0) barely shows which workspace is
+# selected, so step it up to catppuccin surface2 for each appearance.
+[theme.custom.light]
+active_row_bg = "#acb0be"
+
+[theme.custom.dark]
+active_row_bg = "#585b70"
+
 [terminal]
 # Matches -c "#{pane_current_path}" on every split, window, and session
 new_cwd = "follow"
@@ -92,3 +100,9 @@ tab_bar_right = [{ type = "zoom" }, { type = "hostname" }]
 # the basename of the pane cwd. This is what Hyprland shows in the group bar,
 # and it resolves on the server so remote sessions name the remote host.
 window_title = "{hostname}: {workspace}"
+
+[ui.sound]
+enabled = false
+
+[ui.toast]
+delivery = "system"
