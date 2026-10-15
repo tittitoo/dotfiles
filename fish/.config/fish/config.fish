@@ -57,7 +57,7 @@ fish_vi_key_bindings
 fzf --fish | source
 set -x FZF_DEFAULT_COMMAND 'fd -t d --follow --exclude .git --color=never'
 
-# Function to set FZF colors based on macOS appearance
+# Function to set FZF colors based on system appearance (macOS or Linux)
 function set_fzf_theme
     # Base options (non-color)
     set -l fzf_base_opts '
@@ -122,6 +122,14 @@ end
 
 # Set FZF theme on shell startup
 set_fzf_theme
+
+# Re-pick the flavour on every launch, so a shell opened before a light/dark
+# switch doesn't keep the old colours. fzf.fish and `fzf --fish` both call
+# plain `fzf`, so this covers their bindings too.
+function fzf --wraps fzf --description 'fzf with current light/dark colours'
+    set_fzf_theme
+    command fzf $argv
+end
 
 set -x FZF_CTRL_T_OPTS '--walker-skip .git,node_modules,target,.obsidian'
 set -x FZF_ALT_C_OPTS '
