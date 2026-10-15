@@ -1,0 +1,16 @@
+# Uses the terminal's own ANSI palette instead of fixed hex colours, so atuin
+# follows Ghostty's light:catppuccin-latte / dark:catppuccin-mocha switch on
+# every machine without any per-OS appearance detection. The @ prefix makes
+# atuin parse the name as a crossterm colour rather than a palette entry.
+[theme]
+name = "terminal"
+
+[colors]
+AlertInfo = "@dark_green"
+AlertWarn = "@dark_yellow"
+AlertError = "@dark_red"
+Annotation = "@dark_blue"
+Base = "@reset"
+Guidance = "@dark_grey"
+Important = "@dark_red"
+Title = "@dark_blue"

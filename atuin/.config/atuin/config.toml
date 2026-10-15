@@ -237,5 +237,8 @@ enabled = true
 [theme]
 # name = "kanagawa" # Defaut to wave theme
 # name = "kanagawa-dragon"
-name = "catppuccin-latte-lavender"
+# "terminal" uses Ghostty's ANSI palette, so it follows the system light/dark
+# switch; the fixed catppuccin-* themes stay light or dark all day.
+# name = "catppuccin-latte-lavender"
+name = "terminal"
 background = "transparent"
