@@ -11,9 +11,6 @@ windows:
   - hote:
       root:
       panes:
-  - hote:
-      root:
-      panes:
   - hote-server:
       root:
       panes:
