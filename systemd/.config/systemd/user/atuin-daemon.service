@@ -1,0 +1,13 @@
+[Unit]
+# Linux counterpart of launchd/Library/LaunchAgents/com.user.atuin-daemon.plist.
+# atuin/config.toml sets [daemon] enabled = true, so shells hand every
+# command to this daemon; without it running, history is silently dropped.
+Description=Atuin shell history daemon
+
+[Service]
+ExecStart=/usr/bin/atuin daemon start
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
