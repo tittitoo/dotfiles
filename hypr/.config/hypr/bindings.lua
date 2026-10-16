@@ -50,6 +50,23 @@ o.bind("XF86PowerOff", "Lock screen", "omarchy-system-lock", { locked = true })
 -- shortcuts (see the float rule for it in looknfeel.lua).
 o.bind("SUPER + SHIFT + K", "Show keystrokes", { launch = "showmethekey-gtk -A" })
 
+-- Drop-down terminal on its own special workspace, separate from Omarchy's
+-- Super+S scratchpad. Ghostty's quick terminal (global:ctrl+grave in the
+-- ghostty config, used on the Macs) never showed up here, so this does the
+-- same job with plain Hyprland. The first toggle launches Ghostty into the
+-- workspace; later toggles just show/hide it with the shell state intact.
+-- DROPTERM=1 makes config.fish skip its tmux auto-attach.
+hl.workspace_rule({
+  workspace = "special:term",
+  on_created_empty = "env DROPTERM=1 ghostty --class=dev.infowizard.dropterm --gtk-single-instance=false",
+})
+o.window("^dev\\.infowizard\\.dropterm$", {
+  float = true,
+  size = { "(monitor_w*0.94)", "(monitor_h*0.55)" },
+  move = { "(monitor_w*0.03)", "(monitor_h*0.06)" },
+})
+o.bind("CTRL + grave", "Drop-down terminal", hl.dsp.workspace.toggle_special("term"))
+
 -- Logitech MX Keys examples:
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")

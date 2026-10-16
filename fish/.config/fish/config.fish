@@ -197,7 +197,8 @@ set -gx PATH (printf '%s\n' $PATH | awk '!seen[$0]++ && /^\//')
 
 # Auto-attach to or start "ai_dragon" tmux session (via sesh/tmuxinator)
 # Skip when Atuin Desktop opens a terminal (ATUIN_TMUX_POPUP is set in that context)
-if status is-interactive; and not set -q ATUIN_TMUX_POPUP
+# or in the Hyprland drop-down terminal (DROPTERM, see hypr/bindings.lua)
+if status is-interactive; and not set -q ATUIN_TMUX_POPUP; and not set -q DROPTERM
     if not set -q TMUX
         sesh connect --tmuxinator ai_dragon
     end
