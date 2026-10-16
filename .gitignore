@@ -12,6 +12,7 @@ fish/.config/fish/fish_variables
 fabric/.config/fabric/.env
 fabric/.config/fabric/unique_patterns.txt
 scripts/.config/scripts/.env
+fish/.config/fish/secrets.fish
 nvim/.config/nvim/lazyvim.json
 karabiner/.config/karabiner/automatic_backups
 scripts/.config/scripts/CLAUDE.md

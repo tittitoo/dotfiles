@@ -188,6 +188,11 @@ set -gx PNPM_HOME /Users/infowizard/Library/pnpm
 fish_add_path -P "$PNPM_HOME"
 # pnpm end
 
+# Local secrets (gitignored, not stowed/tracked) — API keys etc.
+if test -f $__fish_config_dir/secrets.fish
+    source $__fish_config_dir/secrets.fish
+end
+
 # .config/scripts last = highest PATH priority (shadows system tools)
 fish_add_path -P $HOME/.config/scripts
 
