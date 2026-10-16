@@ -6,7 +6,7 @@ font-family = "VictorMono Nerd Font Mono"
 config-file = ?local
 
 # keymaps
-keybind = global:ctrl+alt+`=toggle_quick_terminal
+keybind = global:ctrl+`=toggle_quick_terminal
 
 # Font size. ctrl+0 (Ghostty's default reset) is intercepted by Hyprland as
 # "switch to workspace 10" on Linux, so reset lives on ctrl+= instead.
