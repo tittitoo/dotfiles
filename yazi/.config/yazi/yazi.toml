@@ -5,8 +5,11 @@ image_quality = 90
 skim = [
 	{ run = "open -a Skim %s", desc = "Skim", for = "macos" },
 ]
+xournal = [
+	{ run = "xournalpp %s", desc = "Xournal++", orphan = true, for = "linux" },
+]
 
 [open]
 prepend_rules = [
-	{ mime = "application/pdf", use = [ "open", "skim", "reveal" ] },
+	{ mime = "application/pdf", use = [ "open", "skim", "xournal", "reveal" ] },
 ]
