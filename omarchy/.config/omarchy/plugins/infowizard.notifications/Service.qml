@@ -159,6 +159,10 @@ Item {
   }
 
   function handleNotification(notification) {
+    // Blocked senders are dropped before tracking, so the object is released
+    // as soon as this handler returns and nothing reaches popups or history.
+    if (NotificationLogic.isBlocked(notification)) return
+
     // Without `tracked = true` the Notification object is destroyed as soon
     // as this signal handler returns, which would null out the `ref` we just
     // captured for the popup card.

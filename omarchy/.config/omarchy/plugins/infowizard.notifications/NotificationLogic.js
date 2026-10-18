@@ -121,6 +121,24 @@ function shouldBypassDnd(notification, criticalUrgency) {
   return appName === "notify-send" && notification && notification.urgency === criticalUrgency
 }
 
+// Notifications dropped outright: no popup, no history. Each rule matches an
+// exact app_name plus an exact summary, so the app's other notifications
+// still get through.
+//   - pcloud: the AUR build can't self-update, so its in-app updater re-nags
+//     every two hours until the package catches up.
+var BLOCKED = [
+  { app: "pcloud", summary: "New update available" }
+]
+
+function isBlocked(notification) {
+  var appName = String((notification && notification.appName) || "")
+  var summary = String((notification && notification.summary) || "")
+  for (var i = 0; i < BLOCKED.length; i++) {
+    if (BLOCKED[i].app === appName && BLOCKED[i].summary === summary) return true
+  }
+  return false
+}
+
 function isEphemeralApp(appName) {
   var name = String(appName || "")
   return name === "notify-send" || name === "omarchy-action"
@@ -454,6 +472,7 @@ if (typeof module !== "undefined") {
     summaryStartsWithGlyph: summaryStartsWithGlyph,
     shouldBypassDnd: shouldBypassDnd,
     isEphemeralApp: isEphemeralApp,
+    isBlocked: isBlocked,
     stringHint: stringHint,
     glyphFromHints: glyphFromHints,
     execArgvFromHints: execArgvFromHints,
