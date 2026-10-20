@@ -6,6 +6,7 @@ skim = [
 	{ run = "open -a Skim %s", desc = "Skim", for = "macos" },
 ]
 xournal = [
+	{ run = "open -a Xournal++ %s", desc = "Xournal++", for = "macos" },
 	{ run = "xournalpp %s", desc = "Xournal++", orphan = true, for = "linux" },
 ]
 
