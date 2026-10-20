@@ -74,6 +74,10 @@ close_workspace = "prefix+shift+k"
 previous_workspace = ["prefix+shift+p", "alt+up"]
 next_workspace = ["prefix+shift+n", "alt+down"]
 
+# Jump directly to workspace 1-9; prefix+1..9 alone is already switch_tab,
+# and plain ctrl+1..9 is macOS Mission Control's Switch to Desktop N
+switch_workspace = "prefix+shift+1..9"
+
 # Jump directly between agent panes without going through the goto picker
 previous_agent = "prefix+shift+a"
 next_agent = "prefix+a"

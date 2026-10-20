@@ -7,6 +7,11 @@
 # (Nerd Font icons, etc.) for every session attached from this shell.
 set -gx LANG en_SG.UTF-8
 
+# Default editor. Left unset, many tools (crontab -e, less, fzf bindings,
+# etc.) fall back to the system vi/vim rather than nvim.
+set -gx EDITOR nvim
+set -gx VISUAL nvim
+
 # PATH — fish_add_path -P: prepends directly to PATH (not universal fish_user_paths),
 # skips silently if already present. Last call wins highest priority.
 fish_add_path -P $HOME/.local/bin
@@ -147,6 +152,11 @@ fzf_configure_bindings --directory=\cf --variables=\e\cv --history=\ca --git_sta
 
 # Yazi
 function y
+    # yazi shells out to fzf internally for its directory-jump popup; that
+    # subprocess only inherits whatever $FZF_DEFAULT_OPTS was last exported,
+    # so refresh it here too (the `fzf` wrapper below only catches direct
+    # `fzf` invocations, not ones yazi makes on our behalf).
+    set_fzf_theme
     set tmp (mktemp -t "yazi-cwd.XXXXXX")
     yazi $argv --cwd-file="$tmp"
     if set cwd (command cat -- "$tmp"); and [ -n "$cwd" ]; and [ "$cwd" != "$PWD" ]
