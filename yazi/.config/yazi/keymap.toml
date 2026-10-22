@@ -61,5 +61,5 @@ for = "macos"
 # `trash` is keg-only, and its Homebrew prefix differs between Apple
 # Silicon (/opt/homebrew) and Intel (/usr/local) Macs, so resolve it at
 # run time via `brew --prefix` rather than hardcoding one path.
-run = 'shell --block --interactive -- "$(brew --prefix trash)/bin/trash" %*'
+run = 'shell --block --interactive -- "$(brew --prefix trash)/bin/trash" %s'
 desc = "Move to trash (bypasses the OneDrive trashItemAtURL bug)"
