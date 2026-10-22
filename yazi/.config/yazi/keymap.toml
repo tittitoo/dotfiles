@@ -47,3 +47,16 @@ desc = "Rename note and fix [[links]] to it vault-wide"
 on = "?"
 run = "help"
 desc = "Open help"
+
+# macOS's trashItemAtURL (what yazi's native trash normally calls) fails on
+# files inside OneDrive's ~/Library/CloudStorage with "you don't have
+# permission to access it" while OneDrive is running -- a OneDrive File
+# Provider bug, not a yazi bug (upstream: sxyazi/yazi#4406, closed as "not
+# planned", OneDrive doesn't implement the API correctly). Route delete
+# through hasseg's `trash` CLI instead, which moves files into ~/.Trash
+# directly rather than calling that API.
+[[mgr.prepend_keymap]]
+on = "d"
+for = "macos"
+run = 'shell --block --interactive -- "/opt/homebrew/opt/trash/bin/trash" %*'
+desc = "Move to trash (bypasses the OneDrive trashItemAtURL bug)"
