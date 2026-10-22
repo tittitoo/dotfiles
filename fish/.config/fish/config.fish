@@ -165,6 +165,15 @@ function y
     rm -f -- "$tmp"
 end
 
+# `bid` is also a fish abbreviation (see aliases.fish) for bid.py, but
+# abbreviations only expand on a live keypress (space/enter) while you're
+# typing. Atuin recalling a past command drops the whole line in at once,
+# so a recalled "bid ..." never gets the expand trigger and "bid" resolves
+# as a plain command instead -- hence this function, so it works either way.
+function bid
+    bid.py $argv
+end
+
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 if test -f /Users/infowizard/anaconda3/bin/conda
