@@ -58,5 +58,8 @@ desc = "Open help"
 [[mgr.prepend_keymap]]
 on = "d"
 for = "macos"
-run = 'shell --block --interactive -- "/opt/homebrew/opt/trash/bin/trash" %*'
+# `trash` is keg-only, and its Homebrew prefix differs between Apple
+# Silicon (/opt/homebrew) and Intel (/usr/local) Macs, so resolve it at
+# run time via `brew --prefix` rather than hardcoding one path.
+run = 'shell --block --interactive -- "$(brew --prefix trash)/bin/trash" %*'
 desc = "Move to trash (bypasses the OneDrive trashItemAtURL bug)"
