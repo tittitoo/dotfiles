@@ -158,11 +158,16 @@ function y
     # `fzf` invocations, not ones yazi makes on our behalf).
     set_fzf_theme
     set tmp (mktemp -t "yazi-cwd.XXXXXX")
-    yazi $argv --cwd-file="$tmp"
+    set err (mktemp -t "yazi-err.XXXXXX")
+    yazi $argv --cwd-file="$tmp" 2> "$err"
     if set cwd (command cat -- "$tmp"); and [ -n "$cwd" ]; and [ "$cwd" != "$PWD" ]
         builtin cd -- "$cwd"
     end
     rm -f -- "$tmp"
+    # macOS prints a harmless "MallocStackLogging: can't turn ..." line on
+    # every exit; filter just that out so real stderr still surfaces.
+    grep -v "MallocStackLogging" -- "$err" >&2
+    rm -f -- "$err"
 end
 
 # `bid` is also a fish abbreviation (see aliases.fish) for bid.py, but
