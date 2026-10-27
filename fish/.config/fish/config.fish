@@ -101,27 +101,26 @@ function set_fzf_theme
   --color=selected-bg:#45475A
   --color=border:#6C7086,label:#CDD6F4'
 
-    # Detect appearance. macOS: AppleInterfaceStyle is only set when dark mode is
-    # enabled. Linux: query the freedesktop appearance portal via gsettings (Omarchy
-    # keeps this in sync with the active theme). Hosts with neither (e.g. the Debian
-    # VPS, which has no desktop portal) fall back to dark.
-    set -l is_dark 0
-    if test (uname -s) = Darwin
-        if defaults read -g AppleInterfaceStyle &>/dev/null
-            set is_dark 1
-        end
-    else if command -q gsettings
-        if string match -q '*dark*' -- (gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null)
-            set is_dark 1
-        end
-    else
-        set is_dark 1
-    end
-
-    if test $is_dark = 1
+    if is_dark_mode
         set -gx FZF_DEFAULT_OPTS "$fzf_base_opts $fzf_mocha_colors"
     else
         set -gx FZF_DEFAULT_OPTS "$fzf_base_opts $fzf_latte_colors"
+    end
+end
+
+# Detect appearance. macOS: AppleInterfaceStyle is only set when dark mode is
+# enabled. Linux: query the freedesktop appearance portal via gsettings (Omarchy
+# keeps this in sync with the active theme). Hosts with neither (e.g. the Debian
+# VPS, which has no desktop portal) fall back to dark.
+function is_dark_mode
+    if test (uname -s) = Darwin
+        defaults read -g AppleInterfaceStyle &>/dev/null
+        return $status
+    else if command -q gsettings
+        string match -q '*dark*' -- (gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null)
+        return $status
+    else
+        return 0
     end
 end
 
@@ -168,6 +167,21 @@ function y
     # every exit; filter just that out so real stderr still surfaces.
     grep -v "MallocStackLogging" -- "$err" >&2
     rm -f -- "$err"
+end
+
+# btop.conf is gitignored -- btop rewrites color_theme (among other state) to
+# whatever it last had on every exit, so a theme committed to git never
+# sticks. Pick catppuccin light/dark here instead, before each launch.
+function btop --wraps btop --description 'btop with current light/dark theme'
+    set -l conf ~/.config/btop/btop.conf
+    if test -f "$conf"
+        set -l theme catppuccin_mocha
+        is_dark_mode; or set theme catppuccin_latte
+        set -l tmp (mktemp -t "btop-conf.XXXXXX")
+        string replace -r '^color_theme = .*' "color_theme = \"$theme\"" < "$conf" > "$tmp"
+        and mv "$tmp" "$conf"
+    end
+    command btop $argv
 end
 
 # `bid` is also a fish abbreviation (see aliases.fish) for bid.py, but
