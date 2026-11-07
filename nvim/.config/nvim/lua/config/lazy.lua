@@ -14,7 +14,19 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- posonekyu disables some plugins (see plugins/host-overrides.lua), so a
+-- :Lazy update/sync there would drop them from the synced lockfile. Give it a
+-- private copy, refreshed from the shared one on every start, so :Lazy restore
+-- still follows the shared pins but nothing is ever written back.
+local lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json"
+if vim.uv.os_gethostname():match("^[^.]+") == "posonekyu" then
+  local private = vim.fn.stdpath("state") .. "/lazy-lock.json"
+  vim.uv.fs_copyfile(lockfile, private)
+  lockfile = private
+end
+
 require("lazy").setup({
+  lockfile = lockfile,
   spec = {
     -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
