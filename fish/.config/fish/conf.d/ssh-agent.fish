@@ -1,5 +1,6 @@
 # Persistent ssh-agent shared across fish sessions (until reboot or agent killed)
-if status is-interactive
+# Keep a forwarded agent: replacing it would break agent-based sudo (pam_rssh) over SSH.
+if status is-interactive; and not begin; set -q SSH_CONNECTION; and test -S "$SSH_AUTH_SOCK"; end
     set -l ssh_env_file ~/.ssh/fish-ssh-agent-env
 
     if test -f $ssh_env_file
