@@ -81,3 +81,9 @@
 # Interval of saving user data in minutes
 # AutoSavePeriod=30
 
+[Hotkey/TriggerKeys]
+0=Zenkaku_Hankaku
+1=Hangul
+
+[Behavior]
+ActiveByDefault=False
