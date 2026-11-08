@@ -55,6 +55,8 @@ abbr -a -g scans -- 'cd ~/Library/Mobile Documents/iCloud~com~readdle~Scanner~PD
 abbr -a -g scripts -- 'cd ~/.config/scripts'
 abbr -a -g se -- 'sudoedit'
 abbr -a -g sp -- 'cd ~/Repos/github.com/tittitoo/lbsnippets'
+abbr -a -g sshk -- '/usr/local/opt/openssh/bin/ssh -F /dev/null -l infowizard -i ~/.ssh/id_ed25519_sk_touch -o IdentitiesOnly=yes'
+abbr -a -g sshkp -- '/usr/local/opt/openssh/bin/ssh -F /dev/null -l infowizard -i ~/.ssh/id_ed25519_sk_yubikey -o IdentitiesOnly=yes'
 abbr -a -g sz -- 'source ~/.zshrc'
 abbr -a -g t -- 'tmux'
 abbr -a -g ta -- 'tmux a'
