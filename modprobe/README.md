@@ -15,6 +15,13 @@ rule alone did not stop the Intel AX200/201-class Bluetooth controller
 the Toucan keyboard's BLE connection), because `enable_autosuspend` stayed
 `Y` the whole time regardless of the udev rule's effect.
 
+Also blacklists the Realtek USB card reader's SD and Memory Stick drivers
+(`rtsx_usb_sdmmc`, `rtsx_usb_ms`). The SD slot is hardly used, and its
+card-detect rescan once wedged a kworker on an unanswered USB bulk transfer
+for 52 hours, pinning `/proc/pressure/io` at ~90% with the disk idle.
+Delete `/etc/modprobe.d/rtsx-usb-cardreader-blacklist.conf` to get the SD
+slot back.
+
 ## Setting up on a (new) machine
 
 ```
