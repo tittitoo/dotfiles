@@ -25,4 +25,9 @@ if [[ $current == "$want" ]]; then
   exit 0
 fi
 
-exec /usr/share/omarchy/bin/omarchy theme set "$want"
+# Without a tty, `omarchy theme set` returns once the visible retint is done
+# and finishes the rest (gsettings color-scheme, which Ghostty follows, and
+# the Claude Code theme, among others) in a background job. In a oneshot
+# service systemd kills that job the moment this script exits, so those
+# steps silently never ran. OMARCHY_THEME_WAIT=1 makes it run them inline.
+OMARCHY_THEME_WAIT=1 exec /usr/share/omarchy/bin/omarchy theme set "$want"
