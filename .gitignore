@@ -22,3 +22,7 @@ scripts/.config/scripts/.markdownlint.yaml
 .claude
 *.sync-conflict-*
 dragon/
+herdr/.config/herdr/.plugins.lock
+herdr/.config/herdr/herdr.sock.agent
+herdr/.config/herdr/session.json
+herdr/.config/herdr/session-snapshots/
