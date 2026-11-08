@@ -1,4 +1,10 @@
 # Persistent ssh-agent shared across fish sessions (until reboot or agent killed)
+# Over SSH, prefer ~/.ssh/ssh_auth_sock (kept current by ~/.ssh/rc on hosts that have it).
+# Multiplexer panes (herdr, tmux) otherwise keep a stale or wrong agent socket.
+if status is-interactive; and set -q SSH_CONNECTION; and test -S ~/.ssh/ssh_auth_sock
+    set -gx SSH_AUTH_SOCK ~/.ssh/ssh_auth_sock
+end
+
 # Keep a forwarded agent: replacing it would break agent-based sudo (pam_rssh) over SSH.
 if status is-interactive; and not begin; set -q SSH_CONNECTION; and test -S "$SSH_AUTH_SOCK"; end
     set -l ssh_env_file ~/.ssh/fish-ssh-agent-env
