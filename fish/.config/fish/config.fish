@@ -52,8 +52,8 @@ set -gx DYLD_FALLBACK_LIBRARY_PATH $HOMEBREW_PREFIX/lib
 # Supress greeting message
 set fish_greeting
 
-# Disable fish's built-in history (atuin handles all history)
-set -g fish_history ""
+# Keep fish's built-in history alongside atuin: fish's inline autosuggestions
+# only draw from it, while atuin handles search (ctrl-r / up) and sync.
 
 # Enable vi mode
 fish_vi_key_bindings
