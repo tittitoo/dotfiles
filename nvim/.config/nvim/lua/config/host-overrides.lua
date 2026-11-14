@@ -25,7 +25,7 @@ local lite = {
   follow_background = true,
 }
 
--- posonekyu: 1-CPU 2GB VPS on Neovim 0.11.
+-- posonekyu: 1-CPU 2GB VPS. Needs Neovim >= 0.12 (nvim-treesitter main).
 -- * gitcommit's parser.c is ~3MB and gcc -O2 exhausts its RAM;
 --   the built-in gitcommit syntax is used instead.
 local overrides = {
