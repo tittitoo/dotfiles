@@ -14,15 +14,25 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- posonekyu disables some plugins (see plugins/host-overrides.lua), so a
--- :Lazy update/sync there would drop them from the synced lockfile. Give it a
--- private copy, refreshed from the shared one on every start, so :Lazy restore
--- still follows the shared pins but nothing is ever written back.
+-- Lite profile for small boxes used only to edit config files: listed hosts,
+-- or any machine started with NVIM_LITE=1 (e.g. `set -Ux NVIM_LITE 1` in fish).
+local lite_hosts = { "posonekyu" }
+vim.g.nvim_lite = vim.env.NVIM_LITE == "1"
+  or vim.tbl_contains(lite_hosts, vim.uv.os_gethostname():match("^[^.]+"))
+
+-- Lite machines disable some plugins (see config/host-overrides.lua), so a
+-- :Lazy update/sync there would drop them from the synced lockfile. Give them
+-- a private copy, refreshed from the shared one on every start, so :Lazy
+-- restore still follows the shared pins but nothing is ever written back.
 local lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json"
-if vim.uv.os_gethostname():match("^[^.]+") == "posonekyu" then
+if vim.g.nvim_lite then
   local private = vim.fn.stdpath("state") .. "/lazy-lock.json"
   vim.uv.fs_copyfile(lockfile, private)
   lockfile = private
+  -- Config-editing box: a trimmed extras list instead of the full dev set
+  -- (no language servers, test runners, AI, animations). :LazyExtras there
+  -- edits this file, leaving the shared lazyvim.json alone.
+  vim.g.lazyvim_json = vim.fn.stdpath("config") .. "/lazyvim-lite.json"
 end
 
 require("lazy").setup({
@@ -32,6 +42,8 @@ require("lazy").setup({
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
     -- import/override with your plugins
     { import = "plugins" },
+    -- per-host overrides go last so they win over any plugins/*.lua spec
+    { import = "config.host-overrides" },
   },
   defaults = {
     -- By default, only LazyVim plugins will be lazy-loaded. Your custom plugins will load during startup.
