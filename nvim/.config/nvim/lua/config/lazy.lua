@@ -55,7 +55,9 @@ require("lazy").setup({
     -- version = "*", -- try installing the latest stable version for plugins that support semver
   },
   install = { colorscheme = { "tokyonight", "habamax" } },
-  checker = { enabled = true }, -- automatically check for plugin updates
+  -- automatically check for plugin updates; not on lite machines, where updates
+  -- are pinned by the shared lockfile and background git fetches are costly
+  checker = { enabled = not vim.g.nvim_lite },
   performance = {
     rtp = {
       -- disable some rtp plugins
