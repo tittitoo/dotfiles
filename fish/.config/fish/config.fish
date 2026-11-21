@@ -109,18 +109,45 @@ function set_fzf_theme
 end
 
 # Detect appearance. macOS: AppleInterfaceStyle is only set when dark mode is
-# enabled. Linux: query the freedesktop appearance portal via gsettings (Omarchy
-# keeps this in sync with the active theme). Hosts with neither (e.g. the Debian
-# VPS, which has no desktop portal) fall back to dark.
+# enabled. Linux desktop: query the freedesktop appearance portal via gsettings
+# (Omarchy keeps this in sync with the active theme). Anywhere else (e.g. the
+# Debian VPS over SSH -- it has gsettings, but with no desktop it always says
+# 'default') ask the terminal for its background colour instead, the same way
+# Neovim's lite profile does, and fall back to dark if it doesn't answer.
 function is_dark_mode
     if test (uname -s) = Darwin
         defaults read -g AppleInterfaceStyle &>/dev/null
         return $status
-    else if command -q gsettings
+    else if command -q gsettings; and begin; set -q WAYLAND_DISPLAY; or set -q DISPLAY; end
         string match -q '*dark*' -- (gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null)
         return $status
     else
-        return 0
+        set -l bg (terminal_background)
+        or return 0
+        test "$bg" = dark
+        return $status
+    end
+end
+
+# Print "dark" or "light" from the terminal's OSC 11 reply (rgb:RRRR/GGGG/BBBB).
+# fish's `read` has no timeout, so bash does the tty round-trip.
+function terminal_background
+    test -r /dev/tty; and isatty stdin; or return 1
+    set -l reply (bash -c '
+        exec </dev/tty
+        old=$(stty -g) || exit 1
+        stty raw -echo
+        printf "\e]11;?\a" >/dev/tty
+        IFS= read -rs -t 0.5 -d $'"'"'\a'"'"' r
+        stty "$old"
+        printf %s "$r"' 2>/dev/null)
+    set -l rgb (string match -r -g 'rgb:([0-9a-fA-F]{2})[0-9a-fA-F]*/([0-9a-fA-F]{2})[0-9a-fA-F]*/([0-9a-fA-F]{2})' -- "$reply")
+    or return 1
+    set -l lum (math -s0 "(299 * 0x$rgb[1] + 587 * 0x$rgb[2] + 114 * 0x$rgb[3]) / 1000")
+    if test $lum -lt 128
+        echo dark
+    else
+        echo light
     end
 end
 
