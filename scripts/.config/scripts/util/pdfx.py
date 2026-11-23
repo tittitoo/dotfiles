@@ -901,12 +901,12 @@ def create_toc_pdf(
             title, max_title_width, font_name, entry_font_size, c
         )
 
-        # Draw title in dark blue
-        c.setFillColorRGB(0, 0, 0.8)
+        # Draw title in Jason brand blue (#005BBF)
+        c.setFillColorRGB(0.0, 0.357, 0.749)
         c.drawString(left_margin, y, display_title)
 
-        # Draw page number (right-aligned) in black
-        c.setFillColorRGB(0, 0, 0)
+        # Draw page number in Jason brand blue (#005BBF)
+        c.setFillColorRGB(0.0, 0.357, 0.749)
         c.drawRightString(right_margin, y, str(display_page))
 
         # Draw dotted line between title and page number
@@ -1126,15 +1126,13 @@ def create_hierarchical_toc_pdf(
             title, max_title_width, font_name, font_size, c
         )
 
-        # Draw title in dark blue (darker for level 1)
-        if level == 1:
-            c.setFillColorRGB(0, 0, 0.7)
-        else:
-            c.setFillColorRGB(0.1, 0.1, 0.6)
+        # Draw title in Jason brand blue (#005BBF); hierarchy is signaled
+        # by font size/weight/indentation alone, not by color.
+        c.setFillColorRGB(0.0, 0.357, 0.749)
         c.drawString(entry_left, y, display_title)
 
-        # Draw page number (right-aligned) in black
-        c.setFillColorRGB(0, 0, 0)
+        # Draw page number in Jason brand blue (#005BBF)
+        c.setFillColorRGB(0.0, 0.357, 0.749)
         c.drawRightString(right_margin, y, str(display_page))
 
         # Draw dotted line between title and page number
