@@ -13,4 +13,5 @@ xournal = [
 [open]
 prepend_rules = [
 	{ mime = "application/pdf", use = [ "open", "skim", "xournal", "reveal" ] },
+	{ url = "*.{doc,docx,xls,xlsx,ppt,pptx}", use = [ "open", "reveal" ] },
 ]
